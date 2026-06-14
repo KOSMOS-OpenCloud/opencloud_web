@@ -1,7 +1,6 @@
 import {
   ActionExtension,
   useFileActionsCopyPermanentLink,
-  useFileActionsImmutable,
   useFileActionsOpenShortcut,
   useFileActionsShowShares
 } from '@opencloud-eu/web-pkg'
@@ -12,7 +11,6 @@ export const useFileActions = (): ActionExtension[] => {
   const { actions: openShortcutActions } = useFileActionsOpenShortcut()
   const { actions: showSharesActions } = useFileActionsShowShares()
   const { actions: permanentLinkActions } = useFileActionsCopyPermanentLink()
-  const { actions: immutableActions } = useFileActionsImmutable()
 
   return [
     {
@@ -32,12 +30,6 @@ export const useFileActions = (): ActionExtension[] => {
       extensionPointIds: [quickActionsExtensionPoint.id],
       type: 'action',
       action: unref(permanentLinkActions)[0]
-    },
-    ...unref(immutableActions).map((action, i) => ({
-      id: `com.github.opencloud-eu.web.files.context-action.${action.name}`,
-      extensionPointIds: [contextActionsExtensionPoint.id],
-      type: 'action' as const,
-      action
-    }))
+    }
   ]
 }
