@@ -27,6 +27,7 @@ import {
   useFileActionsMove,
   useFileActionsNavigate,
   useFileActionsRename,
+  useFileActionsImmutable,
   useFileActionsRestore,
   useFileActionsToggleHideShare
 } from './index'
@@ -76,6 +77,7 @@ export const useFileActions = () => {
   const { actions: renameActions } = useFileActionsRename()
   const { actions: restoreActions } = useFileActionsRestore()
   const { actions: createSpaceFromResource } = useFileActionsCreateSpaceFromResource()
+  const { actions: immutableActions } = useFileActionsImmutable()
 
   const systemActions = computed<FileAction<any>[]>(() => [
     ...unref(downloadArchiveActions),
@@ -89,7 +91,8 @@ export const useFileActions = () => {
     ...unref(enableSyncActions),
     ...unref(hideShareActions),
     ...unref(disableSyncActions),
-    ...unref(favoriteActions)
+    ...unref(favoriteActions),
+    ...unref(immutableActions)
   ])
 
   const extensionsContextActions = computed(() => {
