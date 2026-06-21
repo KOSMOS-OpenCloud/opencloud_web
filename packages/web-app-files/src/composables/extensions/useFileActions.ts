@@ -22,7 +22,9 @@ import {
   useFileActionsRename,
   useFileActionsShowDetails,
   useFileActionsShowShares,
-  useFileActionsToggleHideShare
+  useFileActionsToggleHideShare,
+  useFileActionsLockVault,
+  useFileActionsUnlockVault
 } from '../actions'
 import { unref } from 'vue'
 
@@ -47,6 +49,8 @@ export const useFileActions = (): ActionExtension[] => {
   const { actions: showDetailsActions } = useFileActionsShowDetails()
   const { actions: toggleHideShareActions } = useFileActionsToggleHideShare()
   const { actions: immutableActions } = useFileActionsImmutable()
+  const { actions: lockVaultActions } = useFileActionsLockVault()
+  const { actions: unlockVaultActions } = useFileActionsUnlockVault()
 
   const singleItemActions = unref(immutableActions).filter(
     (a) => !a.name.startsWith('protect-folder') && !a.name.startsWith('unprotect-folder')
@@ -246,6 +250,24 @@ export const useFileActions = (): ActionExtension[] => {
       extensionPointIds: [batchActionsExtensionPoint.id],
       type: 'action' as const,
       action
-    }))
+    })),
+    {
+      id: 'com.github.opencloud-eu.web.files.context-action.lock-vault',
+      extensionPointIds: [contextActionsExtensionPoint.id, fileSideBarActionsExtensionPoint.id],
+      type: 'action',
+      action: {
+        ...unref(lockVaultActions)[0],
+        category: 'tertiary'
+      }
+    },
+    {
+      id: 'com.github.opencloud-eu.web.files.context-action.unlock-vault',
+      extensionPointIds: [contextActionsExtensionPoint.id, fileSideBarActionsExtensionPoint.id],
+      type: 'action',
+      action: {
+        ...unref(unlockVaultActions)[0],
+        category: 'tertiary'
+      }
+    }
   ]
 }

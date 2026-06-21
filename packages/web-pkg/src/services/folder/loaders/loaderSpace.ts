@@ -63,10 +63,12 @@ export class FolderLoaderSpace implements FolderLoader {
           // needed for public links for make previews work
           davProperties.push(DavProperty.DownloadURL)
         }
+
         // eslint-disable-next-line prefer-const
         let { resource: currentFolder, children: resources } = yield* call(
           webdav.listFiles(space, { path, fileId }, { signal: signal1, davProperties })
         )
+
         // if current folder has no id (= singe file public link) we must not correct the route
         if (currentFolder.id) {
           replaceInvalidFileRoute({ space, resource: currentFolder, path, fileId })

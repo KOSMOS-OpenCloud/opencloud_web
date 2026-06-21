@@ -23,9 +23,10 @@ const InnerSideBarComponent = defineComponent({
   template: '<div id="foo"><slot name="rootHeader"></slot></div>'
 })
 
+const { canListVersionsMock } = vi.hoisted(() => ({ canListVersionsMock: vi.fn() }))
 vi.mock('../../../../src/composables/selection', () => ({ useSelectedResources: vi.fn() }))
 vi.mock('../../../../src/composables/resources/useCanListVersions', () => ({
-  useCanListVersions: () => ({ canListVersions: vi.fn() })
+  useCanListVersions: () => ({ canListVersions: canListVersionsMock })
 }))
 
 const selectors = {
@@ -233,13 +234,15 @@ describe('FileSideBar', () => {
     })
     describe('loadVersionsTask', () => {
       beforeEach(() => {
-        vi.mock('../../../../src/composables/resources/useCanListVersions', () => ({
-          useCanListVersions: () => ({ canListVersions: vi.fn().mockReturnValue(true) })
-        }))
+        canListVersionsMock.mockReturnValue(true)
       })
 
       it('is called when resource is selected and sidebar is opened', () => {
-        const resource = mock<Resource>({ id: 'some-image', path: '/someImage.jpg' })
+        const resource = mock<Resource>({
+          id: 'some-image',
+          path: '/someImage.jpg',
+          isInVault: false
+        })
         const { mocks } = createWrapper({
           item: resource
         })
@@ -250,7 +253,11 @@ describe('FileSideBar', () => {
       })
 
       it('is not called if resource is selected and sidebar is not opened', () => {
-        const resource = mock<Resource>({ id: 'some-image', path: '/someImage.jpg' })
+        const resource = mock<Resource>({
+          id: 'some-image',
+          path: '/someImage.jpg',
+          isInVault: false
+        })
         const { mocks } = createWrapper({
           item: resource,
           isOpen: false

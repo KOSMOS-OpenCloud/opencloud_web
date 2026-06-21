@@ -1,9 +1,10 @@
 import { HttpClient } from '../../../src/http'
 import { ClientService, useAuthStore, useConfigStore } from '../../../src/'
 import { Language } from 'vue3-gettext'
-import { graph, ocs, webdav } from '@opencloud-eu/web-client'
+import { graph, ocs, ox, webdav } from '@opencloud-eu/web-client'
 import { Graph } from '@opencloud-eu/web-client/graph'
 import { OCS } from '@opencloud-eu/web-client/ocs'
+import { OX } from '@opencloud-eu/web-client/ox'
 import { WebDAV } from '@opencloud-eu/web-client/webdav'
 import { createTestingPinia, writable } from '@opencloud-eu/web-test-helpers'
 import axios from 'axios'
@@ -25,10 +26,12 @@ const getClientServiceMock = () => {
 }
 const v4uuid = '00000000-0000-0000-0000-000000000000'
 vi.mock('uuid', () => ({ v4: () => v4uuid }))
+vi.mock('../../../src/http')
 vi.mock('@opencloud-eu/web-client', async (importOriginal) => ({
   ...(await importOriginal<any>()),
   graph: vi.fn(),
   ocs: vi.fn(),
+  ox: vi.fn(),
   webdav: vi.fn()
 }))
 
@@ -42,7 +45,6 @@ describe('ClientService', () => {
       expect(clientService.httpAuthenticated).toBeInstanceOf(HttpClient)
     })
     it('initializes the http client with baseURL and static headers', () => {
-      vi.mock('../../../src/http')
       const mocky = vi.mocked(HttpClient)
       getClientServiceMock()
 
@@ -61,7 +63,6 @@ describe('ClientService', () => {
       expect(clientService.httpUnAuthenticated).toBeInstanceOf(HttpClient)
     })
     it('initializes the http client with baseURL and static headers', () => {
-      vi.mock('../../../src/http')
       const mocky = vi.mocked(HttpClient)
       getClientServiceMock()
 
@@ -100,13 +101,29 @@ describe('ClientService', () => {
       expect(clientService.ocs).toEqual(ocsMock)
     })
   })
+  describe('ox', () => {
+    it('initializes an axios client with static headers and an api url resolver', () => {
+      const oxMock = mock<OX>()
+      const oxSpy = vi.mocked(ox).mockReturnValue(oxMock)
+      const createSpy = vi.spyOn(axios, 'create')
+      const clientService = getClientServiceMock()
+      expect(createSpy).toHaveBeenCalledWith({
+        headers: { 'Initiator-ID': v4uuid, 'X-Requested-With': 'XMLHttpRequest' }
+      })
+      expect(oxSpy).toHaveBeenCalledWith(expect.anything(), expect.any(Function))
+      expect(clientService.ox).toEqual(oxMock)
+    })
+  })
   describe('webdav', () => {
     it('initializes a webdav client', () => {
       const webDavMock = mock<WebDAV>()
       const webDavSpy = vi.mocked(webdav).mockReturnValue(webDavMock)
       const clientService = getClientServiceMock()
       expect(webDavSpy).toHaveBeenCalledWith(serverUrl, expect.anything())
-      expect(clientService.webdav).toEqual(webDavMock)
+      // the raw client is wrapped by the vault-aware decorator before it's
+      // exposed, so it's no longer identical to the bare factory result
+      expect(clientService.webdav).toBeDefined()
+      expect(clientService.webdav.listFiles).toBeInstanceOf(Function)
     })
   })
 })

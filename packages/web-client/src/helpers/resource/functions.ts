@@ -154,6 +154,10 @@ export function buildResource(
       ? resource.props[DavProperty.ContentSize]?.toString() || '0'
       : resource.props[DavProperty.ContentLength]?.toString() || '0',
     permissions: resource.props[DavProperty.Permissions] || '',
+    // Folder-vault membership is set later by the vault helpers (loader,
+    // markVaultStatus, decryptResourceInPlace) once we know the space and
+    // path. Default false here so consumers can rely on a defined boolean.
+    isInVault: false,
     starred: resource.props[DavProperty.IsFavorite] === 1,
     etag: resource.props[DavProperty.ETag],
     shareTypes,
@@ -198,6 +202,9 @@ export function buildResource(
         this.permissions.indexOf(DavPermission.FileUpdateable) >= 0 ||
         this.permissions.indexOf(DavPermission.FolderCreateable) >= 0
       )
+    },
+    canListVersions: function () {
+      return !this.isFolder
     },
     isMounted: function () {
       return this.permissions.indexOf(DavPermission.Mounted) >= 0
@@ -256,6 +263,7 @@ export function buildDeletedResource(resource: WebDavResponseResource): TrashRes
     isReceivedShare: () => false,
     hasPreview: () => false,
     isShareRoot: () => false,
+    canListVersions: () => false,
     getDomSelector: () => extractDomSelector(id)
   }
 }

@@ -89,10 +89,15 @@ import { HttpError } from '@opencloud-eu/web-client'
 import { dirname } from 'path'
 import { useFileActionsOpenWithApp } from '../../composables'
 import { UnsavedChangesModal } from '../Modals'
-import { formatFileSize, getSharedDriveItem } from '../../helpers'
+import {
+  formatFileSize,
+  getSharedDriveItem,
+  setCurrentUserShareSpacePermissions
+} from '../../helpers'
 import toNumber from 'lodash-es/toNumber'
 import { useIsMobile } from '@opencloud-eu/design-system/composables'
 import { storeToRefs } from 'pinia'
+import { DriveItem } from '@opencloud-eu/web-client/graph/generated'
 
 const {
   applicationId,
@@ -152,7 +157,8 @@ const currentContent = ref<unknown>()
 let deleteResourceEventToken = ''
 let appOnDeleteResourceCallback: (() => void) | null = null
 
-const { registerExtensions, unregisterExtensions, requestExtensions } = useExtensionRegistry()
+const extensionRegistry = useExtensionRegistry()
+const { registerExtensions, unregisterExtensions, requestExtensions } = extensionRegistry
 const topBarExtensionId = 'app.app-wrapper.app-top-bar'
 const appBarExtension = computed<CustomComponentExtension[]>(() => {
   if (unref(loading) || unref(loadingError) || !unref(resource)) {
@@ -300,17 +306,30 @@ const loadResourceTask = useTask(function* (signal) {
       // FIXME: As soon the backend exposes oc-remote-id via webdav, remove the assignment below
       unref(resource).remoteItemId = unref(space).id
 
-      if (unref(resource).id === unref(resource).remoteItemId) {
-        // use graph api to build incoming share resource
-        const sharedDriveItem = yield* call(
+      let sharedDriveItem: DriveItem
+      const resourceIsShareSpaceRoot = unref(resource).id === unref(resource).remoteItemId
+      if (!unref(space).graphPermissions || resourceIsShareSpaceRoot) {
+        // we need to load the driveItem either for the share space permissions if not yet loaded,
+        // or for building the incoming share resource if it is a share space root
+        sharedDriveItem = yield* call(
           getSharedDriveItem({
             graphClient: clientService.graphAuthenticated,
             spacesStore,
             space: unref(space)
           })
         )
+      }
 
-        if (sharedDriveItem) {
+      if (sharedDriveItem) {
+        // set graph permissions on the current share space
+        setCurrentUserShareSpacePermissions({
+          sharesStore,
+          spacesStore,
+          space: unref(space),
+          sharedDriveItem
+        })
+
+        if (resourceIsShareSpaceRoot) {
           resource.value = {
             ...fileInfo,
             ...buildIncomingShareResource({
@@ -322,6 +341,12 @@ const loadResourceTask = useTask(function* (signal) {
           }
         }
       }
+    }
+    if (isProjectSpaceResource(unref(space))) {
+      yield spacesStore.loadGraphPermissions({
+        ids: [unref(space).id],
+        graphClient: clientService.graphAuthenticated
+      })
     }
     resourcesStore.initResourceList({ currentFolder: null, resources: [unref(resource)] })
     selectedResources.value = [unref(resource)]
@@ -365,7 +390,7 @@ const loadFileTask = useTask(function* (signal) {
 
     if (unref(hasProp('currentContent'))) {
       const fileContentsResponse = yield* call(
-        getFileContents(currentFileContext, { ...fileContentOptions, signal })
+        getFileContents(unref(currentFileContext), { ...fileContentOptions, signal })
       )
       serverContent.value = currentContent.value = fileContentsResponse.body
       currentETag.value = fileContentsResponse.headers['OC-ETag']
@@ -438,7 +463,7 @@ const saveFileTask = useTask(function* () {
   const newContent = unref(currentContent)
   try {
     const putFileContentsResponse = yield putFileContents(currentFileContext, {
-      content: newContent as string,
+      content: newContent as string | ArrayBuffer,
       previousEntityTag: unref(currentETag)
     })
     serverContent.value = newContent

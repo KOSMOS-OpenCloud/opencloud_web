@@ -1,6 +1,6 @@
 {
   "name": "@opencloud-eu/web-test-helpers",
-  "version": "7.1.0",
+  "version": "7.2.0-beta.3",
   "description": "OpenCloud web test helpers",
   "license": "AGPL-3.0",
   "private": false,
@@ -55,6 +55,6 @@
     "pinia": "^3.0.4",
     "vitest-mock-extended": "^4.0.0",
     "vue-router": "^5.0.4",
-    "vue3-gettext": "4.0.0-beta.1"
+    "vue3-gettext": "4.0.1"
   }
 }

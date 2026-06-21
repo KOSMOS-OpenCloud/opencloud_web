@@ -1,6 +1,6 @@
 {
   "name": "@opencloud-eu/design-system",
-  "version": "7.1.0",
+  "version": "7.2.0-beta.3",
   "description": "OpenCloud Design System is used to design OpenCloud UI components",
   "keywords": [
     "vue design system",
@@ -107,7 +107,7 @@
     "vue-inline-svg": "^4.0.1",
     "vue-router": "^5.0.4",
     "vue-select": "4.0.0-beta.6",
-    "vue3-gettext": "4.0.0-beta.1"
+    "vue3-gettext": "4.0.1"
   },
   "peerDependencies": {
     "pinia": "^3.0.3"

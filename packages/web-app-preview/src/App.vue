@@ -276,7 +276,17 @@ const loadPreviewImage = async (mediaFile: MediaFile) => {
   loadPreviewImageController = new AbortController()
 
   try {
-    if (mediaFile.isImage) {
+    // Vault images can't be thumbnailed server-side (the server only holds
+    // the ciphertext blob), so skip the preview service and fetch the full
+    // image instead - `getUrlForResource` is vault-aware and returns a blob
+    // URL with cleartext bytes. Gate strictly on the vault flag: every other
+    // image keeps the normal preview-service path, including the legacy
+    // no-thumbnail behaviour (do NOT key this off hasPreview(), or plain
+    // images the server has no thumbnail for would download the full
+    // original on every open).
+    const useFullImage = mediaFile.isImage && mediaFile.resource.isInVault
+
+    if (mediaFile.isImage && !useFullImage) {
       mediaFile.url = await previewService.loadPreview(
         {
           space: unref(space),

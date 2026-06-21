@@ -168,7 +168,8 @@ import {
   CollaboratorShare,
   ShareRole,
   ShareTypes,
-  call
+  call,
+  isSpaceResource
 } from '@opencloud-eu/web-client'
 import {
   useCapabilityStore,
@@ -203,6 +204,10 @@ import { Group } from '@opencloud-eu/web-client/graph/generated'
 import ExpirationDateIndicator from '../../ExpirationDateIndicator.vue'
 import { ContextualHelper } from '@opencloud-eu/design-system/helpers'
 import CopyPrivateLink from '../../../../Shares/CopyPrivateLink.vue'
+import {
+  useInviteContactViaEmail,
+  useOpenXchangeContacts
+} from '../../../../../composables/openXchange'
 
 type DropDownShouldOpenOptions = { open: boolean; search: string[] }
 
@@ -246,7 +251,7 @@ export default defineComponent({
   },
 
   setup() {
-    const { $gettext } = useGettext()
+    const { $gettext, $ngettext } = useGettext()
     const clientService = useClientService()
     const { showMessage, showErrorMessage } = useMessages()
     const spacesStore = useSpacesStore()
@@ -259,6 +264,9 @@ export default defineComponent({
     const sharesStore = useSharesStore()
     const { addShare } = sharesStore
     const { collaboratorShares } = storeToRefs(sharesStore)
+
+    const { searchContacts: searchOpenXchangeContacts } = useOpenXchangeContacts()
+    const { inviteContact } = useInviteContactViaEmail()
 
     const searchQuery = ref('')
     const searchInProgress = ref(false)
@@ -363,7 +371,14 @@ export default defineComponent({
         shareType: ShareTypes.group.value
       })) as CollaboratorAutoCompleteItem[]
 
-      autocompleteResults.value = [...users, ...groups].filter(
+      const isSpace = !unref(resource) || isSpaceResource(unref(resource))
+      const guests = isSpace
+        ? []
+        : ((yield* call(
+            searchOpenXchangeContacts(query, signal)
+          )) as CollaboratorAutoCompleteItem[])
+
+      autocompleteResults.value = [...users, ...groups, ...guests].filter(
         (collaborator: CollaboratorAutoCompleteItem) => {
           if (collaborator.id === userStore.user.id) {
             // filter current user
@@ -396,11 +411,36 @@ export default defineComponent({
       const saveQueue = new PQueue({ concurrency: unref(createSharesConcurrentRequests) })
       const savePromises: Promise<void>[] = []
       const errors: { displayName: string; error: Error }[] = []
+      const contactErrors: { displayName: string; error: Error }[] = []
       const addedShares: CollaboratorShare[] = []
+      let invitedContactCount = 0
 
-      unref(selectedCollaborators).forEach(({ id, shareType, displayName }) => {
+      unref(selectedCollaborators).forEach((collaborator) => {
+        const { id, shareType, displayName } = collaborator
+
+        if (shareType === ShareTypes.contact.value) {
+          // address book contacts are not OpenCloud users: create a public link
+          // and email it to them, never a collaborator share
+          savePromises.push(
+            saveQueue.add(async () => {
+              try {
+                await inviteContact({
+                  space: unref(space),
+                  resource: unref(resource),
+                  contact: collaborator
+                })
+                invitedContactCount++
+              } catch (error) {
+                console.error(error)
+                contactErrors.push({ displayName, error })
+                throw error
+              }
+            })
+          )
+          return
+        }
+
         const type = shareType === ShareTypes.group.value ? 'group' : 'user'
-
         savePromises.push(
           saveQueue.add(async () => {
             try {
@@ -430,7 +470,7 @@ export default defineComponent({
         )
       })
 
-      const results = await Promise.allSettled(savePromises)
+      await Promise.allSettled(savePromises)
 
       if (isProjectSpaceResource(unref(resource))) {
         const updatedSpace = await clientService.graphAuthenticated.drives.getDrive(
@@ -440,13 +480,32 @@ export default defineComponent({
         upsertSpace({ ...updatedSpace, graphPermissions: unref(space).graphPermissions })
       }
 
-      if (results.length !== errors.length) {
+      if (addedShares.length > 0) {
         showMessage({ title: $gettext('Share was added successfully') })
+      }
+
+      if (invitedContactCount > 0) {
+        showMessage({
+          title: $ngettext(
+            'Sent a read-only link to %{count} contact',
+            'Sent read-only links to %{count} contacts',
+            invitedContactCount,
+            { count: invitedContactCount.toString() }
+          )
+        })
       }
 
       errors.forEach((e) => {
         showErrorMessage({
           title: $gettext('Failed to add share for "%{displayName}"', {
+            displayName: e.displayName
+          }),
+          errors: [e.error]
+        })
+      })
+      contactErrors.forEach((e) => {
+        showErrorMessage({
+          title: $gettext('Failed to send invite link for "%{displayName}"', {
             displayName: e.displayName
           }),
           errors: [e.error]

@@ -71,6 +71,11 @@ export interface Resource {
   remoteItemId?: string
   remoteItemPath?: string
 
+  // Set by the folder loaders / vault helpers when the resource sits inside
+  // or *is* a folder-vault root. Lets action guards short-circuit on
+  // `resources.some((r) => r.isInVault)` instead of re-parsing paths.
+  isInVault?: boolean
+
   hasPreview?(): boolean
   canCreate?(): boolean
   canUpload?({ user }: { user?: User }): boolean
@@ -79,6 +84,7 @@ export interface Resource {
   canRename?(args?: { user?: User; ability?: Ability }): boolean
   canBeDeleted?(args?: { user?: User; ability?: Ability }): boolean
   canEditTags?(): boolean
+  canListVersions?(args?: { user?: User }): boolean
 
   getDomSelector?(): string
 

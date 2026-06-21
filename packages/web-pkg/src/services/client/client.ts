@@ -1,7 +1,8 @@
 import { HttpClient } from '../../http'
-import { graph, ocs, webdav } from '@opencloud-eu/web-client'
+import { graph, ocs, ox, webdav } from '@opencloud-eu/web-client'
 import { Graph } from '@opencloud-eu/web-client/graph'
 import { OCS } from '@opencloud-eu/web-client/ocs'
+import { OX } from '@opencloud-eu/web-client/ox'
 import { AuthParameters } from './auth'
 import axios from 'axios'
 import { v4 as uuidV4 } from 'uuid'
@@ -10,6 +11,7 @@ import { Language } from 'vue3-gettext'
 import { FetchEventSourceInit } from '@microsoft/fetch-event-source'
 import { sse } from '@opencloud-eu/web-client/sse'
 import { AuthStore, ConfigStore } from '../../composables'
+import { createVaultWebDav } from './vaultWebDav'
 
 const createFetchOptions = (authParams: AuthParameters, language: string): FetchEventSourceInit => {
   return {
@@ -38,6 +40,7 @@ export class ClientService {
 
   private graphClient: Graph
   private ocsClient: OCS
+  private oxClient: OX
   private webDavClient: WebDAV
 
   public initiatorId = uuidV4()
@@ -54,6 +57,7 @@ export class ClientService {
 
     this.initGraphClient()
     this.initOcsClient()
+    this.initOxClient()
     this.initWebDavClient()
 
     this.httpAuthenticatedClient = new HttpClient(
@@ -95,6 +99,10 @@ export class ClientService {
     return this.ocsClient
   }
 
+  public get ox() {
+    return this.oxClient
+  }
+
   public get webdav() {
     return this.webDavClient
   }
@@ -128,8 +136,17 @@ export class ClientService {
     this.ocsClient = ocs(this.configStore.serverUrl, axiosClient)
   }
 
+  private initOxClient() {
+    const axiosClient = axios.create({ headers: this.staticHeaders })
+    axiosClient.interceptors.request.use((config) => {
+      Object.assign(config.headers, this.getDynamicHeaders())
+      return config
+    })
+    this.oxClient = ox(axiosClient, () => this.configStore.options.oxAppSuite?.apiUrl)
+  }
+
   private initWebDavClient() {
-    this.webDavClient = webdav(this.configStore.serverUrl, () => {
+    const client = webdav(this.configStore.serverUrl, () => {
       const headers = { ...this.staticHeaders, ...this.getDynamicHeaders() }
 
       if (this.authStore.publicLinkToken) {
@@ -144,6 +161,10 @@ export class ClientService {
 
       return headers
     })
+    // Wrap the raw client so folder-vault path/name translation happens
+    // transparently for every caller (clear-text in, clear-text out). It's a
+    // strict pass-through for any path that isn't inside a vault.
+    this.webDavClient = createVaultWebDav(client)
   }
 
   /**

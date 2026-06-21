@@ -31,7 +31,15 @@
           :class="{ 'h-[40vh]': isSpaceFrontpage }"
         />
         <template v-else>
-          <space-header v-if="isSpaceFrontpage" :space="space" class="px-4" />
+          <custom-component-target
+            v-if="isSpaceFrontpage && hasSpaceHeaderExtension"
+            :extension-point="spaceHeaderExtensionPoint"
+          />
+          <space-header
+            v-else-if="isSpaceFrontpage"
+            :space="space"
+            class="px-4"
+          />
           <no-content-message
             v-if="isCurrentFolderEmpty"
             id="files-space-empty"
@@ -121,8 +129,11 @@ import {
 import {
   ResourceTransfer,
   TransferType,
+  getVaultClaim,
+  useExtensionRegistry,
   useFileActions,
   useLoadPreview,
+  useMessages,
   usePasteWorker,
   useResourcesStore,
   useRouter,
@@ -143,8 +154,10 @@ import {
   useKeyboardActions,
   useRoute,
   useRouteQuery,
-  FolderLoaderOptions
+  FolderLoaderOptions,
+  CustomComponentTarget
 } from '@opencloud-eu/web-pkg'
+import { spaceHeaderExtensionPoint } from '../../extensionPoints'
 import CreateAndUpload from '../../components/AppBar/CreateAndUpload.vue'
 import FilesViewWrapper from '../../components/FilesViewWrapper.vue'
 import ListInfo from '../../components/FilesList/ListInfo.vue'
@@ -175,6 +188,8 @@ const props = defineProps<{
 const router = useRouter()
 const userStore = useUserStore()
 const { $gettext, $ngettext } = useGettext()
+const { showMessage } = useMessages()
+const extensionRegistry = useExtensionRegistry()
 const openWithDefaultAppQuery = useRouteQuery('openWithDefaultApp')
 const clientService = useClientService()
 const { startWorker } = usePasteWorker()
@@ -195,6 +210,10 @@ const canUpload = computed(() => {
 })
 
 const folderNotFound = computed(() => unref(currentFolder) === null)
+
+const hasSpaceHeaderExtension = computed(() => {
+  return extensionRegistry.requestExtensions(spaceHeaderExtensionPoint).length > 0
+})
 const isCurrentFolderEmpty = computed(() => unref(paginatedResources).length < 1)
 
 const titleSegments = computed(() => {
@@ -445,6 +464,21 @@ const fileDropped = async (fileTarget: string | { name: string; path: string }) 
   }
 
   if (!targetFolder || targetFolder.type !== 'folder') {
+    return
+  }
+
+  // ResourceTransfer is vault-unaware (cleartext listing + path join), so a
+  // drag-move into or out of a vault would read/write at the wrong, cleartext
+  // paths. Block it whenever a vault is involved on either side. getVaultClaim
+  // is a cheap, path-based check that also covers a target fetched via
+  // getFileInfo (which doesn't carry the isInVault flag).
+  if (
+    selected.some((r) => r.isInVault) ||
+    getVaultClaim(extensionRegistry, unref(space), targetFolder.path)
+  ) {
+    showMessage({
+      title: $gettext('Moving items into or out of a vault by drag and drop is not supported')
+    })
     return
   }
 

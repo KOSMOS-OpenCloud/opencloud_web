@@ -3,7 +3,7 @@ docker_repo_slug = "opencloudeu/web"
 
 ALPINE_GIT = "alpine/git:latest"
 APACHE_TIKA = "apache/tika:2.8.0.0"
-COLLABORA_CODE = "collabora/code:25.04.8.2.1"
+COLLABORA_CODE = "collabora/code:26.04.1.4.1"
 KEYCLOAK = "quay.io/keycloak/keycloak:26.6.1"
 MINIO_MC = "minio/mc:RELEASE.2021-10-07T04-19-58Z"
 OC_CI_BAZEL_BUILDIFIER = "quay.io/opencloudeu/bazel-buildifier-ci:latest"
@@ -25,6 +25,7 @@ READY_RELEASE_GO = "woodpeckerci/plugin-ready-release-go:latest"
 WEB_PUBLISH_NPM_PACKAGES = ["design-system", "eslint-config", "extension-sdk", "prettier-config", "tsconfig", "web-client", "web-pkg", "web-test-helpers"]
 WEB_PUBLISH_NPM_ORGANIZATION = "@opencloud-eu"
 CACHE_S3_SERVER = "https://s3.ci.opencloud.eu"
+MACHINE_AUTH_API_KEY = "4f9e8d1c7a5b2e6f93c0a1d8e7b4f6c2d9a3e8f1b7c5d0a6e4f2c9b8a1d7e3f6"
 
 dir = {
     "base": "/woodpecker/src/github.com/opencloud-eu/web",
@@ -97,6 +98,14 @@ config = {
                 "app-store",
             ],
         },
+        "rclone-crypt": {
+            "earlyFail": True,
+            "skip": False,
+            "rcloneNeeded": True,
+            "suites": [
+                "rclone-crypt",
+            ],
+        },
         "a11y": {
             "earlyFail": True,
             "skip": False,
@@ -122,6 +131,7 @@ config = {
                 "NATS_NATS_PORT": 9233,
                 "COLLABORA_DOMAIN": "collabora:9980",
                 "WEB_UI_CONFIG_FILE": None,
+                "OC_MACHINE_AUTH_API_KEY": MACHINE_AUTH_API_KEY,
             },
         },
         "app-provider-onlyOffice": {
@@ -137,6 +147,7 @@ config = {
                 "NATS_NATS_PORT": 9233,
                 "ONLYOFFICE_DOMAIN": "onlyoffice:443",
                 "WEB_UI_CONFIG_FILE": None,
+                "OC_MACHINE_AUTH_API_KEY": MACHINE_AUTH_API_KEY,
             },
         },
         "oidc-refresh-token": {
@@ -236,7 +247,7 @@ event = {
 }
 
 def main(ctx):
-    if ctx.build.event == "cron" and ctx.build.sender == "translation-sync":
+    if ctx.build.event == "cron" and ctx.build.cron == "translation-sync":
         return translation_sync(ctx)
     is_release_pr = (ctx.build.event == "pull_request" and ctx.build.sender == "openclouders" and "🎉 release" in ctx.build.title.lower())
     if is_release_pr:
@@ -538,6 +549,31 @@ def unitTests(ctx):
         ],
     }]
 
+def installRclone(params):
+    # The rclone-crypt e2e suite shells out to the rclone CLI to build encrypted
+    # vault fixtures on the backend and to verify decryption against the
+    # reference implementation. rclone is a single static binary; pin the
+    # version (crypt format stays reproducible) AND verify the archive against a
+    # pinned SHA256 before extracting, so a tampered or corrupted download fails
+    # the step instead of installing an unverified binary.
+    if not params["rcloneNeeded"]:
+        return []
+    version = "v1.74.0"
+    archive = "rclone-%s-linux-amd64.zip" % version
+
+    # SHA256 of the official archive, from https://downloads.rclone.org/v1.74.0/SHA256SUMS
+    sha256 = "61de0a78d8776fe3e080f8385ebe96d817f2ee6a6003fe36b2d9f3b49d3e36ea"
+    url = "https://downloads.rclone.org/%s/%s" % (version, archive)
+    return [
+        "command -v unzip || (apt-get update && apt-get install -y unzip)",
+        "curl -fsSL %s -o /tmp/rclone.zip" % url,
+        # abort the step on any checksum mismatch, before we trust the archive
+        "echo '%s  /tmp/rclone.zip' | sha256sum -c -" % sha256,
+        "unzip -j /tmp/rclone.zip '*/rclone' -d /usr/local/bin",
+        "chmod +x /usr/local/bin/rclone",
+        "rclone version",
+    ]
+
 def e2eTests(ctx):
     default = {
         "skip": False,
@@ -547,6 +583,7 @@ def e2eTests(ctx):
         "suites": [],
         "features": [],
         "tikaNeeded": False,
+        "rcloneNeeded": False,
         "federationServer": False,
         "failOnUncaughtConsoleError": False,
         "extraServerEnvironment": {},
@@ -658,7 +695,7 @@ def e2eTests(ctx):
                          "name": "e2e-tests",
                          "image": OC_CI_NODEJS,
                          "environment": environment,
-                         "commands": [
+                         "commands": installRclone(params) + [
                              command,
                          ],
                      }] + \
@@ -1459,6 +1496,8 @@ def wopiCollaborationService(name):
         "COLLABORATION_CS3API_DATAGATEWAY_INSECURE": True,
         "OC_JWT_SECRET": "some-opencloud-jwt-secret",
         "COLLABORATION_WOPI_SECRET": "some-wopi-secret",
+        "OC_EVENTS_ENDPOINT": "opencloud:9233",
+        "OC_MACHINE_AUTH_API_KEY": MACHINE_AUTH_API_KEY,
     }
 
     if name == "collabora":

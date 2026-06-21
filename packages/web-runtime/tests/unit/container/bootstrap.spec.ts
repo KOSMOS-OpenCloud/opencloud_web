@@ -1,6 +1,8 @@
 import { mock, mockDeep } from 'vitest-mock-extended'
 import { createApp, defineComponent, App } from 'vue'
+import { Language } from 'vue3-gettext'
 import {
+  AuthStore,
   CapabilityStore,
   ClientService,
   ConfigStore,
@@ -11,6 +13,7 @@ import {
 import {
   initializeApplications,
   announceApplicationsReady,
+  announceClientService,
   announceCustomScripts,
   announceCustomStyles,
   announceConfiguration,
@@ -22,6 +25,10 @@ import { createTestingPinia, mockAxiosResolve } from '@opencloud-eu/web-test-hel
 import type { ModuleFederation } from '@module-federation/runtime'
 
 vi.mock('../../../src/container/application')
+vi.mock('@opencloud-eu/web-pkg', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@opencloud-eu/web-pkg')>()),
+  ClientService: vi.fn()
+}))
 
 describe('initialize applications', () => {
   beforeEach(() => {
@@ -282,5 +289,20 @@ describe('announceUpdates', () => {
         }
       }
     )
+  })
+})
+
+describe('announceClientService', () => {
+  it('creates a client service and provides it on the app', () => {
+    const app = createApp(defineComponent({}))
+    app.config.globalProperties.$language = mock<Language>()
+
+    const configStore = mockDeep<ConfigStore>()
+    const authStore = mockDeep<AuthStore>()
+
+    const clientService = announceClientService({ app, configStore, authStore })
+
+    expect(ClientService).toHaveBeenCalledWith(expect.objectContaining({ configStore, authStore }))
+    expect(app.config.globalProperties.$clientService).toBe(clientService)
   })
 })

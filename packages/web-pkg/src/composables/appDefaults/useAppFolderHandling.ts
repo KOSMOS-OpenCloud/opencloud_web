@@ -100,9 +100,8 @@ export function useAppFolderHandling({
         return
       }
 
-      const path = dirname(pathResource.path)
       const { resource, children } = await webdav.listFiles(space, {
-        path
+        path: dirname(pathResource.path)
       })
 
       if (isShareSpaceResource(space)) {

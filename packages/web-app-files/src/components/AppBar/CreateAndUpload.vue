@@ -29,6 +29,7 @@ import {
   ClipboardActions,
   isLocationPublicActive,
   useClipboardStore,
+  useExtensionRegistry,
   useMessages,
   useResourcesStore,
   useRoute,
@@ -68,6 +69,7 @@ const { resources: clipboardResources, action: clipboardAction } = storeToRefs(c
 
 const resourcesStore = useResourcesStore()
 const { currentFolder } = storeToRefs(resourcesStore)
+const extensionRegistry = useExtensionRegistry()
 
 const isPublicLocation = useActiveLocation(isLocationPublicActive, 'files-public-link')
 
@@ -85,6 +87,7 @@ if (!uppyService.getPlugin('HandleUpload')) {
     spacesStore,
     messageStore,
     resourcesStore,
+    extensionRegistry,
     uppyService
   })
 }
@@ -147,6 +150,7 @@ const onUploadComplete = async (result: UploadResult) => {
 
   const existingIds = new Set(resourcesStore.resources.map((r) => r.id))
   const newResources = children.filter((child) => !existingIds.has(child.id))
+
   resourcesStore.upsertResources(newResources)
 }
 
@@ -165,7 +169,10 @@ const isMovingIntoSameFolder = computed(() => {
 })
 
 const isPasteHereButtonDisabled = computed(() => {
-  return !unref(canUpload) || unref(isMovingIntoSameFolder)
+  // Pasting into a vault isn't supported (the worker can't re-encrypt the moved
+  // content), so the button is disabled inside one - matching the context-menu
+  // paste action, which the "Paste here" button bypasses.
+  return !unref(canUpload) || unref(isMovingIntoSameFolder) || unref(currentFolder)?.isInVault
 })
 
 const pasteHereButtonTooltip = computed(() => {

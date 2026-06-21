@@ -31,7 +31,7 @@ export interface AppFileHandlingResult {
   getFileContents(fileContext: MaybeRef<FileContext>, options?: FileContentOptions): Promise<any>
   putFileContents(
     fileContext: MaybeRef<FileContext>,
-    putFileOptions: { content?: string } & Record<string, any>
+    putFileOptions: { content?: string | ArrayBuffer } & Record<string, any>
   ): Promise<FileResource>
 }
 
@@ -41,11 +41,26 @@ export function useAppFileHandling({
   clientService = clientService || useClientService()
   const userStore = useUserStore()
 
-  const getUrlForResource = (
+  const getUrlForResource = async (
     space: SpaceResource,
     resource: Resource,
     options?: UrlForResourceOptions
-  ) => {
+  ): Promise<string> => {
+    // A vault resource's server blob is ciphertext, so a plain download URL (or
+    // thumbnail) would render garbage. Fetch the bytes through the vault-aware
+    // webdav client (which decrypts them) and expose the cleartext as an
+    // in-memory blob URL the embedded app can consume directly.
+    if (resource.isInVault) {
+      const response = await clientService.webdav.getFileContents(
+        space,
+        { path: resource.path },
+        { responseType: 'arraybuffer', signal: options?.signal }
+      )
+      const blob = new Blob([response.body as ArrayBuffer], {
+        type: resource.mimeType || 'application/octet-stream'
+      })
+      return URL.createObjectURL(blob)
+    }
     return clientService.webdav.getFileUrl(space, resource, {
       username: userStore.user?.onPremisesSamAccountName,
       ...options
@@ -91,7 +106,7 @@ export function useAppFileHandling({
 
   const putFileContents = (
     fileContext: MaybeRef<FileContext>,
-    options: { content?: string; signal?: AbortSignal } & Record<string, any>
+    options: { content?: string | ArrayBuffer; signal?: AbortSignal } & Record<string, any>
   ) => {
     return clientService.webdav.putFileContents(unref(unref(fileContext).space), {
       path: unref(unref(fileContext).item),
