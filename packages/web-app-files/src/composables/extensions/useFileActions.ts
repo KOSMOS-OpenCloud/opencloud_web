@@ -9,6 +9,7 @@ import {
 import {
   useFileActionsCopy,
   useFileActionsCopyPermanentLink,
+<<<<<<< HEAD
   useFileActionsCreateSpaceFromResource,
   useFileActionsDisableSync,
   useFileActionsDownloadArchive,
@@ -26,6 +27,17 @@ import {
   useFileActionsLockVault,
   useFileActionsUnlockVault
 } from '../actions'
+=======
+  useFileActionsImmutable,
+  useFileActionsOpenShortcut,
+  useFileActionsShowShares
+} from '@opencloud-eu/web-pkg'
+import {
+  batchActionsExtensionPoint,
+  contextActionsExtensionPoint,
+  quickActionsExtensionPoint
+} from '../../extensionPoints'
+>>>>>>> feature/metadata-panel
 import { unref } from 'vue'
 
 const previewToolBarActionsExtensionPointId = 'app.preview.toolbar-actions'
@@ -38,6 +50,7 @@ export const useFileActions = (): ActionExtension[] => {
   const { actions: openShortcutActions } = useFileActionsOpenShortcut()
   const { actions: showSharesActions } = useFileActionsShowShares()
   const { actions: permanentLinkActions } = useFileActionsCopyPermanentLink()
+<<<<<<< HEAD
   const { actions: createSpaceFromResourceActions } = useFileActionsCreateSpaceFromResource()
   const { actions: disableSyncActions } = useFileActionsDisableSync()
   const { actions: enableSyncActions } = useFileActionsEnableSync()
@@ -51,6 +64,9 @@ export const useFileActions = (): ActionExtension[] => {
   const { actions: immutableActions } = useFileActionsImmutable()
   const { actions: lockVaultActions } = useFileActionsLockVault()
   const { actions: unlockVaultActions } = useFileActionsUnlockVault()
+=======
+  const { actions: immutableActions } = useFileActionsImmutable()
+>>>>>>> feature/metadata-panel
 
   const singleItemActions = unref(immutableActions).filter(
     (a) => !a.name.startsWith('protect-folder') && !a.name.startsWith('unprotect-folder')
@@ -121,6 +137,7 @@ export const useFileActions = (): ActionExtension[] => {
       id: 'com.github.opencloud-eu.web.files.quick-action.quicklink',
       extensionPointIds: [quickActionsExtensionPoint.id, contextActionsExtensionPoint.id],
       type: 'action',
+<<<<<<< HEAD
       action: {
         ...unref(permanentLinkActions)[0],
         category: 'secondary'
@@ -232,13 +249,22 @@ export const useFileActions = (): ActionExtension[] => {
       }
     },
     // Immutable: single-item quick actions (freeze, frozen, shielded indicators)
+=======
+      action: unref(permanentLinkActions)[0]
+    },
+    // Single-item quick actions (freeze, frozen, shielded indicators)
+>>>>>>> feature/metadata-panel
     ...singleItemActions.map((action) => ({
       id: `com.github.opencloud-eu.web.files.quick-action.${action.name}`,
       extensionPointIds: [quickActionsExtensionPoint.id],
       type: 'action' as const,
       action
     })),
+<<<<<<< HEAD
     // Immutable: protect/unprotect as quick action + batch action
+=======
+    // Protect/Unprotect: quick action (single) + batch action (multi-select)
+>>>>>>> feature/metadata-panel
     ...batchableActions.map((action) => ({
       id: `com.github.opencloud-eu.web.files.quick-action.${action.name}`,
       extensionPointIds: [quickActionsExtensionPoint.id],
@@ -250,6 +276,7 @@ export const useFileActions = (): ActionExtension[] => {
       extensionPointIds: [batchActionsExtensionPoint.id],
       type: 'action' as const,
       action
+<<<<<<< HEAD
     })),
     {
       id: 'com.github.opencloud-eu.web.files.context-action.lock-vault',
@@ -269,5 +296,8 @@ export const useFileActions = (): ActionExtension[] => {
         category: 'tertiary'
       }
     }
+=======
+    }))
+>>>>>>> feature/metadata-panel
   ]
 }

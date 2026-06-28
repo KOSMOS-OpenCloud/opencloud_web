@@ -18,6 +18,7 @@ import {
   useFileActionsDelete,
   useFileActionsDownloadFile,
   useFileActionsNavigate,
+  useFileActionsImmutable,
   useFileActionsRestore
 } from './index'
 import {
@@ -57,11 +58,13 @@ export const useFileActions = () => {
   const { actions: fallbackToDownloadAction } = useFileActionFallbackToDownload()
   const { actions: navigateActions } = useFileActionsNavigate()
   const { actions: restoreActions } = useFileActionsRestore()
+  const { actions: immutableActions } = useFileActionsImmutable()
 
   const systemActions = computed<FileAction<any>[]>(() => [
     ...unref(downloadFileActions),
     ...unref(deleteActions),
-    ...unref(restoreActions)
+    ...unref(restoreActions),
+    ...unref(immutableActions)
   ])
 
   const extensionsContextActions = computed(() => {
