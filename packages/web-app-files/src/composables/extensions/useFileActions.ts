@@ -1,4 +1,4 @@
-import { ActionExtension } from '@opencloud-eu/web-pkg'
+import { ActionExtension, useFileActionsJobPipeline } from '@opencloud-eu/web-pkg'
 import {
   batchActionsExtensionPoint,
   contextActionsExtensionPoint,
@@ -51,6 +51,7 @@ export const useFileActions = (): ActionExtension[] => {
   const { actions: immutableActions } = useFileActionsImmutable()
   const { actions: lockVaultActions } = useFileActionsLockVault()
   const { actions: unlockVaultActions } = useFileActionsUnlockVault()
+  const { actions: jobPipelineActions } = useFileActionsJobPipeline()
 
   const singleItemActions = unref(immutableActions).filter(
     (a) => !a.name.startsWith('protect-folder') && !a.name.startsWith('unprotect-folder')
@@ -250,6 +251,20 @@ export const useFileActions = (): ActionExtension[] => {
       extensionPointIds: [batchActionsExtensionPoint.id],
       type: 'action' as const,
       action
+    })),
+    {
+    // Job pipeline actions (dynamically loaded from backend)
+    ...unref(jobPipelineActions).map((action) => ({
+      id: `com.github.opencloud-eu.web.files.context-action.job-${action.name}`,
+      extensionPointIds: [
+        contextActionsExtensionPoint.id,
+        batchActionsExtensionPoint.id
+      ],
+      type: 'action' as const,
+      action: {
+        ...action,
+        category: 'tertiary'
+      }
     })),
     {
       id: 'com.github.opencloud-eu.web.files.context-action.lock-vault',
