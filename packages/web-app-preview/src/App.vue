@@ -110,6 +110,7 @@ import {
   useGetMatchingSpace,
   useKeyboardActions,
   usePreviewService,
+  useAudioPlayerStore,
   useRoute,
   useRouteQuery,
   useRouter
@@ -422,8 +423,26 @@ watch(
   { immediate: true }
 )
 
-watch(activeMediaFile, (newValue, oldValue) => {
+const audioPlayerStore = useAudioPlayerStore()
+
+watch(activeMediaFile, async (newValue, oldValue) => {
   if (!unref(activeMediaFile)) {
+    return
+  }
+
+  // Audio files: delegate to persistent header player and navigate back
+  const file = unref(activeMediaFile)
+  if (file.isAudio) {
+    const url = await getUrlForResource(
+      unref(currentFileContext.space),
+      file.resource
+    )
+    audioPlayerStore.play({
+      id: file.id,
+      name: file.name,
+      url
+    })
+    router.back()
     return
   }
 

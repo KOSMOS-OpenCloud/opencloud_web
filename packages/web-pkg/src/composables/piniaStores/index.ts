@@ -1,4 +1,5 @@
 export * from './apps'
+export * from './audioPlayer'
 export * from './auth'
 export * from './avatars'
 export * from './capabilities'

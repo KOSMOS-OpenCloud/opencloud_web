@@ -20,7 +20,8 @@
         </picture>
       </router-link>
     </div>
-    <div class="topbar-center flex justify-end sm:justify-center col-2">
+    <div class="topbar-center flex justify-end sm:justify-center col-2 gap-2">
+      <audio-player />
       <custom-component-target :extension-point="topBarCenterExtensionPoint" />
     </div>
     <div class="flex items-center justify-end gap-5 col-3">
@@ -72,6 +73,7 @@ import {
 import { RouteLocationNormalizedLoaded } from 'vue-router'
 import { useGettext } from 'vue3-gettext'
 import ApplicationsMenu from './ApplicationsMenu.vue'
+import AudioPlayer from './AudioPlayer.vue'
 
 const { $gettext } = useGettext()
 const capabilityStore = useCapabilityStore()
