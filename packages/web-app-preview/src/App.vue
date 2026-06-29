@@ -127,6 +127,7 @@ import {
   useImageControls,
   usePreviewDimensions
 } from './composables'
+import { parsePlaylist } from './helpers/playlistParser'
 import { mimeTypes } from './mimeTypes'
 import { RouteLocationRaw } from 'vue-router'
 import { SortDir } from '@opencloud-eu/design-system/helpers'
@@ -433,15 +434,34 @@ watch(activeMediaFile, async (newValue, oldValue) => {
   // Audio files: delegate to persistent header player and navigate back
   const file = unref(activeMediaFile)
   if (file.isAudio) {
-    const url = await getUrlForResource(
-      unref(currentFileContext.space),
-      file.resource
-    )
-    audioPlayerStore.play({
-      id: file.id,
-      name: file.name,
-      url
-    })
+    const { isFileTypePlaylist } = useFileTypes()
+
+    if (isFileTypePlaylist(file.resource)) {
+      // Playlist file: download content, parse, play first stream URL
+      try {
+        const url = await getUrlForResource(unref(currentFileContext.space), file.resource)
+        const response = await fetch(url)
+        const content = await response.text()
+        const entries = parsePlaylist(content, file.name)
+        if (entries.length > 0) {
+          audioPlayerStore.play({
+            id: file.id,
+            name: entries[0].title,
+            url: entries[0].url
+          })
+        }
+      } catch {
+        // fallback: ignore
+      }
+    } else {
+      // Direct audio file
+      const url = await getUrlForResource(unref(currentFileContext.space), file.resource)
+      audioPlayerStore.play({
+        id: file.id,
+        name: file.name,
+        url
+      })
+    }
     router.back()
     return
   }
