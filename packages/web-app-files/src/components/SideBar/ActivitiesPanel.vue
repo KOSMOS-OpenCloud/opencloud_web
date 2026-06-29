@@ -245,7 +245,7 @@ const loadActivitiesTask = useTask(function* (signal) {
     if (httpClient) {
       try {
         const { data } = yield httpClient.get(
-          `/graph/v1.0/extensions/org.libregraph/activities?kql=${encodeURIComponent(filters.join(' AND '))}`
+          `/graph/v1beta1/extensions/org.libregraph/activities?kql=${encodeURIComponent(filters.join(' AND '))}`
         )
         if (data.groupBy) {
           groupedData.value = data as GroupedResponse

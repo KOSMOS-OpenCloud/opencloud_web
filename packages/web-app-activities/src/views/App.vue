@@ -204,7 +204,7 @@ export default defineComponent({
         if (axiosClient) {
           try {
             const { data } = yield axiosClient.get(
-              `/graph/v1.0/extensions/org.libregraph/activities?kql=${encodeURIComponent(filters.join(' AND '))}`
+              `/graph/v1beta1/extensions/org.libregraph/activities?kql=${encodeURIComponent(filters.join(' AND '))}`
             )
             if (data.groupBy) {
               groupedResponse.value = data as GroupedResponse
