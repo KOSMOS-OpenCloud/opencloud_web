@@ -437,18 +437,19 @@ watch(activeMediaFile, async (newValue, oldValue) => {
     const { isFileTypePlaylist } = useFileTypes()
 
     if (isFileTypePlaylist(file.resource)) {
-      // Playlist file: download content, parse, play first stream URL
+      // Playlist file: download content, parse, play tracks
       try {
         const url = await getUrlForResource(unref(currentFileContext.space), file.resource)
         const response = await fetch(url)
         const content = await response.text()
         const entries = parsePlaylist(content, file.name)
         if (entries.length > 0) {
-          audioPlayerStore.play({
-            id: file.id,
-            name: entries[0].title,
-            url: entries[0].url
-          })
+          const tracks = entries.map((e, i) => ({
+            id: `${file.id}-${i}`,
+            name: e.title,
+            url: e.url
+          }))
+          audioPlayerStore.playList(tracks)
         }
       } catch {
         // fallback: ignore
