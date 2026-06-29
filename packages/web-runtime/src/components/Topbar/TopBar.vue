@@ -20,12 +20,12 @@
         </picture>
       </router-link>
     </div>
-    <div class="topbar-center flex justify-end sm:justify-center col-2 gap-2">
-      <audio-player />
+    <div class="topbar-center flex justify-end sm:justify-center col-2">
       <custom-component-target :extension-point="topBarCenterExtensionPoint" />
     </div>
     <div class="flex items-center justify-end gap-5 col-3">
       <template v-if="!isEmbedModeEnabled">
+        <audio-player />
         <custom-component-target :extension-point="topBarRightExtensionPoint" />
         <feedback-link v-if="isFeedbackLinkEnabled" v-bind="feedbackLinkOptions" />
         <notifications v-if="isNotificationBellEnabled" />
