@@ -25,7 +25,7 @@
       controls
       autoplay
       preload="auto"
-      class="h-8 max-w-56"
+      class="h-10 w-64"
       @ended="onEnded"
     >
       <source :src="currentTrack.url" />
