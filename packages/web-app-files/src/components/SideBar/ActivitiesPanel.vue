@@ -42,7 +42,8 @@
               :name="expandedGroups.has(group.key) ? 'arrow-down-s' : 'arrow-right-s'"
               size="small"
             />
-            <span class="font-semibold text-sm ml-1">{{ group.label }}</span>
+            <span class="font-semibold text-sm ml-1">{{ groupName(group.label) }}</span>
+            <span v-if="groupContext(group.label)" class="text-role-on-surface-variant text-xs ml-1">{{ groupContext(group.label) }}</span>
             <span class="ml-1 text-role-on-surface-variant text-xs">({{ group.count }})</span>
           </div>
           <oc-list v-if="expandedGroups.has(group.key)" class="oc-timeline break-all ml-3">
@@ -170,6 +171,12 @@ const groupModes = [
   { value: 'user', label: $gettext('Nutzer') },
   { value: 'container', label: $gettext('Ordner') }
 ]
+
+const groupName = (label: string) => label.split(' → ')[0]
+const groupContext = (label: string) => {
+  const parts = label.split(' → ')
+  return parts.length > 1 ? `in ${parts[1]}` : ''
+}
 
 const toggleGroup = (key: string) => {
   const s = new Set(unref(expandedGroups))
