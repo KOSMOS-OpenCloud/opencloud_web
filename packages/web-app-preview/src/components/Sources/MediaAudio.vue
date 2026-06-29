@@ -3,11 +3,11 @@
     <audio
       :key="`media-audio-${file.id}`"
       controls
-      preload="preload"
+      preload="auto"
       :autoplay="isAutoPlayEnabled"
       @ended="$emit('ended')"
     >
-      <source :src="file.url" :type="file.mimeType" />
+      <source :src="file.url" />
     </audio>
     <p v-if="audioText" class="text-role-on-surface-variant text-sm" v-text="audioText"></p>
   </div>
