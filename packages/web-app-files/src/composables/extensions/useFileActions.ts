@@ -252,7 +252,6 @@ export const useFileActions = (): ActionExtension[] => {
       type: 'action' as const,
       action
     })),
-    {
     // Job pipeline actions (dynamically loaded from backend)
     ...unref(jobPipelineActions).map((action) => ({
       id: `com.github.opencloud-eu.web.files.context-action.job-${action.name}`,
