@@ -1,26 +1,40 @@
-import { computed, ref, unref, Ref } from 'vue'
+import { computed, ref, unref, watch } from 'vue'
 import { useJobService, useJobProgress, Pipeline } from '../../jobs'
 import { FileAction } from '../../../composables/actions'
+import { useAuthStore } from '../../../composables/piniaStores'
 import { Resource } from '@opencloud-eu/web-client'
 
 export const useFileActionsJobPipeline = () => {
   const jobService = useJobService()
   const { showJobProgress } = useJobProgress()
+  const authStore = useAuthStore()
   const pipelines = ref<Pipeline[]>([])
   const loaded = ref(false)
+  const loading = ref(false)
 
   const loadPipelines = async () => {
-    if (unref(loaded)) return
+    if (unref(loaded) || unref(loading)) return
+    if (!authStore.accessToken) return
+    loading.value = true
+    console.debug('[jobengine] loading pipelines...')
     try {
       pipelines.value = await jobService.getPipelines()
-    } catch {
+      loaded.value = true
+      console.debug('[jobengine] loaded', pipelines.value.length, 'pipelines:', pipelines.value.map((p) => p.id))
+    } catch (e) {
+      console.warn('[jobengine] failed to load pipelines:', e)
       pipelines.value = []
+    } finally {
+      loading.value = false
     }
-    loaded.value = true
   }
 
-  // Load pipelines on first access
-  loadPipelines()
+  // Load pipelines once auth token is available
+  watch(() => authStore.accessToken, (token) => {
+    if (token && !unref(loaded)) {
+      loadPipelines()
+    }
+  }, { immediate: true })
 
   const actions = computed<FileAction[]>(() => {
     return unref(pipelines).map((pipeline) => ({
@@ -31,6 +45,7 @@ export const useFileActionsJobPipeline = () => {
         if (!resources.length) return false
         if (!pipeline.batch && resources.length > 1) return false
         return resources.some((r) =>
+          pipeline.sourceTypes.includes('*') ||
           pipeline.sourceTypes.includes(r.mimeType?.toLowerCase() || '')
         )
       },

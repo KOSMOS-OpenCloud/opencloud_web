@@ -10,6 +10,7 @@ import {
   useRouter,
   useSearch,
   useSpaceActionsCreate,
+  useFileActionsJobPipeline,
   useUserStore
 } from '@opencloud-eu/web-pkg'
 import { computed, markRaw, unref } from 'vue'
@@ -47,9 +48,23 @@ export const extensions = (appInfo: ApplicationInformation) => {
   const folderViewExtensions = useFolderViews()
   const sideBarPanelExtensions = useSideBarPanels()
   const folderVaultIndicator = useFolderVaultIndicator()
+  const { actions: jobPipelineActions } = useFileActionsJobPipeline()
 
   return computed<Extension[]>(() => [
     ...fileActionExtensions,
+    // Job pipeline actions (dynamically loaded, reactive)
+    ...unref(jobPipelineActions).map((action) => ({
+      id: `com.github.opencloud-eu.web.files.context-action.job-${action.name}`,
+      extensionPointIds: [
+        'global.files.context-actions',
+        'global.files.batch-actions'
+      ],
+      type: 'action' as const,
+      action: {
+        ...action,
+        category: 'tertiary'
+      }
+    })),
     ...spaceActionExtensions,
     ...trashActionExtensions,
     ...uploadActionExtensions,
