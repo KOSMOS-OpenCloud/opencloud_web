@@ -252,23 +252,17 @@ export const useFileActions = (): ActionExtension[] => {
       type: 'action' as const,
       action
     })),
-    {
+    ...unref(lockVaultActions).map((action) => ({
       id: 'com.github.opencloud-eu.web.files.context-action.lock-vault',
       extensionPointIds: [contextActionsExtensionPoint.id, fileSideBarActionsExtensionPoint.id],
-      type: 'action',
-      action: {
-        ...unref(lockVaultActions)[0],
-        category: 'tertiary'
-      }
-    },
-    {
+      type: 'action' as const,
+      action: { ...action, category: 'tertiary' }
+    })),
+    ...unref(unlockVaultActions).map((action) => ({
       id: 'com.github.opencloud-eu.web.files.context-action.unlock-vault',
       extensionPointIds: [contextActionsExtensionPoint.id, fileSideBarActionsExtensionPoint.id],
-      type: 'action',
-      action: {
-        ...unref(unlockVaultActions)[0],
-        category: 'tertiary'
-      }
-    }
+      type: 'action' as const,
+      action: { ...action, category: 'tertiary' }
+    }))
   ]
 }
