@@ -197,11 +197,13 @@ function removeJobShares(jobId: string) {
 }
 
 function generatePassword(): string {
-  const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
+  const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!#@$%&'
   let pw = ''
   for (let i = 0; i < 24; i++) {
     pw += chars[Math.floor(Math.random() * chars.length)]
   }
+  // Ensure at least one special character
+  pw = pw.slice(0, 23) + '!#@$%&'[Math.floor(Math.random() * 6)]
   return pw
 }
 
