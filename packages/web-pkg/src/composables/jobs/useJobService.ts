@@ -86,7 +86,8 @@ export const useJobService = () => {
     if (pipeline.shares?.origin && resources.length > 0) {
       const resource = resources[0]
       const password = generatePassword()
-      const link = await createJobShare(space, resource, password)
+      const writable = pipeline.shares?.destination === 'same'
+      const link = await createJobShare(space, resource, password, writable)
       shares.push({
         permId: link.id,
         driveId: space.id,
@@ -113,13 +114,14 @@ export const useJobService = () => {
   const createJobShare = async (
     space: SpaceResource,
     resource: Resource,
-    password: string
+    password: string,
+    writable = false
   ) => {
     const graphClient = clientService.graphAuthenticated
     const expiresIn = new Date(Date.now() + 3600 * 1000) // 1 hour
 
     const link = await graphClient.permissions.createLink(space.id, resource.id, {
-      type: SharingLinkType.View,
+      type: writable ? SharingLinkType.Edit : SharingLinkType.View,
       password,
       expirationDateTime: expiresIn.toISOString()
     })
