@@ -11,6 +11,9 @@ export const getWebDavPath = (
     const needsTrailingSlash = !path.endsWith('/') &&
       BROWSABLE_ARCHIVE_EXTENSIONS.some((ext) => path.toLowerCase().endsWith(ext))
     const effectivePath = needsTrailingSlash ? path + '/' : path
+    if (needsTrailingSlash) {
+      console.debug('[zipfs-debug] SLASH ADDED:', path, '->', effectivePath)
+    }
     return urlJoin(space.webDavPath, effectivePath, { trailingSlash: 'keep' })
   }
 

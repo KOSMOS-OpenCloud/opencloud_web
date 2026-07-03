@@ -111,6 +111,7 @@ export const ListFilesFactory = (
           webDavPath = buildWebDavSpacesTrashPath(space.id)
         } else {
           webDavPath = getWebDavPath(space, { fileId, path })
+          console.debug('[zipfs-debug] listFiles webDavPath:', webDavPath, 'fileId:', fileId, 'path:', path)
         }
 
         webDavResources = await dav.propfind(webDavPath, {
