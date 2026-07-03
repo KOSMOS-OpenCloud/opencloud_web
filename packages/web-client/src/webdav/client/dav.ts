@@ -191,7 +191,7 @@ export class DAV {
   }
 
   private async request(path: string, options: RequestOptionsCustom): Promise<DavResult> {
-    const url = urlJoin(this.davPath, encodePath(path), { leadingSlash: true })
+    const url = urlJoin(this.davPath, encodePath(path), { leadingSlash: true, trailingSlash: 'keep' })
 
     const requestOptions = {
       ...options,
