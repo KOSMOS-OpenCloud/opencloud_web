@@ -1,13 +1,14 @@
 import { computed, ref, unref, watch } from 'vue'
 import { useJobService, useJobProgress, Pipeline } from '../../jobs'
-import { FileAction } from '../../../composables/actions'
+import { FileAction, FileActionOptions } from '../../../composables/actions'
 import { useAuthStore } from '../../../composables/piniaStores'
-import { Resource } from '@opencloud-eu/web-client'
+import { useGetMatchingSpace } from '../../../composables/spaces'
 
 export const useFileActionsJobPipeline = () => {
   const jobService = useJobService()
   const { showJobProgress } = useJobProgress()
   const authStore = useAuthStore()
+  const { getMatchingSpace } = useGetMatchingSpace()
   const pipelines = ref<Pipeline[]>([])
   const loaded = ref(false)
   const loading = ref(false)
@@ -37,35 +38,49 @@ export const useFileActionsJobPipeline = () => {
   }, { immediate: true })
 
   const actions = computed<FileAction[]>(() => {
-    return unref(pipelines).map((pipeline) => ({
-      name: `job-${pipeline.id}`,
-      icon: pipeline.icon || 'play',
-      label: () => pipeline.label,
-      isVisible: ({ resources }: { resources: Resource[] }) => {
-        if (!resources.length) return false
-        if (!pipeline.batch && resources.length > 1) return false
-        return resources.some((r) =>
-          pipeline.sourceTypes.includes('*') ||
-          pipeline.sourceTypes.includes(r.mimeType?.toLowerCase() || '')
-        )
-      },
-      handler: async ({ resources }: { resources: Resource[] }) => {
-        const resourceIds = resources.map((r) => r.fileId).filter(Boolean) as string[]
-        if (!resourceIds.length) return
+    return unref(pipelines)
+      .filter((p) => !p.menu || p.menu === 'context')
+      .map((pipeline) => ({
+        name: `job-${pipeline.id}`,
+        icon: pipeline.icon || 'play',
+        label: () => pipeline.label,
+        isVisible: ({ resources }: FileActionOptions) => {
+          if (!resources?.length) return false
+          if (!pipeline.sourceTypes?.length) return true
+          return resources.some((r) =>
+            pipeline.sourceTypes.includes('*') ||
+            pipeline.sourceTypes.includes(r.mimeType?.toLowerCase() || '')
+          )
+        },
+        handler: async ({ resources }: FileActionOptions) => {
+          if (!resources?.length) return
 
-        try {
-          const job = await jobService.submitJob({
-            pipeline: pipeline.id,
-            resources: resourceIds
-          })
-          showJobProgress(job.jobId)
-        } catch (e: any) {
-          console.error('Job submission failed:', e)
-        }
-      },
-      componentType: 'button',
-      class: 'oc-files-actions-job-pipeline'
-    }))
+          try {
+            if (pipeline.shares?.origin) {
+              // Share-based job: create shares, submit with WebDAV URLs
+              const space = getMatchingSpace(resources[0])
+              if (!space) {
+                console.error('No matching space for resource')
+                return
+              }
+              const { job } = await jobService.submitJobWithShares(pipeline, resources, space)
+              showJobProgress(job.jobId)
+            } else {
+              // Param-only job: submit without shares
+              const resourceIds = resources.map((r) => r.fileId).filter(Boolean) as string[]
+              const job = await jobService.submitJob({
+                pipeline: pipeline.id,
+                resources: resourceIds
+              })
+              showJobProgress(job.jobId)
+            }
+          } catch (e: any) {
+            console.error('Job submission failed:', e)
+          }
+        },
+        componentType: 'button',
+        class: 'oc-files-actions-job-pipeline'
+      }))
   })
 
   return { actions, pipelines, loadPipelines }
