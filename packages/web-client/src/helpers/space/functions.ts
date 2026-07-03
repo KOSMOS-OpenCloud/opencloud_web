@@ -307,10 +307,13 @@ export function buildSpace(
     },
     getDomSelector: () => extractDomSelector(data.id),
     getDriveAliasAndItem({ path }: Resource): string {
-      return urlJoin(this.driveAlias, path, {
+      console.debug('[zipfs-debug] getDriveAliasAndItem input path:', JSON.stringify(path))
+      const result = urlJoin(this.driveAlias, path, {
         leadingSlash: false,
         trailingSlash: 'keep'
       })
+      console.debug('[zipfs-debug] getDriveAliasAndItem result:', result)
+      return result
     },
     getWebDavUrl({ path }: { path: string }): string {
       return urlJoin(webDavUrl, path)

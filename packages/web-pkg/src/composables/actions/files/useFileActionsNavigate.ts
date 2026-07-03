@@ -70,6 +70,7 @@ export const useFileActionsNavigate = () => {
         const resourcePath = isBrowsableArchive(resources[0])
           ? resources[0].path + '/'
           : resources[0].path
+        console.debug('[zipfs-debug] navigate resourcePath:', JSON.stringify(resourcePath))
         return merge(
           {},
           unref(routeName),
