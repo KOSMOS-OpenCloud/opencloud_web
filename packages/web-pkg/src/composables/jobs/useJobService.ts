@@ -1,6 +1,5 @@
 import { useClientService } from '../clientService'
-import { useSharesStore } from '../piniaStores/shares'
-import { useSpacesStore } from '../piniaStores/spaces'
+import { usePasswordPolicyService } from '../passwordPolicyService'
 import type { Resource, SpaceResource } from '@opencloud-eu/web-client'
 import { SharingLinkType } from '@opencloud-eu/web-client/graph/generated'
 
@@ -55,6 +54,7 @@ interface ShareRef {
 
 export const useJobService = () => {
   const clientService = useClientService()
+  const passwordPolicyService = usePasswordPolicyService()
 
   const getPipelines = async (): Promise<Pipeline[]> => {
     const httpClient = (clientService as any).httpAuthenticated
@@ -85,7 +85,7 @@ export const useJobService = () => {
     const shareType = pipeline.shares?.type
     if (shareType && resources.length > 0) {
       const resource = resources[0]
-      const password = generatePassword()
+      const password = passwordPolicyService.generatePassword()
       const writable = ['parentDir', 'sameFile', 'sameDir', 'srcDstFile', 'srcDstDir'].includes(shareType)
       const useParent = shareType === 'parentDir'
 
@@ -196,14 +196,7 @@ function removeJobShares(jobId: string) {
   jobShareStore.delete(jobId)
 }
 
-function generatePassword(): string {
-  const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!#@$%&'
-  let pw = ''
-  for (let i = 0; i < 24; i++) {
-    pw += chars[Math.floor(Math.random() * chars.length)]
-  }
-  // Ensure at least one special character
-  pw = pw.slice(0, 23) + '!#@$%&'[Math.floor(Math.random() * 6)]
+// Password generation removed — uses PasswordPolicyService.generatePassword() instead
   return pw
 }
 
