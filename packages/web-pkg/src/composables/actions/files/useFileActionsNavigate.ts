@@ -13,7 +13,17 @@ import { useGettext } from 'vue3-gettext'
 import { FileAction } from '../types'
 import { useResourcesStore } from '../../piniaStores'
 import { storeToRefs } from 'pinia'
-import { isProjectSpaceResource, isTrashResource } from '@opencloud-eu/web-client'
+import { isProjectSpaceResource, isTrashResource, Resource } from '@opencloud-eu/web-client'
+
+const BROWSABLE_ARCHIVE_TYPES = [
+  'application/zip',
+  'application/x-zip-compressed'
+]
+
+function isBrowsableArchive(resource: Resource): boolean {
+  if (resource.isFolder) return false
+  return BROWSABLE_ARCHIVE_TYPES.includes(resource.mimeType?.toLowerCase() || '')
+}
 
 export const useFileActionsNavigate = () => {
   const router = useRouter()
@@ -54,14 +64,17 @@ export const useFileActionsNavigate = () => {
           return false
         }
 
-        return resources[0].isFolder || resources[0].type === 'space'
+        return resources[0].isFolder || resources[0].type === 'space' || isBrowsableArchive(resources[0])
       },
       route: ({ space, resources }) => {
+        const resourcePath = isBrowsableArchive(resources[0])
+          ? resources[0].path + '/'
+          : resources[0].path
         return merge(
           {},
           unref(routeName),
           createFileRouteOptions(space, {
-            path: resources[0].path,
+            path: resourcePath,
             fileId: resources[0].fileId
           })
         )
