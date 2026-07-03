@@ -196,9 +196,6 @@ function removeJobShares(jobId: string) {
   jobShareStore.delete(jobId)
 }
 
-// Password generation removed — uses PasswordPolicyService.generatePassword() instead
-  return pw
-}
 
 function buildWebdavUrl(webUrl: string, password: string): string {
   // Convert share web URL to WebDAV public-files URL
