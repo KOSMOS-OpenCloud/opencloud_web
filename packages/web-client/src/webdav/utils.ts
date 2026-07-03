@@ -1,18 +1,17 @@
 import { isPublicSpaceResource, SpaceResource } from '../helpers'
 import { urlJoin } from '../utils'
 
-/**
- * Builds a webdav path based on a given `path` or `fileId`. A `path` takes precedence.
- **/
+const BROWSABLE_ARCHIVE_EXTENSIONS = ['.zip', '.7z']
+
 export const getWebDavPath = (
   space: SpaceResource,
   { fileId, path, name }: { fileId?: string; path?: string; name?: string }
 ) => {
   if (path !== undefined) {
-    console.debug('[zipfs-debug] getWebDavPath input path:', JSON.stringify(path))
-    const result = urlJoin(space.webDavPath, path, { trailingSlash: 'keep' })
-    console.debug('[zipfs-debug] getWebDavPath result:', result)
-    return result
+    const needsTrailingSlash = !path.endsWith('/') &&
+      BROWSABLE_ARCHIVE_EXTENSIONS.some((ext) => path.toLowerCase().endsWith(ext))
+    const effectivePath = needsTrailingSlash ? path + '/' : path
+    return urlJoin(space.webDavPath, effectivePath, { trailingSlash: 'keep' })
   }
 
   if (fileId !== undefined) {
