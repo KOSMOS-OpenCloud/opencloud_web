@@ -56,7 +56,7 @@ export const useFileActionsJobPipeline = () => {
           if (!resources?.length) return
 
           try {
-            if (pipeline.shares?.origin) {
+            if (pipeline.shares?.type) {
               // Share-based job: create shares, submit with WebDAV URLs
               const space = getMatchingSpace(resources[0])
               if (!space) {

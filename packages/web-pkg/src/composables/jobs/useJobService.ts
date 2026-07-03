@@ -5,8 +5,7 @@ import type { Resource, SpaceResource } from '@opencloud-eu/web-client'
 import { SharingLinkType } from '@opencloud-eu/web-client/graph/generated'
 
 export interface SharesConfig {
-  origin: boolean
-  destination?: string // "picker" | "same" | ""
+  type: string // srcFile | srcDir | parentDir | sameFile | sameDir | srcDstFile | srcDstDir
 }
 
 export interface Pipeline {
@@ -83,18 +82,27 @@ export const useJobService = () => {
     const shares: ShareRef[] = []
     const jobParams: Record<string, any> = { ...(params || {}) }
 
-    if (pipeline.shares?.origin && resources.length > 0) {
+    const shareType = pipeline.shares?.type
+    if (shareType && resources.length > 0) {
       const resource = resources[0]
       const password = generatePassword()
-      const writable = pipeline.shares?.destination === 'same'
-      const link = await createJobShare(space, resource, password, writable)
+      const writable = ['parentDir', 'sameFile', 'sameDir', 'srcDstFile', 'srcDstDir'].includes(shareType)
+      const useParent = shareType === 'parentDir'
+
+      const shareResource = useParent && resource.parentFolderId
+        ? { ...resource, id: resource.parentFolderId } as Resource
+        : resource
+      const link = await createJobShare(space, shareResource, password, writable)
       shares.push({
         permId: link.id,
         driveId: space.id,
-        itemId: resource.id
+        itemId: shareResource.id
       })
       jobParams.origin_url = buildWebdavUrl(link.webUrl, password)
       jobParams.origin_password = password
+      if (useParent) {
+        jobParams.origin_filename = resource.name
+      }
     }
 
     const job = await submitJob({
