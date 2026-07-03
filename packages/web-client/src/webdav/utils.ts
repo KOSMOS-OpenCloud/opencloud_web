@@ -13,7 +13,7 @@ export const getWebDavPath = (
   { fileId, path, name }: { fileId?: string; path?: string; name?: string }
 ) => {
   if (path !== undefined) {
-    return urlJoin(space.webDavPath, path)
+    return urlJoin(space.webDavPath, path, { trailingSlash: 'keep' })
   }
 
   if (fileId !== undefined) {

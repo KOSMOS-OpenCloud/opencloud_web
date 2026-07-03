@@ -308,7 +308,8 @@ export function buildSpace(
     getDomSelector: () => extractDomSelector(data.id),
     getDriveAliasAndItem({ path }: Resource): string {
       return urlJoin(this.driveAlias, path, {
-        leadingSlash: false
+        leadingSlash: false,
+        trailingSlash: 'keep'
       })
     },
     getWebDavUrl({ path }: { path: string }): string {
