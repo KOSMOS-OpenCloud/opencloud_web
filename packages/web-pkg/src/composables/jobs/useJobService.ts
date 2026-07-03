@@ -1,4 +1,13 @@
 import { useClientService } from '../clientService'
+import { useSharesStore } from '../piniaStores/shares'
+import { useSpacesStore } from '../piniaStores/spaces'
+import type { Resource, SpaceResource } from '@opencloud-eu/web-client'
+import { SharingLinkType } from '@opencloud-eu/web-client/graph/generated'
+
+export interface SharesConfig {
+  origin: boolean
+  destination?: string // "picker" | "same" | ""
+}
 
 export interface Pipeline {
   id: string
@@ -6,8 +15,11 @@ export interface Pipeline {
   icon: string
   sourceTypes: string[]
   targetLocation: string
-  userChoosableTarget: boolean
-  batch: boolean
+  menu?: string
+  shares?: SharesConfig
+  jobType: string
+  notification?: string
+  designedBy?: string
 }
 
 export interface JobSubmission {
@@ -15,6 +27,7 @@ export interface JobSubmission {
   resources: string[]
   targetPath?: string
   createTarget?: boolean
+  params?: Record<string, any>
 }
 
 export interface JobResult {
@@ -35,6 +48,12 @@ export interface Job {
   error?: string
 }
 
+interface ShareRef {
+  permId: string
+  driveId: string
+  itemId: string
+}
+
 export const useJobService = () => {
   const clientService = useClientService()
 
@@ -48,6 +67,79 @@ export const useJobService = () => {
     const httpClient = (clientService as any).httpAuthenticated
     const { data } = await httpClient.post('/api/v0/jobs', submission)
     return data
+  }
+
+  /**
+   * Submit a job with automatic share creation based on pipeline.shares config.
+   * Creates public link shares for origin (and optionally destination),
+   * passes WebDAV URLs as job params, and cleans up shares after completion.
+   */
+  const submitJobWithShares = async (
+    pipeline: Pipeline,
+    resources: Resource[],
+    space: SpaceResource,
+    params?: Record<string, any>
+  ): Promise<{ job: Job; shares: ShareRef[] }> => {
+    const shares: ShareRef[] = []
+    const jobParams: Record<string, any> = { ...(params || {}) }
+
+    if (pipeline.shares?.origin && resources.length > 0) {
+      const resource = resources[0]
+      const password = generatePassword()
+      const link = await createJobShare(space, resource, password)
+      shares.push({
+        permId: link.id,
+        driveId: space.id,
+        itemId: resource.id
+      })
+      jobParams.origin_url = buildWebdavUrl(link.webUrl, password)
+      jobParams.origin_password = password
+    }
+
+    const job = await submitJob({
+      pipeline: pipeline.id,
+      resources: resources.map((r) => r.id),
+      params: jobParams
+    })
+
+    // Store share refs for cleanup
+    if (shares.length > 0) {
+      storeJobShares(job.jobId, shares)
+    }
+
+    return { job, shares }
+  }
+
+  const createJobShare = async (
+    space: SpaceResource,
+    resource: Resource,
+    password: string
+  ) => {
+    const graphClient = clientService.graphAuthenticated
+    const expiresIn = new Date(Date.now() + 3600 * 1000) // 1 hour
+
+    const link = await graphClient.permissions.createLink(space.id, resource.id, {
+      type: SharingLinkType.View,
+      password,
+      expirationDateTime: expiresIn.toISOString()
+    })
+
+    return link
+  }
+
+  const cleanupJobShares = async (jobId: string) => {
+    const refs = getJobShares(jobId)
+    if (!refs?.length) return
+
+    const graphClient = clientService.graphAuthenticated
+    for (const ref of refs) {
+      try {
+        await graphClient.permissions.deletePermission(ref.driveId, ref.itemId, ref.permId)
+      } catch {
+        // share may already be expired
+      }
+    }
+    removeJobShares(jobId)
   }
 
   const getJobStatus = async (jobId: string): Promise<Job> => {
@@ -68,5 +160,49 @@ export const useJobService = () => {
     return data.jobs || []
   }
 
-  return { getPipelines, submitJob, getJobStatus, cancelJob, listJobs }
+  return {
+    getPipelines,
+    submitJob,
+    submitJobWithShares,
+    cleanupJobShares,
+    getJobStatus,
+    cancelJob,
+    listJobs
+  }
+}
+
+// Simple in-memory store for job → share refs (cleanup tracking)
+const jobShareStore = new Map<string, ShareRef[]>()
+
+function storeJobShares(jobId: string, shares: ShareRef[]) {
+  jobShareStore.set(jobId, shares)
+}
+
+function getJobShares(jobId: string): ShareRef[] | undefined {
+  return jobShareStore.get(jobId)
+}
+
+function removeJobShares(jobId: string) {
+  jobShareStore.delete(jobId)
+}
+
+function generatePassword(): string {
+  const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
+  let pw = ''
+  for (let i = 0; i < 24; i++) {
+    pw += chars[Math.floor(Math.random() * chars.length)]
+  }
+  return pw
+}
+
+function buildWebdavUrl(webUrl: string, password: string): string {
+  // Convert share web URL to WebDAV public-files URL
+  // e.g. https://cloud.example.com/s/abc123 → https://cloud.example.com/dav/public-files/abc123
+  try {
+    const url = new URL(webUrl)
+    const token = url.pathname.split('/').pop()
+    return `${url.origin}/dav/public-files/${token}`
+  } catch {
+    return webUrl
+  }
 }

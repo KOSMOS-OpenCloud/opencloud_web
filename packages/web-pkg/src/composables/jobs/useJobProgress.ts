@@ -17,19 +17,22 @@ export const useJobProgress = () => {
 
         if (job.status === 'completed') {
           stopPolling(jobId)
+          await jobService.cleanupJobShares(jobId)
           messageStore.showMessage({
-            title: `${job.pipeline}: ${job.completed}/${job.total} fertig`,
+            title: `${job.pipeline}: fertig`,
             status: 'success'
           })
           onComplete?.(job)
         } else if (job.status === 'failed') {
           stopPolling(jobId)
+          await jobService.cleanupJobShares(jobId)
           messageStore.showMessage({
             title: `${job.pipeline} fehlgeschlagen: ${job.error || 'Unbekannter Fehler'}`,
             status: 'danger'
           })
         } else if (job.status === 'cancelled') {
           stopPolling(jobId)
+          await jobService.cleanupJobShares(jobId)
           messageStore.showMessage({
             title: `${job.pipeline} abgebrochen`,
             status: 'warning'
