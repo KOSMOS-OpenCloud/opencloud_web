@@ -127,16 +127,12 @@ export const useDriveResolver = (options: DriveResolverOptions = {}): DriveResol
 
         if (matchingSpace) {
           path = driveAliasAndItem.slice(matchingSpace.driveAlias.length)
-          console.debug('[zipfs-debug] driveResolver driveAliasAndItem:', JSON.stringify(driveAliasAndItem), 'driveAlias:', JSON.stringify(matchingSpace.driveAlias), 'extracted path:', JSON.stringify(path))
         }
       }
       space.value = matchingSpace
-      console.debug('[zipfs-debug] driveResolver path before urlJoin:', JSON.stringify(path))
       item.value = urlJoin(path, {
-        leadingSlash: true,
-        trailingSlash: 'keep'
+        leadingSlash: true
       })
-      console.debug('[zipfs-debug] driveResolver item.value:', JSON.stringify(item.value))
     },
     { immediate: true, deep: true }
   )

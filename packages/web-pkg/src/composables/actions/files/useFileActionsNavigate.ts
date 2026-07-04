@@ -67,15 +67,11 @@ export const useFileActionsNavigate = () => {
         return resources[0].isFolder || resources[0].type === 'space' || isBrowsableArchive(resources[0])
       },
       route: ({ space, resources }) => {
-        const resourcePath = isBrowsableArchive(resources[0])
-          ? resources[0].path + '/'
-          : resources[0].path
-        console.debug('[zipfs-debug] navigate resourcePath:', JSON.stringify(resourcePath))
         return merge(
           {},
           unref(routeName),
           createFileRouteOptions(space, {
-            path: resourcePath,
+            path: resources[0].path,
             fileId: resources[0].fileId
           })
         )
