@@ -129,6 +129,7 @@ export const ListFilesFactory = (
 
         const resourceIsSpace = fileId === space.id
         if (fileId && !resourceIsSpace && resources[0].fileId && fileId !== resources[0].fileId) {
+          console.log('[ZIPFS] fileId mismatch, correcting path', { urlFileId: fileId, responseFileId: resources[0].fileId, path, childCount: resources.length - 1 })
           return listFilesCorrectedPath()
         }
         return { resource: resources[0], children: resources.slice(1) } as ListFilesResult

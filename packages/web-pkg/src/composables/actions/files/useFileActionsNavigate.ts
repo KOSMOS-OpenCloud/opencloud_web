@@ -17,12 +17,24 @@ import { isProjectSpaceResource, isTrashResource, Resource } from '@opencloud-eu
 
 const BROWSABLE_ARCHIVE_TYPES = [
   'application/zip',
-  'application/x-zip-compressed'
+  'application/x-zip-compressed',
+  'application/x-iso9660-image',
+  'application/x-raw-disk-image',
+  'application/octet-stream'  // fallback for .img, .squashfs, .ext4, .fat
+]
+
+// Extension-based fallback for formats without distinct MIME types
+const BROWSABLE_ARCHIVE_EXTENSIONS = [
+  '.zip', '.iso', '.img', '.raw', '.squashfs', '.fat', '.ext4'
 ]
 
 function isBrowsableArchive(resource: Resource): boolean {
   if (resource.isFolder) return false
-  return BROWSABLE_ARCHIVE_TYPES.includes(resource.mimeType?.toLowerCase() || '')
+  if (BROWSABLE_ARCHIVE_TYPES.includes(resource.mimeType?.toLowerCase() || '')) {
+    return true
+  }
+  const name = resource.name?.toLowerCase() || ''
+  return BROWSABLE_ARCHIVE_EXTENSIONS.some((ext) => name.endsWith(ext))
 }
 
 export const useFileActionsNavigate = () => {
