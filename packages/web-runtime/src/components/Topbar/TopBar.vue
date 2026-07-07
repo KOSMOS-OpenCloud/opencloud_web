@@ -20,8 +20,9 @@
         </picture>
       </router-link>
     </div>
-    <div v-if="!isAppModeEnabled" class="topbar-center flex justify-end sm:justify-center col-2">
-      <custom-component-target :extension-point="topBarCenterExtensionPoint" />
+    <div class="topbar-center flex justify-end sm:justify-center col-2">
+      <custom-component-target v-if="isAppModeEnabled" :extension-point="appModeNavExtensionPoint" />
+      <custom-component-target v-else :extension-point="topBarCenterExtensionPoint" />
     </div>
     <div class="flex items-center justify-end gap-5 col-3">
       <template v-if="!isEmbedModeEnabled">
@@ -42,6 +43,7 @@
       </template>
     </div>
     <custom-component-target :extension-point="topBarLeftExtensionPoint" />
+    <custom-component-target v-if="isAppModeEnabled" :extension-point="appModeSecondaryNavExtensionPoint" class="col-span-3" />
   </header>
 </template>
 
@@ -67,6 +69,8 @@ import SidebarNavMobile from '../SidebarNav/SidebarNavMobile.vue'
 import { routeNames } from '../../router/names'
 import {
   appMenuExtensionPoint,
+  appModeNavExtensionPoint,
+  appModeSecondaryNavExtensionPoint,
   topBarCenterExtensionPoint,
   topBarLeftExtensionPoint,
   topBarRightExtensionPoint

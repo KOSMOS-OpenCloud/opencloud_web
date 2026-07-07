@@ -49,6 +49,18 @@ export const topBarRightExtensionPoint: ExtensionPoint<CustomComponentExtension>
   multiple: true
 }
 
+export const appModeNavExtensionPoint: ExtensionPoint<CustomComponentExtension> = {
+  id: 'app.runtime.appMode.primaryNav',
+  extensionType: 'customComponent',
+  multiple: false
+}
+
+export const appModeSecondaryNavExtensionPoint: ExtensionPoint<CustomComponentExtension> = {
+  id: 'app.runtime.appMode.secondaryNav',
+  extensionType: 'customComponent',
+  multiple: false
+}
+
 export const extensionPoints = () => {
   return computed<ExtensionPoint<Extension>[]>(() => {
     return [
@@ -57,7 +69,9 @@ export const extensionPoints = () => {
       progressBarExtensionPoint,
       topBarCenterExtensionPoint,
       topBarLeftExtensionPoint,
-      topBarRightExtensionPoint
+      topBarRightExtensionPoint,
+      appModeNavExtensionPoint,
+      appModeSecondaryNavExtensionPoint
     ]
   })
 }
