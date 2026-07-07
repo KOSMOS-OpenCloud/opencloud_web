@@ -136,7 +136,8 @@ import {
   useCapabilityStore,
   useIsAppActive,
   useKeyboardActions,
-  useResourcesStore
+  useResourcesStore,
+  useSpacesStore
 } from '@opencloud-eu/web-pkg'
 import Mark from 'mark.js'
 import { storeToRefs } from 'pinia'
@@ -179,6 +180,7 @@ export default defineComponent({
 
     const resourcesStore = useResourcesStore()
     const { currentFolder } = storeToRefs(resourcesStore)
+    const spacesStore = useSpacesStore()
 
     const locationFilterId = ref(SearchLocationFilterConstants.allFiles)
     const optionsDropRef = useTemplateRef<ComponentPublicInstance<typeof OcDrop>>('optionsDropRef')
@@ -263,6 +265,12 @@ export default defineComponent({
     })
 
     const scope = computed(() => {
+      if (unref(locationFilterId) === SearchLocationFilterConstants.currentSpace) {
+        const space = spacesStore.currentSpace
+        if (space?.fileId) {
+          return space.fileId
+        }
+      }
       if (unref(currentFolderAvailable) && unref(currentFolder)?.fileId) {
         return unref(currentFolder).fileId
       }
@@ -271,6 +279,9 @@ export default defineComponent({
     })
 
     const useScope = computed(() => {
+      if (unref(locationFilterId) === SearchLocationFilterConstants.currentSpace) {
+        return !!spacesStore.currentSpace?.fileId
+      }
       return (
         unref(currentFolderAvailable) &&
         unref(locationFilterId) === SearchLocationFilterConstants.currentFolder

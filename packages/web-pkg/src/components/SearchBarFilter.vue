@@ -89,6 +89,11 @@ export default defineComponent({
         enabled: unref(currentFolderUsable)
       },
       {
+        id: SearchLocationFilterConstants.currentSpace,
+        title: $gettext('Current space'),
+        enabled: unref(currentFolderUsable)
+      },
+      {
         id: SearchLocationFilterConstants.allFiles,
         title: $gettext('All files'),
         enabled: true
