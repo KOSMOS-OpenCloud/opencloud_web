@@ -56,7 +56,7 @@ import TopBar from '../components/Topbar/TopBar.vue'
 import MessageBar from '../components/MessageBar.vue'
 import SidebarNav from '../components/SidebarNav/SidebarNav.vue'
 import UploadInfo from '../components/UploadInfo.vue'
-import { useRouteMeta, useSpacesLoading, useNavItems, useAppMode } from '@opencloud-eu/web-pkg'
+import { useRouteMeta, useSpacesLoading, useNavItems, useAppModeStore } from '@opencloud-eu/web-pkg'
 import { computed, nextTick, onMounted, unref } from 'vue'
 import { useGettext } from 'vue3-gettext'
 import { progressBarExtensionPoint } from '../extensionPoints'
@@ -100,10 +100,10 @@ const hasSidebarNavExtension = computed(() => {
   )
 })
 
-const { isEnabled: isAppModeEnabled } = useAppMode()
+const appModeStore = useAppModeStore()
 
 const isSidebarVisible = computed(() => {
-  if (unref(isAppModeEnabled)) return false
+  if (appModeStore.isEnabled) return false
   return (
     !unref(isTablet) &&
     (unref(navItems).length || unref(hasFloatingActionButton) || unref(hasSidebarNavExtension))

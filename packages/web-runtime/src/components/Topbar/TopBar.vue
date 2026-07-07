@@ -21,7 +21,7 @@
       </router-link>
     </div>
     <div class="topbar-center flex justify-end sm:justify-center col-2">
-      <custom-component-target v-if="isAppModeEnabled" :extension-point="appModeNavExtensionPoint" />
+      <custom-component-target v-if="appModeStore.isEnabled" :extension-point="appModeNavExtensionPoint" />
       <custom-component-target v-else :extension-point="topBarCenterExtensionPoint" />
     </div>
     <div class="flex items-center justify-end gap-5 col-3">
@@ -31,7 +31,7 @@
         <feedback-link v-if="isFeedbackLinkEnabled" v-bind="feedbackLinkOptions" />
         <notifications v-if="isNotificationBellEnabled" />
         <side-bar-toggle
-          v-if="isSideBarToggleVisible && !isAppModeEnabled"
+          v-if="isSideBarToggleVisible && !appModeStore.isEnabled"
           :disabled="isSideBarToggleDisabled"
           class="hidden sm:flex"
         />
@@ -43,7 +43,7 @@
       </template>
     </div>
     <custom-component-target :extension-point="topBarLeftExtensionPoint" />
-    <custom-component-target v-if="isAppModeEnabled" :extension-point="appModeSecondaryNavExtensionPoint" class="col-span-3" />
+    <custom-component-target v-if="appModeStore.isEnabled" :extension-point="appModeSecondaryNavExtensionPoint" class="col-span-3" />
   </header>
 </template>
 
@@ -60,7 +60,7 @@ import {
   useCapabilityStore,
   useConfigStore,
   useEmbedMode,
-  useAppMode,
+  useAppModeStore,
   useExtensionRegistry,
   useRouter,
   useThemeStore
@@ -91,7 +91,7 @@ const extensionRegistry = useExtensionRegistry()
 const authStore = useAuthStore()
 const router = useRouter()
 const { isEnabled: isEmbedModeEnabled } = useEmbedMode()
-const { isEnabled: isAppModeEnabled } = useAppMode()
+const appModeStore = useAppModeStore()
 
 const appMenuExtensions = computed(() => {
   return extensionRegistry.requestExtensions(appMenuExtensionPoint)
