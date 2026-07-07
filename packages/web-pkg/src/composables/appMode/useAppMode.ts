@@ -1,4 +1,4 @@
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { useRouter } from '../router'
 
 const appModeEnabled = ref(false)
@@ -6,9 +6,12 @@ const appModeEnabled = ref(false)
 export const useAppMode = () => {
   const router = useRouter()
 
-  const isEnabled = computed(() => {
-    return appModeEnabled.value || router.currentRoute.value.query.appMode === 'true'
-  })
+  // Latch: once ?appMode=true is seen, stay in app mode until explicitly disabled
+  watch(() => router.currentRoute.value.query.appMode, (val) => {
+    if (val === 'true') appModeEnabled.value = true
+  }, { immediate: true })
+
+  const isEnabled = computed(() => appModeEnabled.value)
 
   function enable() {
     appModeEnabled.value = true
