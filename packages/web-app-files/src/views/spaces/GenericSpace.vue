@@ -174,7 +174,7 @@ import QuickActions from '../../components/FilesList/QuickActions.vue'
 import ResourceDetails from '../../components/FilesList/ResourceDetails.vue'
 import SpaceHeader from '../../components/Spaces/SpaceHeader.vue'
 import WhitespaceContextMenu from '../../components/Spaces/WhitespaceContextMenu.vue'
-import { eventBus } from '@opencloud-eu/web-pkg'
+import { eventBus, useAppModeStore } from '@opencloud-eu/web-pkg'
 import { useResourcesViewDefaults } from '../../composables'
 import { BreadcrumbItem } from '@opencloud-eu/design-system/helpers'
 import { v4 as uuidV4 } from 'uuid'
@@ -529,7 +529,9 @@ const displayResourceAsSingleResource = computed(() => {
   return false
 })
 
+const appModeStore = useAppModeStore()
 const displayFullAppBar = computed(() => {
+  if (appModeStore.isEnabled) return false
   return !unref(displayResourceAsSingleResource)
 })
 

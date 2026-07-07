@@ -1,29 +1,19 @@
-import { computed, ref, watch } from 'vue'
+import { watch } from 'vue'
 import { useRouter } from '../router'
-
-const appModeEnabled = ref(false)
+import { useAppModeStore } from '../piniaStores/appMode'
 
 export const useAppMode = () => {
+  const store = useAppModeStore()
   const router = useRouter()
 
-  // Latch: once ?appMode=true is seen, stay in app mode until explicitly disabled
-  watch(() => router.currentRoute.value.query.appMode, (val) => {
-    if (val === 'true') appModeEnabled.value = true
-  }, { immediate: true })
-
-  const isEnabled = computed(() => appModeEnabled.value)
-
-  function enable() {
-    appModeEnabled.value = true
-  }
-
-  function disable() {
-    appModeEnabled.value = false
-  }
+  // Watch route changes for auto-disable when leaving the app space
+  watch(() => router.currentRoute.value.path, (path) => {
+    store.checkRoute(path)
+  })
 
   return {
-    isEnabled,
-    enable,
-    disable
+    isEnabled: store.isEnabled,
+    enable: store.enable,
+    disable: store.disable
   }
 }

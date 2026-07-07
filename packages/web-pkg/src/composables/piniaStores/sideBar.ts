@@ -2,12 +2,12 @@ import { defineStore } from 'pinia'
 import { computed, nextTick, ref, unref } from 'vue'
 import { useLocalStorage } from '../localStorage'
 import { useEmbedMode } from '../embedMode'
-import { useAppMode } from '../appMode'
+import { useAppModeStore } from './appMode'
 import { useIsMobile } from '@opencloud-eu/design-system/composables'
 
 export const useSideBar = defineStore('sideBar', () => {
   const { isEnabled: isEmbedModeEnabled } = useEmbedMode()
-  const { isEnabled: isAppModeEnabled } = useAppMode()
+  const appModeStore = useAppModeStore()
   const isSideBarOpenLocalStorage = useLocalStorage(`oc_sideBarOpen`, false)
   const { isMobile } = useIsMobile()
 
@@ -16,7 +16,7 @@ export const useSideBar = defineStore('sideBar', () => {
 
   const isSideBarOpen = computed({
     get() {
-      if (unref(isAppModeEnabled)) return false
+      if (appModeStore.isEnabled) return false
       if (unref(isEmbedModeEnabled)) {
         return unref(isSideBarOpenIsolated)
       }
