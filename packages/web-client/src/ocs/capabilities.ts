@@ -101,6 +101,7 @@ export interface Capabilities {
     files: {
       app_providers?: AppProviderCapability[]
       archivers?: ArchiverCapability[]
+      browsable_archives?: { extension: string; mimeTypes: string[] }[]
       full_text_search?: boolean
       permanent_deletion?: boolean
       privateLinks?: boolean

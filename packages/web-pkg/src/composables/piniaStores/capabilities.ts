@@ -11,6 +11,7 @@ const defaultValues = {
   dav: {},
   files: {
     app_providers: [] as AppProviderCapability[],
+    browsable_archives: [] as { extension: string; mimeTypes: string[] }[],
     permanent_deletion: true,
     tags: false,
     privateLinks: false,
@@ -97,6 +98,7 @@ export const useCapabilityStore = defineStore('capabilities', () => {
 
   const filesAppProviders = computed(() => unref(capabilities).files.app_providers)
   const filesArchivers = computed(() => unref(capabilities).files.archivers)
+  const filesBrowsableArchives = computed(() => unref(capabilities).files.browsable_archives)
   const filesPrivateLinks = computed(() => unref(capabilities).files.privateLinks)
   const filesPermanentDeletion = computed(() => unref(capabilities).files.permanent_deletion)
   const filesTags = computed(() => unref(capabilities).files.tags)
@@ -159,6 +161,7 @@ export const useCapabilityStore = defineStore('capabilities', () => {
     graphUsersReadOnlyAttributes,
     filesAppProviders,
     filesArchivers,
+    filesBrowsableArchives,
     filesPrivateLinks,
     filesPermanentDeletion,
     filesTags,
