@@ -62,7 +62,7 @@ export const extensions = (appInfo: ApplicationInformation) => {
       type: 'action' as const,
       action: {
         ...action,
-        category: 'tertiary'
+        category: 'secondary'
       }
     })),
     ...spaceActionExtensions,
