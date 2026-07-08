@@ -62,10 +62,11 @@ export const useFileActionsJobPipeline = () => {
           if (!resources?.length) return false
 
           // Check source type match
-          const typeMatch = !pipeline.sourceTypes?.length || resources.some((r) =>
-            pipeline.sourceTypes.includes('*') ||
-            pipeline.sourceTypes.includes(r.mimeType?.toLowerCase() || '')
-          )
+          // Folders have no mimeType in the frontend; treat them as httpd/unix-directory (WebDAV standard)
+          const typeMatch = !pipeline.sourceTypes?.length || resources.some((r) => {
+            const mime = r.mimeType?.toLowerCase() || (r.isFolder ? 'httpd/unix-directory' : '')
+            return pipeline.sourceTypes.includes('*') || pipeline.sourceTypes.includes(mime)
+          })
           if (!typeMatch) return false
 
           // parentDir shares require a shareable parent folder
