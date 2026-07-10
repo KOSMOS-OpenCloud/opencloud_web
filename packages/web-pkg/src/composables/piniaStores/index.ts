@@ -1,3 +1,4 @@
+export * from './appCompact'
 export * from './appMode'
 export * from './apps'
 export * from './audioPlayer'

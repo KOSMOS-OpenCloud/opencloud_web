@@ -72,6 +72,7 @@ import {
   useGetResourceContext,
   useKeyboardActions,
   useExtensionRegistry,
+  useAppCompactStore,
   ActionExtension,
   CustomComponentExtension
 } from '../../composables'
@@ -158,10 +159,11 @@ let deleteResourceEventToken = ''
 let appOnDeleteResourceCallback: (() => void) | null = null
 
 const extensionRegistry = useExtensionRegistry()
+const appCompactStore = useAppCompactStore()
 const { registerExtensions, unregisterExtensions, requestExtensions } = extensionRegistry
 const topBarExtensionId = 'app.app-wrapper.app-top-bar'
 const appBarExtension = computed<CustomComponentExtension[]>(() => {
-  if (unref(loading) || unref(loadingError) || !unref(resource)) {
+  if (appCompactStore.isEnabled || unref(loading) || unref(loadingError) || !unref(resource)) {
     return []
   }
   return [
