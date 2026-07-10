@@ -1,19 +1,16 @@
 {
-  "name": "OpenCloud",
-  "short_name": "OpenCloud",
+  "name": "OpenCloud Kosmos Edition",
+  "short_name": "Kosmos",
   "icons": [
     {
-      "src": "img/opencloud-icon.png",
-      "sizes": "512x512",
+      "src": "img/kosmos2.png",
+      "sizes": "300x300",
       "type": "image/png"
     }
   ],
-
   "start_url": "/",
-
-  "display": "fullscreen",
-  "orientation": "portrait",
-
-  "background_color": "#FFFFFF",
-  "theme_color": "#375f7E"
+  "scope": "/",
+  "display": "browser",
+  "orientation": "any",
+  "background_color": "#FFFFFF"
 }
