@@ -8,6 +8,7 @@ REGISTRY="codeberg.org"
 OWNER="${PUSH_ORG:-kosmos-opencloud}"
 PACKAGE="${PACKAGE_NAME:-opencloud-web}"
 TAG="${1:-latest}"
+WEB_CORE_DIR="/data/opencloud_podman/web-core/assets/core"
 
 # Resolve latest tag if not specified
 if [ "$TAG" = "latest" ]; then
@@ -28,9 +29,8 @@ ZIP_URL="https://${REGISTRY}/api/packages/${OWNER}/generic/${PACKAGE}/${TAG}/${P
 ssh "root@${HOST}" "
     TMPDIR=\$(mktemp -d)
     curl -sfL -o \$TMPDIR/web.zip '${ZIP_URL}'
-    podman exec ${INSTANCE} rm -rf /var/lib/opencloud/web/assets/core/*
-    podman cp \$TMPDIR/web.zip ${INSTANCE}:/tmp/web.zip
-    podman exec ${INSTANCE} sh -c 'cd /var/lib/opencloud/web/assets/core && unzip -qo /tmp/web.zip && rm /tmp/web.zip'
+    rm -rf ${WEB_CORE_DIR}/*
+    cd ${WEB_CORE_DIR} && unzip -qo \$TMPDIR/web.zip
     rm -rf \$TMPDIR
     podman restart ${INSTANCE}
 "
@@ -41,7 +41,7 @@ for i in $(seq 1 30); do
     sleep 2
     STATUS=$(curl -sf -o /dev/null -w "%{http_code}" "https://${HOST}" 2>/dev/null || echo "000")
     if [ "$STATUS" = "200" ]; then
-        echo " OK (${STATUS})"
+        echo " OK"
         echo "=== Deployed ${PACKAGE}:${TAG} ==="
         exit 0
     fi
