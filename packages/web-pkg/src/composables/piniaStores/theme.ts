@@ -39,7 +39,8 @@ const DesignTokens = z.object({
 const WebDefaults = CommonSection.extend({
   designTokens: DesignTokens.optional(),
   favicon: z.string().optional(),
-  background: z.string().optional()
+  background: z.string().optional(),
+  customStylesheet: z.string().optional()
 })
 
 const WebTheme = WebDefaults.extend({
@@ -144,6 +145,22 @@ export const useThemeStore = defineStore('theme', () => {
 
     if (unref(currentTheme).favicon) {
       setFavicon(unref(currentTheme).favicon)
+    }
+
+    applyCustomStylesheet(unref(currentTheme).customStylesheet)
+  }
+
+  const applyCustomStylesheet = (url?: string) => {
+    const existingLink = document.getElementById('oc-custom-theme-stylesheet') as HTMLLinkElement
+    if (existingLink) {
+      existingLink.remove()
+    }
+    if (url) {
+      const link = document.createElement('link')
+      link.id = 'oc-custom-theme-stylesheet'
+      link.rel = 'stylesheet'
+      link.href = url
+      document.head.appendChild(link)
     }
   }
 
