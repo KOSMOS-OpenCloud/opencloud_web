@@ -35,4 +35,18 @@ ssh "root@${HOST}" "
     podman restart ${INSTANCE}
 "
 
-echo "=== Deployed ${PACKAGE}:${TAG} ==="
+# Wait for cloud to come back
+echo -n "Waiting for https://${HOST} ..."
+for i in $(seq 1 30); do
+    sleep 2
+    STATUS=$(curl -sf -o /dev/null -w "%{http_code}" "https://${HOST}" 2>/dev/null || echo "000")
+    if [ "$STATUS" = "200" ]; then
+        echo " OK (${STATUS})"
+        echo "=== Deployed ${PACKAGE}:${TAG} ==="
+        exit 0
+    fi
+    echo -n "."
+done
+echo " TIMEOUT"
+echo "WARNING: https://${HOST} not responding with 200 after 60s"
+exit 1
