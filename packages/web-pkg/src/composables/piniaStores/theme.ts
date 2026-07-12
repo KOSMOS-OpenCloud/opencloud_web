@@ -84,6 +84,9 @@ export const useThemeStore = defineStore('theme', () => {
 
   const availableThemes = ref<WebThemeType[]>([])
 
+  // URL parameter override for the current session (e.g. ?appTheme=Windows%2011%20Light)
+  const appThemeOverride = ref<string | null>(null)
+
   const initializeThemes = (themeConfig: ThemeConfigType) => {
     const commonThemeConfig = themeConfig.common as WebThemeType
     const webThemeConfig = themeConfig.clients.web.defaults as WebThemeType
@@ -91,14 +94,26 @@ export const useThemeStore = defineStore('theme', () => {
     availableThemes.value = themeConfig.clients.web.themes.map((theme) => {
       return merge(baseTheme, theme)
     })
+
+    // Check for appTheme URL parameter — overrides user preference for this session
+    const params = new URLSearchParams(window.location.search)
+    const appTheme = params.get('appTheme')
+    if (appTheme) {
+      appThemeOverride.value = appTheme
+    }
+
     setThemeFromStorageOrSystem()
   }
 
   const setThemeFromStorageOrSystem = () => {
     const firstLightTheme = unref(availableThemes).find((theme) => !theme.isDark)
     const firstDarkTheme = unref(availableThemes).find((theme) => theme.isDark)
+
+    // Priority: appTheme URL param > localStorage > system preference > first available
     setAndApplyTheme(
-      unref(availableThemes).find((t) => t.label === unref(currentLocalStorageThemeName)) ||
+      (unref(appThemeOverride) &&
+        unref(availableThemes).find((t) => t.label === unref(appThemeOverride))) ||
+        unref(availableThemes).find((t) => t.label === unref(currentLocalStorageThemeName)) ||
         (unref(isDark) ? firstDarkTheme : firstLightTheme) ||
         unref(availableThemes)[0],
       false
@@ -116,7 +131,8 @@ export const useThemeStore = defineStore('theme', () => {
 
   const setAndApplyTheme = (theme: WebThemeType, updateStorage = true) => {
     currentTheme.value = theme
-    if (updateStorage) {
+    // Don't persist to localStorage when appTheme override is active
+    if (updateStorage && !unref(appThemeOverride)) {
       currentLocalStorageThemeName.value = unref(currentTheme).label
     }
 
