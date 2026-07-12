@@ -15,7 +15,7 @@ if [ "$TAG" = "latest" ]; then
         -H "Authorization: token ${PUSH_TOKEN}" \
         | python3 -c "
 import sys, json
-pkgs = [p for p in json.load(sys.stdin) if p['name'] == '${PACKAGE}']
+pkgs = [p for p in json.load(sys.stdin) if p['name'] == '${PACKAGE}' and p['version'] != 'latest']
 pkgs.sort(key=lambda p: p['version'], reverse=True)
 print(pkgs[0]['version'] if pkgs else '')" 2>/dev/null)
     [ -n "$TAG" ] || { echo "ERROR: no packages found"; exit 1; }
