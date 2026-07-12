@@ -1,0 +1,162 @@
+/*
+ * Windows 11 Platform Theme — Dark
+ * Override-Sheet for OpenCloud Web Design System
+ *
+ * Imports the base Win11 overrides and adjusts colors for dark mode.
+ * Acrylic/Mica effects use dark-tinted transparency.
+ */
+
+/* ==========================================================================
+   1. BORDER-RADIUS — same as light, repeated for standalone use
+   ========================================================================== */
+
+.oc-button { border-radius: 4px !important; }
+.oc-text-input, .oc-textarea, .vs__dropdown-toggle, .vs__dropdown-menu { border-radius: 4px !important; }
+.oc-checkbox { border-radius: 3px !important; }
+.oc-tag, .oc-filter-chip .oc-pill { border-radius: 4px !important; }
+.oc-drop, .oc-drop > div, .tippy-box { border-radius: 8px !important; }
+.oc-modal, .oc-modal-background-overlay + div { border-radius: 8px !important; }
+.oc-card { border-radius: 4px !important; }
+.oc-pagination a, .oc-pagination button { border-radius: 4px !important; }
+.oc-breadcrumb li a, .oc-breadcrumb li button { border-radius: 4px !important; }
+.oc-search-bar input { border-radius: 8px !important; }
+
+/* ==========================================================================
+   2. BACKDROP-FILTER — Dark Acrylic
+   ========================================================================== */
+
+.oc-drop > div,
+.tippy-box .tippy-content {
+  backdrop-filter: saturate(2) blur(20px) !important;
+  -webkit-backdrop-filter: saturate(2) blur(20px) !important;
+  background: rgba(32, 32, 32, 0.85) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+
+.oc-modal-background-overlay {
+  backdrop-filter: blur(4px) !important;
+  -webkit-backdrop-filter: blur(4px) !important;
+  background: rgba(0, 0, 0, 0.5) !important;
+}
+
+.oc-modal-background-overlay + div {
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.06) !important;
+}
+
+/* ==========================================================================
+   3. HOVER EFFECTS — Dark mode: white overlay instead of black
+   ========================================================================== */
+
+.oc-button:hover:not(:disabled) {
+  filter: none !important;
+  background-image: linear-gradient(rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.06)) !important;
+}
+
+.oc-button[class*="appearance-outline"]:hover:not(:disabled),
+.oc-button[class*="appearance-raw"]:hover:not(:disabled) {
+  filter: none !important;
+  background-color: rgba(255, 255, 255, 0.06) !important;
+  background-image: none !important;
+}
+
+table tbody tr:hover {
+  background-color: rgba(255, 255, 255, 0.04) !important;
+  transition: background-color 100ms ease !important;
+}
+
+.oc-drop li > button:hover,
+.oc-drop li > a:hover {
+  background: rgba(255, 255, 255, 0.06) !important;
+  border-radius: 4px !important;
+}
+
+/* ==========================================================================
+   4. SCROLLBARS — Dark mode colors
+   ========================================================================== */
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.3) transparent;
+}
+
+*::-webkit-scrollbar { width: 8px; height: 8px; }
+*::-webkit-scrollbar-track { background: transparent; }
+*::-webkit-scrollbar-thumb {
+  background-color: rgba(255, 255, 255, 0);
+  border-radius: 8px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+*:hover::-webkit-scrollbar-thumb { background-color: rgba(255, 255, 255, 0.3); }
+*::-webkit-scrollbar-thumb:hover { background-color: rgba(255, 255, 255, 0.45); }
+*::-webkit-scrollbar-thumb:active { background-color: rgba(255, 255, 255, 0.55); }
+
+/* ==========================================================================
+   5. SHADOWS — Dark mode: stronger
+   ========================================================================== */
+
+.oc-drop > div {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.24), 0 8px 32px rgba(0, 0, 0, 0.32) !important;
+}
+
+.oc-card {
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2) !important;
+  border: 1px solid rgba(255, 255, 255, 0.06) !important;
+}
+
+/* ==========================================================================
+   6. BORDERS — Input focus accent
+   ========================================================================== */
+
+.oc-text-input:focus-within, input:focus {
+  border-bottom: 2px solid var(--oc-role-primary) !important;
+  padding-bottom: calc(0.375rem - 1px) !important;
+}
+
+.vs--open .vs__dropdown-toggle {
+  border-bottom: 2px solid var(--oc-role-primary) !important;
+}
+
+/* ==========================================================================
+   7-11. TYPOGRAPHY, DIVIDERS, TRANSITIONS, FOCUS, SELECTION — same as light
+   ========================================================================== */
+
+:root {
+  --oc-font-family: 'Segoe UI Variable', 'Segoe UI', system-ui, -apple-system, sans-serif !important;
+}
+
+body { font-size: 14px; -webkit-font-smoothing: antialiased; }
+
+.oc-drop li > button, .oc-drop li > a {
+  font-size: 12px !important; font-weight: 400 !important;
+  padding: 4px 8px !important; min-height: 28px !important;
+}
+
+hr, .oc-drop [role="separator"], .oc-drop hr {
+  border-color: rgba(255, 255, 255, 0.06) !important;
+  margin: 2px 8px !important;
+}
+
+.oc-button, .oc-text-input, .oc-tag, table tbody tr,
+.oc-drop li > button, .oc-drop li > a {
+  transition: all 100ms ease-out !important;
+}
+
+.oc-drop {
+  animation: win11-menu-appear 150ms cubic-bezier(0, 0, 0, 1) !important;
+}
+
+@keyframes win11-menu-appear {
+  from { opacity: 0; transform: scale(0.95) translateY(-4px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+*:focus-visible {
+  outline: 2px solid var(--oc-role-on-surface) !important;
+  outline-offset: 1px !important;
+}
+
+::selection {
+  background: var(--oc-role-primary);
+  color: var(--oc-role-on-primary);
+}

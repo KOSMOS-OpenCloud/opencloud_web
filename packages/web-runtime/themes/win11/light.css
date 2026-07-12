@@ -1,0 +1,289 @@
+/*
+ * Windows 11 Platform Theme — Light
+ * Override-Sheet for OpenCloud Web Design System
+ *
+ * Covers: border-radius, backdrop-filter, hover effects,
+ * scrollbars, spacing, animations, shadows
+ */
+
+/* ==========================================================================
+   1. BORDER-RADIUS — Win11: 4px controls, 8px panels/menus
+   ========================================================================== */
+
+/* Buttons: 4px */
+.oc-button {
+  border-radius: 4px !important;
+}
+
+/* Inputs & Selects: 4px */
+.oc-text-input,
+.oc-textarea,
+.vs__dropdown-toggle,
+.vs__dropdown-menu {
+  border-radius: 4px !important;
+}
+
+/* Checkboxes: 3px (Win11 subtle rounding) */
+.oc-checkbox {
+  border-radius: 3px !important;
+}
+
+/* Tags / Filter Chips: 4px */
+.oc-tag,
+.oc-filter-chip .oc-pill {
+  border-radius: 4px !important;
+}
+
+/* Context menus / Dropdowns: 8px */
+.oc-drop,
+.oc-drop > div,
+.tippy-box {
+  border-radius: 8px !important;
+}
+
+/* Modals: 8px */
+.oc-modal,
+.oc-modal-background-overlay + div {
+  border-radius: 8px !important;
+}
+
+/* Cards: 4px */
+.oc-card {
+  border-radius: 4px !important;
+}
+
+/* Pagination: 4px */
+.oc-pagination a,
+.oc-pagination button {
+  border-radius: 4px !important;
+}
+
+/* Breadcrumb items: 4px */
+.oc-breadcrumb li a,
+.oc-breadcrumb li button {
+  border-radius: 4px !important;
+}
+
+/* Search bar: 8px (Win11 search is slightly rounded, not pill-shaped) */
+.oc-search-bar input {
+  border-radius: 8px !important;
+}
+
+/* ==========================================================================
+   2. BACKDROP-FILTER — Win11 Acrylic/Mica effect
+   ========================================================================== */
+
+/* Context menus / dropdowns */
+.oc-drop > div,
+.tippy-box .tippy-content {
+  backdrop-filter: saturate(2) blur(20px) !important;
+  -webkit-backdrop-filter: saturate(2) blur(20px) !important;
+  background: rgba(249, 249, 249, 0.88) !important;
+  border: 1px solid rgba(0, 0, 0, 0.08) !important;
+}
+
+/* Modal overlay */
+.oc-modal-background-overlay {
+  backdrop-filter: blur(4px) !important;
+  -webkit-backdrop-filter: blur(4px) !important;
+  background: rgba(0, 0, 0, 0.3) !important;
+}
+
+/* Modal dialog itself */
+.oc-modal-background-overlay + div {
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.14), 0 0 0 1px rgba(0, 0, 0, 0.06) !important;
+}
+
+/* ==========================================================================
+   3. HOVER EFFECTS — Win11: subtle background change, no brightness filter
+   ========================================================================== */
+
+/* Buttons: background hover instead of brightness filter */
+.oc-button:hover:not(:disabled) {
+  filter: none !important;
+  background-image: linear-gradient(rgba(0, 0, 0, 0.04), rgba(0, 0, 0, 0.04)) !important;
+}
+
+.oc-button[class*="appearance-outline"]:hover:not(:disabled),
+.oc-button[class*="appearance-raw"]:hover:not(:disabled) {
+  filter: none !important;
+  background-color: rgba(0, 0, 0, 0.04) !important;
+  background-image: none !important;
+}
+
+/* Table rows: subtle hover */
+table tbody tr:hover {
+  background-color: rgba(0, 0, 0, 0.03) !important;
+  transition: background-color 100ms ease !important;
+}
+
+/* Menu items: Win11 style hover (subtle, with 4px radius) */
+.oc-drop li > button:hover,
+.oc-drop li > a:hover {
+  background: rgba(0, 0, 0, 0.05) !important;
+  border-radius: 4px !important;
+}
+
+/* ==========================================================================
+   4. SCROLLBARS — Win11 thin overlay scrollbars
+   ========================================================================== */
+
+/* Thin scrollbar, visible on hover */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 0, 0, 0.35) transparent;
+}
+
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+  background-color: rgba(0, 0, 0, 0);
+  border-radius: 8px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+  transition: background-color 200ms;
+}
+
+*:hover::-webkit-scrollbar-thumb {
+  background-color: rgba(0, 0, 0, 0.35);
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(0, 0, 0, 0.5);
+}
+
+*::-webkit-scrollbar-thumb:active {
+  background-color: rgba(0, 0, 0, 0.6);
+}
+
+/* ==========================================================================
+   5. SHADOWS — Win11: subtle, layered shadows
+   ========================================================================== */
+
+/* Dropdowns */
+.oc-drop > div {
+  box-shadow:
+    0 2px 6px rgba(0, 0, 0, 0.08),
+    0 8px 24px rgba(0, 0, 0, 0.12) !important;
+}
+
+/* Modals */
+.oc-modal-background-overlay + div {
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.14),
+    0 0 0 1px rgba(0, 0, 0, 0.06) !important;
+}
+
+/* Cards — very subtle */
+.oc-card {
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06) !important;
+  border: 1px solid rgba(0, 0, 0, 0.06) !important;
+}
+
+/* ==========================================================================
+   6. BORDERS — Win11: subtle bottom accent on inputs
+   ========================================================================== */
+
+/* Text inputs: bottom accent border (Win11 signature) */
+.oc-text-input:focus-within,
+input:focus {
+  border-bottom: 2px solid var(--oc-role-primary) !important;
+  padding-bottom: calc(0.375rem - 1px) !important;
+}
+
+/* Select: bottom accent on focus */
+.vs--open .vs__dropdown-toggle {
+  border-bottom: 2px solid var(--oc-role-primary) !important;
+}
+
+/* ==========================================================================
+   7. TYPOGRAPHY — Win11: Segoe UI Variable, specific sizes
+   ========================================================================== */
+
+/* Win11 uses Segoe UI Variable, fall back to Segoe UI, then system fonts */
+:root {
+  --oc-font-family: 'Segoe UI Variable', 'Segoe UI', system-ui, -apple-system, sans-serif !important;
+}
+
+/* Slightly smaller default font for denser UI */
+body {
+  font-size: 14px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Menu items: Win11 uses 12px */
+.oc-drop li > button,
+.oc-drop li > a {
+  font-size: 12px !important;
+  font-weight: 400 !important;
+  padding: 4px 8px !important;
+  min-height: 28px !important;
+}
+
+/* ==========================================================================
+   8. DIVIDERS — Win11: very subtle
+   ========================================================================== */
+
+hr,
+.oc-drop [role="separator"],
+.oc-drop hr {
+  border-color: rgba(0, 0, 0, 0.06) !important;
+  margin: 2px 8px !important;
+}
+
+/* ==========================================================================
+   9. TRANSITIONS — Win11: fast, ease-out
+   ========================================================================== */
+
+/* Faster, snappier transitions */
+.oc-button,
+.oc-text-input,
+.oc-tag,
+table tbody tr,
+.oc-drop li > button,
+.oc-drop li > a {
+  transition: all 100ms ease-out !important;
+}
+
+/* Menu appearance */
+.oc-drop {
+  animation: win11-menu-appear 150ms cubic-bezier(0, 0, 0, 1) !important;
+}
+
+@keyframes win11-menu-appear {
+  from {
+    opacity: 0;
+    transform: scale(0.95) translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+/* ==========================================================================
+   10. FOCUS INDICATORS — Win11: dark outline
+   ========================================================================== */
+
+*:focus-visible {
+  outline: 2px solid var(--oc-role-on-surface) !important;
+  outline-offset: 1px !important;
+  border-radius: 4px;
+}
+
+/* ==========================================================================
+   11. SELECTION HIGHLIGHT — Win11: primary blue
+   ========================================================================== */
+
+::selection {
+  background: var(--oc-role-primary);
+  color: var(--oc-role-on-primary);
+}
