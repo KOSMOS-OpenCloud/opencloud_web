@@ -136,9 +136,11 @@ import {
   useCapabilityStore,
   useIsAppActive,
   useKeyboardActions,
+  useExtensionRegistry,
   useResourcesStore,
   useSpacesStore
 } from '@opencloud-eu/web-pkg'
+import { resourceTransformerExtensionPoint } from '@opencloud-eu/web-pkg'
 import Mark from 'mark.js'
 import { storeToRefs } from 'pinia'
 import { debounce } from 'lodash-es'
@@ -181,6 +183,7 @@ export default defineComponent({
     const resourcesStore = useResourcesStore()
     const { currentFolder } = storeToRefs(resourcesStore)
     const spacesStore = useSpacesStore()
+    const extensionRegistry = useExtensionRegistry()
 
     const locationFilterId = ref(SearchLocationFilterConstants.allFiles)
     const optionsDropRef = useTemplateRef<ComponentPublicInstance<typeof OcDrop>>('optionsDropRef')
@@ -309,11 +312,25 @@ export default defineComponent({
 
       loading.value = true
 
+      const transformers = extensionRegistry.requestExtensions?.(resourceTransformerExtensionPoint) ?? []
+
       for (const availableProvider of unref(availableProviders)) {
         if (availableProvider.previewSearch?.available) {
+          const result = await availableProvider.previewSearch.search(terms.join(' '))
+          // Apply resource transformers to preview search results
+          if (transformers.length && result.values.length) {
+            let resources = result.values.map((v: any) => v.data)
+            for (const ext of transformers) {
+              resources = ext.transformResources(resources)
+            }
+            result.values = result.values.map((v: any, i: number) => ({
+              ...v,
+              data: resources[i]
+            }))
+          }
           searchResults.value.push({
             providerId: availableProvider.id,
-            result: await availableProvider.previewSearch.search(terms.join(' '))
+            result
           })
         }
       }
