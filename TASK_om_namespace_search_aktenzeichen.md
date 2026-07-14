@@ -263,27 +263,44 @@ in normalen Ordneransichten — nicht nur in der Suche.
 
 ---
 
-## Scope und Reihenfolge
+## Fortschritt
 
-### Phase 1: reva
-1. `NsOwncloudMetadata` Namespace-Konstante
-2. `requiresExplicitFetching` → `om:` → true
-3. `metadataKeyOf` → `om:` → kurzer Key
-4. Parent-Metadata Lookup bei `parent-*` Keys
+### Phase 1: reva — DONE
+1. [x] `NsOwncloudMetadata` Namespace-Konstante (`net.go`)
+2. [x] `requiresExplicitFetching` → `om:` → true
+3. [x] `metadataKeyOf` → `om:` → kurzer Key (`n.Local`)
+4. [x] `metadataKeys` → `parent-` Keys separieren
+5. [x] `proppatch.go` → `om:` Properties mit kurzem Key schreiben
+6. [x] Parent-Metadata Lookup: `resolveParentMetadata()` batch-stattet Parent-Nodes
+7. [x] `MultistatusResponseWithParent()` — neuer Einstiegspunkt mit Parent-Auflösung
+8. [x] `mdToPropResponse` → `om:parent-*` aus parentMetadataMap auflösen
+9. [x] `propfindResponse` → gwClient holen und `parentMetadataKeys` durchreichen
+10. [x] Abwärtskompatibel: `MultistatusResponse` bleibt als Wrapper erhalten
 
-### Phase 2: web-client
-5. `builders.ts` — `xmlns:om` + `om:` Prefix Handling
-6. `buildResource` — `om:` extraProps parsen
+### Phase 2: web-client — DONE
+11. [x] `builders.ts` — `xmlns:om` Deklaration (nur bei Bedarf)
+12. [x] `builders.ts` — `om:` extraProps korrekt als `om:name` ausgeben
+13. [x] `builders.ts` — `buildPropPatchBody` unterstützt `om:` + xmlns
+14. [x] `NsOwncloudMetadata` Konstante exportiert
+15. [x] 12 Unit-Tests für builders.ts — alle bestanden
 
-### Phase 3: web-pkg
-7. `ResourceNameDecoratorExtension` Typ
-8. `resourceNameDecoratorExtensionPoint` Extension Point
-9. `ResourceListItem.vue` — Decorator rendern
+### Phase 3: web-pkg — OFFEN
+16. [ ] `ResourceNameDecoratorExtension` Typ in `types.ts`
+17. [ ] `resourceNameDecoratorExtensionPoint` in `extensionPoints.ts`
+18. [ ] `ResourceListItem.vue` — Decorator vor Name + Folder rendern
+19. [ ] `useResourceNameDecorators()` Composable
 
-### Phase 4: opencloud_folderviews
-10. `om:aktencode` + `om:parent-aktencode` registrieren
-11. Decorator Extension registrieren
-12. User-Preference einbauen
+### Phase 4: opencloud_folderviews — OFFEN
+20. [ ] bestehende `oc:oy.*` extraProps auf `om:oy.*` migrieren (~15 Stellen)
+21. [ ] `om:aktencode` + `om:parent-aktencode` registrieren
+22. [ ] `ResourceNameDecoratorExtension` registrieren (Aktenzeichen-Prefix)
+23. [ ] User-Preference "Aktenzeichen anzeigen" einbauen
+
+### Phase 5: Verifikation — OFFEN
+24. [ ] xattr-Keys auf bestehendem System prüfen (`getfattr -d -m "user.oc.md"`)
+25. [ ] Ggf. xattr-Migration oder Fallback-Lesen (alte + neue Keys)
+26. [ ] reva Go-Tests (erfordert Go 1.24+ für `tool` Directive in go.mod)
+27. [ ] E2E-Test: Search mit `om:aktencode` + `om:parent-aktencode`
 
 ---
 
