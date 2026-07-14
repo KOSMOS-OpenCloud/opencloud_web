@@ -84,24 +84,26 @@
         ]"
       >
         <slot name="image" :resource="item" />
-        <resource-list-item
-          :key="`${item.path}-${resourceDomSelector(item)}-${item.thumbnail}`"
-          class="min-w-0"
-          :resource="item"
-          :path-prefix="getPathPrefix(item)"
-          :is-path-displayed="arePathsDisplayed"
-          :parent-folder-name="getParentFolderName(item)"
-          :is-icon-displayed="!$slots['image']"
-          :is-extension-displayed="areFileExtensionsShown"
-          :is-resource-clickable="isResourceClickable(item, areResourcesClickable)"
-          :link="getResourceLink(item)"
-          :parent-folder-link="getParentFolderLink(item)"
-          :parent-folder-link-icon-additional-attributes="
-            getParentFolderLinkIconAdditionalAttributes(item)
-          "
-          :class="{ 'opacity-60': isResourceCut(item) }"
-          @click.stop="fileNameClicked({ resource: item, event: $event })"
-        />
+        <slot name="title" :resource="item">
+          <resource-list-item
+            :key="`${item.path}-${resourceDomSelector(item)}-${item.thumbnail}`"
+            class="min-w-0"
+            :resource="item"
+            :path-prefix="getPathPrefix(item)"
+            :is-path-displayed="arePathsDisplayed"
+            :parent-folder-name="getParentFolderName(item)"
+            :is-icon-displayed="!$slots['image']"
+            :is-extension-displayed="areFileExtensionsShown"
+            :is-resource-clickable="isResourceClickable(item, areResourcesClickable)"
+            :link="getResourceLink(item)"
+            :parent-folder-link="getParentFolderLink(item)"
+            :parent-folder-link-icon-additional-attributes="
+              getParentFolderLinkIconAdditionalAttributes(item)
+            "
+            :class="{ 'opacity-60': isResourceCut(item) }"
+            @click.stop="fileNameClicked({ resource: item, event: $event })"
+          />
+        </slot>
         <oc-button
           v-for="action in getResourceTableActions(item)"
           :key="`resource-table-action-${item.id}-${action.name}`"
@@ -383,6 +385,7 @@ const emit = defineEmits<{
 
 defineSlots<{
   image?: (props: { resource: Resource }) => unknown
+  title?: (props: { resource: Resource }) => unknown
   additionalResourceContent?: (props: { resource: Resource }) => unknown
   syncEnabled?: (props: { resource: Resource }) => unknown
   manager?: (props: { resource: Resource }) => unknown

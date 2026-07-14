@@ -1,6 +1,8 @@
 import { XMLBuilder } from 'fast-xml-parser'
 import { DavProperties, DavPropertyValue } from '../constants'
 
+export const NsOwncloudMetadata = 'http://owncloud.org/ns/metadata'
+
 const getNamespacedDavProps = (
   obj: Partial<Record<DavPropertyValue, unknown>>,
   extraProps: string[]
@@ -8,6 +10,10 @@ const getNamespacedDavProps = (
   return Object.fromEntries(
     Object.entries(obj).map(([name, value]) => {
       if (extraProps.includes(name)) {
+        // om: namespace for custom metadata properties
+        if (name.startsWith('om:')) {
+          return [`om:${name.slice(3)}`, value || '']
+        }
         return [name, value || '']
       }
 
@@ -49,11 +55,14 @@ export const buildPropFindBody = (
   }
   const props = getNamespacedDavProps(object, extraProps)
 
+  const hasOmProps = extraProps.some((ep) => ep.startsWith('om:'))
+
   const xmlObj = {
     [bodyType]: {
       'd:prop': props,
       '@@xmlns:d': 'DAV:',
       '@@xmlns:oc': 'http://owncloud.org/ns',
+      ...(hasOmProps && { '@@xmlns:om': NsOwncloudMetadata }),
       ...(pattern && {
         'oc:search': { 'oc:pattern': pattern, 'oc:limit': limit }
       }),
@@ -74,13 +83,17 @@ export const buildPropFindBody = (
 }
 
 export const buildPropPatchBody = (
-  properties: Partial<Record<DavPropertyValue, unknown>>
+  properties: Partial<Record<DavPropertyValue, unknown>>,
+  extraProps: string[] = []
 ): string => {
+  const hasOmProps = Object.keys(properties).some((k) => k.startsWith('om:'))
+
   const xmlObj = {
     'd:propertyupdate': {
-      'd:set': { 'd:prop': getNamespacedDavProps(properties, []) },
+      'd:set': { 'd:prop': getNamespacedDavProps(properties, extraProps) },
       '@@xmlns:d': 'DAV:',
-      '@@xmlns:oc': 'http://owncloud.org/ns'
+      '@@xmlns:oc': 'http://owncloud.org/ns',
+      ...(hasOmProps && { '@@xmlns:om': NsOwncloudMetadata })
     }
   }
 
