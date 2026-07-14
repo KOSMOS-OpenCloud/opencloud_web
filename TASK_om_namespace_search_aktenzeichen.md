@@ -198,10 +198,11 @@ Extension-Registry `userPreference`-Mechanismus.
   ...ein Auszug aus dem Vertrag...   (highlights)
 ```
 
-### Ordneransicht (Bonus — greift automatisch)
+### Alle Ansichten (Ordner, Favoriten, Shares, Trash, Spaces)
 
-Da `resourceNameDecorator` in `ResourceListItem` sitzt, wirkt es auch
-in normalen Ordneransichten — nicht nur in der Suche.
+Da der `#title` Slot in `ResourceTable` und `ResourceTile` sitzt,
+greift er überall — nicht nur in der Suche. Folderviews steuert
+per `extensionPointIds` in welchen Ansichten Aktenzeichen erscheinen.
 
 ---
 
@@ -226,26 +227,31 @@ in normalen Ordneransichten — nicht nur in der Suche.
 14. [x] `NsOwncloudMetadata` Konstante exportiert
 15. [x] 12 Unit-Tests für builders.ts — alle bestanden
 
-### Phase 3: web-pkg — ENTFÄLLT
+### Phase 3: web-pkg — DONE
+16. [x] `#title` Slot in `ResourceTable.vue` und `ResourceTile.vue`
 
-Kein neuer Extension-Typ nötig. Folderviews nutzt bereits heute `extraProps`
-und die bestehenden Extension Points (`SearchExtension`, `FolderViewExtension`,
-`additionalResourceContent`-Slot) um Metadaten anzuzeigen — ohne dass web/
-etwas davon weiß. Das gleiche Muster gilt für Aktenzeichen in der Suche:
+Der `#title` Slot wrappt das gesamte `ResourceListItem` (Dateiname + Elternverzeichnis).
+Kein neuer Extension-Typ nötig. Der Slot liefert die vollständige `Resource`
+(inkl. `extraProps` mit allen `om:*` Metadaten). Default-Content ist das bestehende
+`ResourceListItem` — kein visueller Change ohne Extension.
 
-- **Quickview**: eigene `previewSearch.component` die `ResourcePreview` wrappt
-- **Ergebnisliste**: `additionalResourceContent`-Slot oder eigene `listSearch.component`
+Slot-Props folgen der jeweiligen Komponenten-Konvention:
+- `ResourceTable`: `#title="{ resource }"`
+- `ResourceTile`: `#title="{ item }"`
 
-### Phase 3: opencloud_folderviews — OFFEN
-16. [ ] bestehende `oc:oy.*` extraProps auf `om:oy.*` migrieren (~15 Stellen)
-17. [ ] `om:aktencode` + `om:parent-aktencode` als extraProps registrieren
-18. [ ] Aktenzeichen-Anzeige in Quickview (eigene `previewSearch.component`)
-19. [ ] Aktenzeichen-Anzeige in Ergebnisliste (via `additionalResourceContent` oder eigene `listSearch.component`)
-20. [ ] User-Preference "Aktenzeichen anzeigen" steuert ob Aktencode-Prefix sichtbar ist
+Der Slot greift **überall** — Suche, Ordneransicht, Favoriten, Shares, Trash, Spaces.
+Folderviews entscheidet selbst wo und wie Aktenzeichen angezeigt werden.
 
-### Phase 4: Verifikation — OFFEN
-21. [ ] reva Go-Tests via `opencloud/Dockerfile.test` (Go 1.26)
-22. [ ] E2E-Test: Search mit `om:aktencode` + `om:parent-aktencode`
+### Phase 4: opencloud_folderviews — OFFEN
+17. [ ] bestehende `oc:oy.*` extraProps auf `om:oy.*` migrieren (~15 Stellen)
+18. [ ] `om:aktencode` + `om:parent-aktencode` als extraProps registrieren
+19. [ ] `#title` Slot nutzen um Aktenzeichen an Item-Name und Parent-Folder anzuzeigen
+20. [ ] Quickview: eigene `previewSearch.component` die `ResourcePreview` wrappt
+21. [ ] User-Preference "Aktenzeichen anzeigen" steuert Sichtbarkeit
+
+### Phase 5: Verifikation — OFFEN
+22. [ ] reva Go-Tests via `opencloud/Dockerfile.test` (Go 1.26)
+23. [ ] E2E-Test: Search mit `om:aktencode` + `om:parent-aktencode`
 
 ---
 
@@ -301,7 +307,7 @@ Keine Treffer. Nur `opencloud_folderviews` nutzt `extraProp`.
 | **web-client functions.ts** | 1 | **Niedrig** | Eine Zeile Key-Parsing, klar definiertes Verhalten |
 | **opencloud_folderviews** | ~15 | **Niedrig** | Reine String-Ersetzung `oc:` → `om:`, kein Logik-Change |
 | **reva propfind.go** | 3 Funktionen | **Mittel-Hoch** | Neuer Codepfad (om: + parent-), braucht Unit-Tests |
-| **web-pkg ResourceListItem.vue** | 1 | **Niedrig** | Additiv, keine bestehende Logik betroffen |
+| **web-pkg ResourceTable/Tile** | 2 | **Niedrig** | Additiv, `#title` Slot mit Default-Content |
 
 ### Kritisch: xattr-Migration
 
@@ -354,7 +360,8 @@ neuen Key schreiben).
 - `packages/web-client/src/helpers/resource/types.ts` — optional: parentMetadata auf Resource
 
 ### web-pkg
-- Keine Änderungen — bestehende Extension Points reichen aus
+- `packages/web-pkg/src/components/FilesList/ResourceTable.vue` — `#title` Slot
+- `packages/web-pkg/src/components/FilesList/ResourceTile.vue` — `#title` Slot
 
 ### opencloud_folderviews
 - `index.ts` — `oc:oy.*` → `om:oy.*` + neue `om:aktencode`/`om:parent-aktencode` extraProps
