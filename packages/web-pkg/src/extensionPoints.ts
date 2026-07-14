@@ -1,4 +1,9 @@
-import { CustomComponentExtension, ExtensionPoint, ResourceIndicatorExtension } from './composables'
+import {
+  CustomComponentExtension,
+  ExtensionPoint,
+  ResourceIndicatorExtension,
+  ResourceTransformerExtension
+} from './composables'
 import { computed } from 'vue'
 
 export const fileSideBarSpaceDetailsTableExtensionPoint: ExtensionPoint<CustomComponentExtension> =
@@ -13,8 +18,18 @@ export const resourceIndicatorExtensionPoint: ExtensionPoint<ResourceIndicatorEx
   multiple: true
 }
 
+export const resourceTransformerExtensionPoint: ExtensionPoint<ResourceTransformerExtension> = {
+  id: 'global.files.resource-transformer',
+  extensionType: 'resourceTransformer',
+  multiple: true
+}
+
 export const extensionPoints = () => {
   return computed<ExtensionPoint<any>[]>(() => {
-    return [fileSideBarSpaceDetailsTableExtensionPoint, resourceIndicatorExtensionPoint]
+    return [
+      fileSideBarSpaceDetailsTableExtensionPoint,
+      resourceIndicatorExtensionPoint,
+      resourceTransformerExtensionPoint
+    ]
   })
 }

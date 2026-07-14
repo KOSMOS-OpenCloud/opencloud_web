@@ -5,9 +5,12 @@ import { getParentPaths } from '../../helpers'
 import { AncestorMetaData, AncestorMetaDataValue } from '../../types'
 import { DavProperty, WebDAV } from '@opencloud-eu/web-client/webdav'
 import { useSpacesStore } from './spaces'
+import { useExtensionRegistry } from './extensionRegistry'
+import { resourceTransformerExtensionPoint } from '../../extensionPoints'
 
 export const useResourcesStore = defineStore('resources', () => {
   const spacesStore = useSpacesStore()
+  const extensionRegistry = useExtensionRegistry()
 
   const resources = ref<Resource[]>([]) as Ref<Resource[]>
   const currentFolder = ref<Resource>()
@@ -94,7 +97,12 @@ export const useResourcesStore = defineStore('resources', () => {
   }
 
   const initResourceList = <T extends Resource>(data: { resources: T[]; currentFolder: T }) => {
-    resources.value = data.resources
+    let transformed = data.resources
+    const transformers = extensionRegistry.requestExtensions?.(resourceTransformerExtensionPoint) ?? []
+    for (const ext of transformers) {
+      transformed = ext.transformResources(transformed) as T[]
+    }
+    resources.value = transformed
     currentFolder.value = data.currentFolder
   }
 

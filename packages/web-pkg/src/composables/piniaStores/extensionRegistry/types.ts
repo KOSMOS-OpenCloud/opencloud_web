@@ -20,6 +20,7 @@ export type ExtensionType = StringUnionOrAnyString<
   | 'floatingActionButton'
   | 'folderVault'
   | 'resourceIndicator'
+  | 'resourceTransformer'
 >
 
 export type Extension = {
@@ -191,6 +192,11 @@ export interface FolderVaultExtension extends Extension {
    * extension-defined unlock UI even when `resolve` returns null.
    */
   claimsPath: (space: SpaceResource, path: string) => FolderVaultClaim | null
+}
+
+export interface ResourceTransformerExtension extends Extension {
+  type: 'resourceTransformer'
+  transformResources(resources: Resource[]): Resource[]
 }
 
 export interface ResourceIndicatorExtension extends Extension {
