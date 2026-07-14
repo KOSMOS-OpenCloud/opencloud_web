@@ -142,100 +142,42 @@ alternativ `extraProps.aktencode` (Namespace strippen, da eindeutig).
 
 ---
 
-### 3. web-pkg — Extension-Typ `resourceNameDecorator`
+### 3. web-pkg — Keine Änderung nötig
 
-**Neue Dateien/Änderungen:**
+Web/ bietet bereits alle nötigen Extension Points:
+- `SearchExtension` → eigene `previewSearch.component` / `listSearch.component`
+- `FolderViewExtension` → eigene Darstellungskomponente
+- `additionalResourceContent` Slot → Inhalte unter dem Namen
+- `extraProps` auf `Resource` → Daten aus WebDAV Properties
 
-#### 3.1 Extension-Typ definieren
-
-**Datei:** `packages/web-pkg/src/composables/piniaStores/extensionRegistry/types.ts`
-
-```ts
-export interface ResourceNameDecoratorExtension extends Extension {
-    type: 'resourceNameDecorator'
-    /**
-     * Prefix/Label für den Item-Namen.
-     * Erhält die vollständige Resource mit extraProps.
-     */
-    getNamePrefix(resource: Resource): string | null
-    /**
-     * Prefix/Label für den Parent-Folder-Namen.
-     * parentFolderId ist resource.parentFolderId.
-     * parentMetadata kommt aus resource.extraProps (parent-* Keys).
-     */
-    getFolderPrefix(resource: Resource): string | null
-}
-```
-
-#### 3.2 Extension Point registrieren
-
-**Datei:** `packages/web-pkg/src/extensionPoints.ts`
-
-```ts
-export const resourceNameDecoratorExtensionPoint: ExtensionPoint<ResourceNameDecoratorExtension> = {
-    id: 'global.files.resource-name-decorator',
-    extensionType: 'resourceNameDecorator',
-    multiple: true
-}
-```
-
-#### 3.3 ResourceListItem.vue erweitern
-
-**Datei:** `packages/web-pkg/src/components/FilesList/ResourceListItem.vue`
-
-Vor `<resource-name>` (Zeile 46) und vor `parentFolderName` (Zeile 68)
-die registrierten Decorator-Extensions abfragen und Prefix rendern:
-
-```vue
-<!-- Item-Name Prefix -->
-<span v-if="namePrefix" class="text-xs text-gray-500 mr-1">{{ namePrefix }}</span>
-<resource-name ... />
-
-<!-- Parent-Folder Prefix -->
-<span v-if="folderPrefix" class="text-xs text-gray-500 mr-0.5">{{ folderPrefix }}</span>
-<span class="text truncate text-sm hover:underline" v-text="parentFolderName" />
-```
-
-Composable `useResourceNameDecorators()` fragt die Extension Registry ab
-und liefert `getNamePrefix(resource)` / `getFolderPrefix(resource)`.
+Kein neuer Extension-Typ nötig. Folderviews nutzt diese bestehenden Mechanismen.
 
 ---
 
-### 4. opencloud_folderviews Extension — Aktenzeichen registrieren
+### 4. opencloud_folderviews — Aktenzeichen in Suche
 
 #### 4.1 extraProps registrieren
 
 ```ts
-// setup()
 clientService.webdav.registerExtraProp('om:aktencode')
 clientService.webdav.registerExtraProp('om:parent-aktencode')
 ```
 
-#### 4.2 ResourceNameDecorator Extension registrieren
+#### 4.2 Quickview (Suchleiste Preview)
 
-```ts
-const extensions = computed(() => [
-    {
-        id: 'com.openyard.folderviews.name-decorator.aktencode',
-        type: 'resourceNameDecorator',
-        extensionPointIds: ['global.files.resource-name-decorator'],
-        userPreference: {
-            optionLabel: 'Aktenzeichen anzeigen'
-        },
-        getNamePrefix(resource: Resource): string | null {
-            return resource.extraProps?.['om:aktencode'] as string || null
-        },
-        getFolderPrefix(resource: Resource): string | null {
-            return resource.extraProps?.['om:parent-aktencode'] as string || null
-        }
-    }
-])
-```
+Eigene `previewSearch.component` die `ResourcePreview` wrappt und
+das Aktenzeichen aus `resource.extraProps['om:aktencode']` anzeigt —
+sofern User-Preference aktiviert.
 
-#### 4.3 User-Preference
+#### 4.3 Ergebnisliste
 
-Die `userPreference`-Option nutzt den bestehenden Extension-Registry-Mechanismus.
-Wenn der User "Aktenzeichen anzeigen" deaktiviert, wird die Extension nicht geladen.
+Aktenzeichen via `additionalResourceContent`-Slot oder eigene
+`listSearch.component` die die bestehende `List.vue` wrappt.
+
+#### 4.4 User-Preference
+
+Steuerung ob Aktencode-Prefix sichtbar ist — über bestehenden
+Extension-Registry `userPreference`-Mechanismus.
 
 ---
 
@@ -284,23 +226,26 @@ in normalen Ordneransichten — nicht nur in der Suche.
 14. [x] `NsOwncloudMetadata` Konstante exportiert
 15. [x] 12 Unit-Tests für builders.ts — alle bestanden
 
-### Phase 3: web-pkg — OFFEN
-16. [ ] `ResourceNameDecoratorExtension` Typ in `types.ts`
-17. [ ] `resourceNameDecoratorExtensionPoint` in `extensionPoints.ts`
-18. [ ] `ResourceListItem.vue` — Decorator vor Name + Folder rendern
-19. [ ] `useResourceNameDecorators()` Composable
+### Phase 3: web-pkg — ENTFÄLLT
 
-### Phase 4: opencloud_folderviews — OFFEN
-20. [ ] bestehende `oc:oy.*` extraProps auf `om:oy.*` migrieren (~15 Stellen)
-21. [ ] `om:aktencode` + `om:parent-aktencode` registrieren
-22. [ ] `ResourceNameDecoratorExtension` registrieren (Aktenzeichen-Prefix)
-23. [ ] User-Preference "Aktenzeichen anzeigen" einbauen
+Kein neuer Extension-Typ nötig. Folderviews nutzt bereits heute `extraProps`
+und die bestehenden Extension Points (`SearchExtension`, `FolderViewExtension`,
+`additionalResourceContent`-Slot) um Metadaten anzuzeigen — ohne dass web/
+etwas davon weiß. Das gleiche Muster gilt für Aktenzeichen in der Suche:
 
-### Phase 5: Verifikation — OFFEN
-24. [ ] xattr-Keys auf bestehendem System prüfen (`getfattr -d -m "user.oc.md"`)
-25. [ ] Ggf. xattr-Migration oder Fallback-Lesen (alte + neue Keys)
-26. [ ] reva Go-Tests (erfordert Go 1.24+ für `tool` Directive in go.mod)
-27. [ ] E2E-Test: Search mit `om:aktencode` + `om:parent-aktencode`
+- **Quickview**: eigene `previewSearch.component` die `ResourcePreview` wrappt
+- **Ergebnisliste**: `additionalResourceContent`-Slot oder eigene `listSearch.component`
+
+### Phase 3: opencloud_folderviews — OFFEN
+16. [ ] bestehende `oc:oy.*` extraProps auf `om:oy.*` migrieren (~15 Stellen)
+17. [ ] `om:aktencode` + `om:parent-aktencode` als extraProps registrieren
+18. [ ] Aktenzeichen-Anzeige in Quickview (eigene `previewSearch.component`)
+19. [ ] Aktenzeichen-Anzeige in Ergebnisliste (via `additionalResourceContent` oder eigene `listSearch.component`)
+20. [ ] User-Preference "Aktenzeichen anzeigen" steuert ob Aktencode-Prefix sichtbar ist
+
+### Phase 4: Verifikation — OFFEN
+21. [ ] reva Go-Tests via `opencloud/Dockerfile.test` (Go 1.26)
+22. [ ] E2E-Test: Search mit `om:aktencode` + `om:parent-aktencode`
 
 ---
 
@@ -409,9 +354,8 @@ neuen Key schreiben).
 - `packages/web-client/src/helpers/resource/types.ts` — optional: parentMetadata auf Resource
 
 ### web-pkg
-- `packages/web-pkg/src/composables/piniaStores/extensionRegistry/types.ts` — ResourceNameDecoratorExtension
-- `packages/web-pkg/src/extensionPoints.ts` — Extension Point
-- `packages/web-pkg/src/components/FilesList/ResourceListItem.vue` — Decorator Rendering
+- Keine Änderungen — bestehende Extension Points reichen aus
 
 ### opencloud_folderviews
-- Extension Setup — registerExtraProp + Decorator Extension
+- `index.ts` — `oc:oy.*` → `om:oy.*` + neue `om:aktencode`/`om:parent-aktencode` extraProps
+- Neue/erweiterte Search-Komponenten für Aktenzeichen-Anzeige in Quickview + Ergebnisliste

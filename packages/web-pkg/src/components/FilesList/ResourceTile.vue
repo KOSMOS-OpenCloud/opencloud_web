@@ -78,17 +78,19 @@
           <div
             class="flex items-center truncate resource-name-wrapper text-role-on-surface overflow-hidden"
           >
-            <resource-list-item
-              :resource="resource"
-              :is-icon-displayed="false"
-              :is-extension-displayed="isExtensionDisplayed"
-              :is-resource-clickable="isResourceClickable"
-              :is-path-displayed="isPathDisplayed"
-              :parent-folder-name="getParentFolderName(resource)"
-              :parent-folder-link="getParentFolderLink(resource)"
-              :link="resourceRoute"
-              @click.stop="$emit('fileNameClicked', $event)"
-            />
+            <slot name="title" :item="resource">
+              <resource-list-item
+                :resource="resource"
+                :is-icon-displayed="false"
+                :is-extension-displayed="isExtensionDisplayed"
+                :is-resource-clickable="isResourceClickable"
+                :is-path-displayed="isPathDisplayed"
+                :parent-folder-name="getParentFolderName(resource)"
+                :parent-folder-link="getParentFolderLink(resource)"
+                :link="resourceRoute"
+                @click.stop="$emit('fileNameClicked', $event)"
+              />
+            </slot>
           </div>
           <div class="flex items-center">
             <!-- Slot for indicators !-->
@@ -160,6 +162,7 @@ defineSlots<{
   contextMenu?: (props: { item: Resource }) => unknown
   imageField?: (props: { item: Resource }) => unknown
   indicators?: (props: { item: Resource }) => unknown
+  title?: (props: { item: Resource }) => unknown
   selection?: (props: { item: Resource }) => unknown
   additionalResourceContent?: (props: { item: Resource }) => unknown
 }>()
