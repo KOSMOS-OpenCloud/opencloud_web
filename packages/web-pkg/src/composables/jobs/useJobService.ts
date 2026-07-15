@@ -18,6 +18,7 @@ export interface Pipeline {
   jobType: string
   notification?: string
   designedBy?: string
+  readOnly?: boolean // true = only reads source, no writeback — no share permission needed
 }
 
 export interface JobSubmission {

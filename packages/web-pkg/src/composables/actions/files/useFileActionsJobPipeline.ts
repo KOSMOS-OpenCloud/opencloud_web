@@ -4,6 +4,7 @@ import { FileAction, FileActionOptions } from '../../../composables/actions'
 import { useAuthStore } from '../../../composables/piniaStores'
 import { useMessages } from '../../../composables/piniaStores/messages'
 import { useGetMatchingSpace } from '../../../composables/spaces'
+import { useCanShare } from '../../../composables/shares'
 import type { Resource } from '@opencloud-eu/web-client'
 
 /**
@@ -23,6 +24,7 @@ export const useFileActionsJobPipeline = () => {
   const authStore = useAuthStore()
   const { showErrorMessage } = useMessages()
   const { getMatchingSpace } = useGetMatchingSpace()
+  const { canShare } = useCanShare()
   const pipelines = ref<Pipeline[]>([])
   const loaded = ref(false)
   const loading = ref(false)
@@ -68,6 +70,12 @@ export const useFileActionsJobPipeline = () => {
             return pipeline.sourceTypes.includes('*') || pipeline.sourceTypes.includes(mime)
           })
           if (!typeMatch) return false
+
+          // Pipelines that create shares need share permission on the resource/space
+          if (pipeline.shares?.type && !pipeline.readOnly) {
+            const space = getMatchingSpace(resources[0])
+            if (space && !canShare({ space, resource: resources[0] })) return false
+          }
 
           // parentDir shares require a shareable parent folder
           if (pipeline.shares?.type === 'parentDir') {
