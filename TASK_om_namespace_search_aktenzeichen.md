@@ -229,29 +229,39 @@ per `extensionPointIds` in welchen Ansichten Aktenzeichen erscheinen.
 
 ### Phase 3: web-pkg — DONE
 16. [x] `#title` Slot in `ResourceTable.vue` und `ResourceTile.vue`
+17. [x] `resourceTransformer` Extension Point in `initResourceList`
+18. [x] `resourceTransformer` Hook in `SearchBar.vue` (Quickview Preview)
 
-Der `#title` Slot wrappt das gesamte `ResourceListItem` (Dateiname + Elternverzeichnis).
-Kein neuer Extension-Typ nötig. Der Slot liefert die vollständige `Resource`
-(inkl. `extraProps` mit allen `om:*` Metadaten). Default-Content ist das bestehende
-`ResourceListItem` — kein visueller Change ohne Extension.
+### Phase 4: opencloud_folderviews — DONE
+19. [x] `oc:oy.*` → `om:oy.*` Migration (alle extraProps + Zugriffe)
+20. [x] `om:parent-oy.fileReference` registriert
+21. [x] `resourceTransformer` registriert (Aktenzeichen-Prefix via `prefixResources`)
+22. [x] Tree-View: `prefixResources` auf nachgeladene Kinder anwenden
+23. [x] Metro/Tree: doppelte UI-Prefixierung entfernt
 
-Slot-Props folgen der jeweiligen Komponenten-Konvention:
-- `ResourceTable`: `#title="{ resource }"`
-- `ResourceTile`: `#title="{ item }"`
+### Phase 5: opencloud Server (Search Pipeline) — DONE
+24. [x] Proto: `Entity.metadata` map<string,string> Feld hinzugefügt
+25. [x] Proto: `search.pb.go` korrekt generiert (protoc auf db.xwork.cloud)
+26. [x] Bleve: `StoreDynamic=true` auf IndexMapping
+27. [x] Bleve: SubDocumentMapping für Metadata entfernt (StoreDynamic-Vererbung)
+28. [x] Bleve backend: Metadata aus `hit.Fields` extrahieren (lowercase `metadata.*`)
+29. [x] WebDAV search handler: Metadata als `om:` Properties in Response ausgeben
+30. [x] CLI: `opencloud search reset` Kommando
+31. [x] CLI: `--all-spaces` bricht nicht mehr beim ersten Fehler ab
 
-Der Slot greift **überall** — Suche, Ordneransicht, Favoriten, Shares, Trash, Spaces.
-Folderviews entscheidet selbst wo und wie Aktenzeichen angezeigt werden.
+### Phase 6: Verifiziert auf cloud.brandis.eu
+32. [x] PROPFIND: `om:` Properties mit Werten (oy.fileReference, oy.ftype)
+33. [x] PROPFIND: `parent-oy.fileReference` vom Parent-Node aufgelöst
+34. [x] Search: Item-Metadata (oy.fileReference, oy.ftype) in Response
+35. [x] Ordneransicht: Aktenzeichen-Prefix in Table, Tree, Metro
+36. [x] Suche Quickview: Aktenzeichen-Prefix (via resourceTransformer)
+37. [x] Suche Ergebnisliste: Aktenzeichen-Prefix (via resourceTransformer)
 
-### Phase 4: opencloud_folderviews — OFFEN
-17. [ ] bestehende `oc:oy.*` extraProps auf `om:oy.*` migrieren (~15 Stellen)
-18. [ ] `om:aktencode` + `om:parent-aktencode` als extraProps registrieren
-19. [ ] `#title` Slot nutzen um Aktenzeichen an Item-Name und Parent-Folder anzuzeigen
-20. [ ] Quickview: eigene `previewSearch.component` die `ResourcePreview` wrappt
-21. [ ] User-Preference "Aktenzeichen anzeigen" steuert Sichtbarkeit
-
-### Phase 5: Verifikation — OFFEN
-22. [ ] reva Go-Tests via `opencloud/Dockerfile.test` (Go 1.26)
-23. [ ] E2E-Test: Search mit `om:aktencode` + `om:parent-aktencode`
+### Offen
+38. [ ] Search: Parent-Aktenzeichen fehlt (parentFolderName kommt aus `resource.path`, kein Metadata-Lookup)
+39. [ ] Search: Teilstring-Suche "11.1" findet nicht "11.13" (Bleve Keyword-Analyzer, kein Wildcard auf Metadata)
+40. [ ] Debug-Logging in backend.go entfernen
+41. [ ] Dockerfile.test: protoc-Step entfernen (pb.go ist committed)
 
 ---
 
