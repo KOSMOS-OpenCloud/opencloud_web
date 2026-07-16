@@ -68,3 +68,4 @@ docker-compose.override.yml
 
 # claude code
 .claude/
+DIST
