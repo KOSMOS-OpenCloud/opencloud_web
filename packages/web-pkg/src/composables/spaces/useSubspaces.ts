@@ -6,10 +6,17 @@ import type { SpaceResource } from '@opencloud-eu/web-client'
 // Module-level cache, also used by getIndicators for sync access
 export const subspaceCache = new Map<string, SubspaceEntry[]>()
 
-// Sync check if a node ID is a subspace root in any cached space
+// Extract the node ID from a resource ID (format: "spaceID$nodeID" or just "nodeID")
+function extractNodeId(resourceId: string): string {
+  const idx = resourceId.indexOf('$')
+  return idx >= 0 ? resourceId.substring(idx + 1) : resourceId
+}
+
+// Sync check if a resource ID is a subspace root in any cached space
 export function isSubspaceRootSync(resourceId: string): boolean {
+  const nodeId = extractNodeId(resourceId)
   for (const entries of subspaceCache.values()) {
-    if (entries.some((s) => s.id === resourceId)) {
+    if (entries.some((s) => s.id === nodeId)) {
       return true
     }
   }
@@ -38,7 +45,8 @@ export function useSubspaces() {
   }
 
   function isSubspaceRoot(resourceId: string): boolean {
-    return unref(subspaces).some((s) => s.id === resourceId)
+    const nodeId = extractNodeId(resourceId)
+    return unref(subspaces).some((s) => s.id === nodeId)
   }
 
   function invalidateCache(driveId: string) {
