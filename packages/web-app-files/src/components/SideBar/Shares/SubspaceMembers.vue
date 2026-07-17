@@ -7,6 +7,9 @@
       :label="$gettext('Add members')"
       :invite-label="$gettext('Search')"
       :resource="resource"
+      :show-private-link="false"
+      :success-message="$gettext('Member was added successfully')"
+      :error-message="$gettext('Failed to add member')"
       class="mt-2"
     />
     <template v-if="hasMembers">

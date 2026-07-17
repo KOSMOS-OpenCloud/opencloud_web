@@ -16,7 +16,7 @@
             class="pl-1"
           />
         </div>
-        <copy-private-link :resource="resource" />
+        <copy-private-link v-if="showPrivateLink" :resource="resource" />
       </div>
       <oc-select
         id="files-share-invite-input"
@@ -247,6 +247,20 @@ export default defineComponent({
     resource: {
       type: Object as PropType<SpaceResource | Resource>,
       required: true
+    },
+    showPrivateLink: {
+      type: Boolean,
+      default: true
+    },
+    successMessage: {
+      type: String,
+      required: false,
+      default: ''
+    },
+    errorMessage: {
+      type: String,
+      required: false,
+      default: ''
     }
   },
 
@@ -481,7 +495,7 @@ export default defineComponent({
       }
 
       if (addedShares.length > 0) {
-        showMessage({ title: $gettext('Share was added successfully') })
+        showMessage({ title: this.successMessage || $gettext('Share was added successfully') })
       }
 
       if (invitedContactCount > 0) {
@@ -497,9 +511,11 @@ export default defineComponent({
 
       errors.forEach((e) => {
         showErrorMessage({
-          title: $gettext('Failed to add share for "%{displayName}"', {
-            displayName: e.displayName
-          }),
+          title: this.errorMessage
+            ? `${this.errorMessage} "${e.displayName}"`
+            : $gettext('Failed to add share for "%{displayName}"', {
+                displayName: e.displayName
+              }),
           errors: [e.error]
         })
       })
