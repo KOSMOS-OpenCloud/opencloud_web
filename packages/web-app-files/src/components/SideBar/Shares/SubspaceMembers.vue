@@ -1,45 +1,117 @@
 <template>
-  <div id="oc-subspace-members" class="px-2 py-2">
+  <div id="oc-subspace-members" class="relative rounded-sm">
     <invite-collaborator-form
-      v-if="canShare({ resource, space })"
+      v-if="canShare({ space, resource })"
       key="subspace-collaborator"
-      :label="$gettext('Share with people')"
       :save-button-label="$gettext('Add')"
+      :label="$gettext('Add members')"
+      :invite-label="$gettext('Search')"
       :resource="resource"
-      class="mb-2"
+      class="mt-2"
     />
-    <p v-if="!hasMembers" class="text-sm text-role-on-surface-variant">
-      {{
-        $gettext(
-          'No subspace members yet. Add members to restrict access to this folder.'
-        )
-      }}
+    <template v-if="hasMembers">
+      <div class="flex items-center justify-between">
+        <h4 class="font-semibold my-0" v-text="$gettext('Members')" />
+      </div>
+      <ul
+        id="subspace-members-list"
+        class="oc-list m-0"
+        :aria-label="$gettext('Subspace members')"
+      >
+        <li v-for="collaborator in directShares" :key="collaborator.id" class="pt-2">
+          <collaborator-list-item
+            :share="collaborator"
+            :modifiable="canShare({ space, resource })"
+            :removable="canShare({ space, resource })"
+            :is-space-share="true"
+            @on-delete="deleteMemberConfirm(collaborator)"
+          />
+        </li>
+      </ul>
+    </template>
+    <p v-else class="text-sm text-role-on-surface-variant mt-2">
+      {{ $gettext('No subspace members yet. Add members to restrict access to this folder.') }}
     </p>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, inject, unref, watch, Ref } from 'vue'
-import { SpaceResource, Resource } from '@opencloud-eu/web-client'
+import { computed, inject, provide, readonly, unref, watch, Ref, ref } from 'vue'
+import { useGettext } from 'vue3-gettext'
+import {
+  SpaceResource,
+  Resource,
+  CollaboratorShare,
+  ShareRole
+} from '@opencloud-eu/web-client'
 import {
   useCanShare,
+  useMessages,
+  useModals,
   useSharesStore,
-  useSubspaces
+  useSubspaces,
+  useClientService
 } from '@opencloud-eu/web-pkg'
 import InviteCollaboratorForm from './Collaborators/InviteCollaborator/InviteCollaboratorForm.vue'
+import CollaboratorListItem from './Collaborators/ListItem.vue'
 
+const { $gettext } = useGettext()
 const { canShare } = useCanShare()
+const { showMessage, showErrorMessage } = useMessages()
+const { dispatchModal } = useModals()
+const clientService = useClientService()
 const sharesStore = useSharesStore()
+const { deleteShare } = sharesStore
 const { setSubspace, removeSubspace, isSubspaceRoot } = useSubspaces()
 
 const resource = inject<Ref<Resource>>('resource')
 const space = inject<Ref<SpaceResource>>('space')
 
+// Override available roles: use ALL space roles (Viewer/Editor/Manager)
+// instead of the item-level roles (only Viewer for folders).
+const spaceRoles = computed<ShareRole[]>(() => {
+  const rolesArray = Object.values(sharesStore.graphRoles)
+  // Space roles have the condition "exists @Resource.Root"
+  return rolesArray.filter(
+    (r) =>
+      r.rolePermissions?.some((rp: { condition?: string }) =>
+        rp.condition?.includes('@Resource.Root')
+      ) && r.displayName !== 'Denied'
+  )
+})
+provide('availableInternalShareRoles', readonly(spaceRoles))
+
 const directShares = computed(() =>
-  sharesStore.collaboratorShares.filter((s) => !s.indirect)
+  sharesStore.collaboratorShares.filter((s: CollaboratorShare) => !s.indirect)
 )
 
 const hasMembers = computed(() => directShares.value.length > 0)
+
+const deleteMemberConfirm = (share: CollaboratorShare) => {
+  dispatchModal({
+    title: $gettext('Remove member'),
+    confirmText: $gettext('Remove'),
+    message: $gettext('Are you sure you want to remove this member?'),
+    hasInput: false,
+    onConfirm: async () => {
+      try {
+        await deleteShare({
+          clientService,
+          space: unref(space),
+          resource: unref(resource),
+          collaboratorShare: share
+        })
+        showMessage({ title: $gettext('Member was removed successfully') })
+      } catch (error) {
+        console.error(error)
+        showErrorMessage({
+          title: $gettext('Failed to remove member'),
+          errors: [error as Error]
+        })
+      }
+    }
+  })
+}
 
 // Auto-manage subspace marking: mark on first member, unmark on last removal
 watch(directShares, async (shares, oldShares) => {
