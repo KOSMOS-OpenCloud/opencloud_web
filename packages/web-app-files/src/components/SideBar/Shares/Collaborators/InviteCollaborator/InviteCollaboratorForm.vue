@@ -101,40 +101,42 @@
         @option-change="collaboratorRoleChanged"
       />
       <div class="flex items-center">
-        <expiration-date-indicator
-          v-if="expirationDate"
-          :expiration-date="DateTime.fromISO(expirationDate)"
-          class="ml-1 p-1"
-          data-testid="recipient-info-expiration-date"
-        />
-        <oc-button
-          id="show-more-share-options-btn"
-          class="ml-1 p-1"
-          :aria-label="$gettext('Show more actions')"
-          appearance="raw"
-        >
-          <oc-icon name="more-2" />
-        </oc-button>
-        <oc-drop
-          ref="showMoreShareOptionsDropRef"
-          :title="$gettext('Share options')"
-          :drop-id="'show-more-share-options-drop'"
-          :toggle="'#show-more-share-options-btn'"
-          close-on-click
-          mode="click"
-          padding-size="small"
-        >
-          <oc-list class="collaborator-edit-dropdown-options-list" :aria-label="'shareEditOptions'">
-            <li>
-              <expiration-datepicker
-                v-if="!saving"
-                :share-types="selectedCollaborators.map(({ shareType }) => shareType)"
-                :current-expiration-date="expirationDate"
-                :on-option-change="collaboratorExpiryChanged"
-              />
-            </li>
-          </oc-list>
-        </oc-drop>
+        <template v-if="showShareOptions">
+          <expiration-date-indicator
+            v-if="expirationDate"
+            :expiration-date="DateTime.fromISO(expirationDate)"
+            class="ml-1 p-1"
+            data-testid="recipient-info-expiration-date"
+          />
+          <oc-button
+            id="show-more-share-options-btn"
+            class="ml-1 p-1"
+            :aria-label="$gettext('Show more actions')"
+            appearance="raw"
+          >
+            <oc-icon name="more-2" />
+          </oc-button>
+          <oc-drop
+            ref="showMoreShareOptionsDropRef"
+            :title="$gettext('Share options')"
+            :drop-id="'show-more-share-options-drop'"
+            :toggle="'#show-more-share-options-btn'"
+            close-on-click
+            mode="click"
+            padding-size="small"
+          >
+            <oc-list class="collaborator-edit-dropdown-options-list" :aria-label="'shareEditOptions'">
+              <li>
+                <expiration-datepicker
+                  v-if="!saving"
+                  :share-types="selectedCollaborators.map(({ shareType }) => shareType)"
+                  :current-expiration-date="expirationDate"
+                  :on-option-change="collaboratorExpiryChanged"
+                />
+              </li>
+            </oc-list>
+          </oc-drop>
+        </template>
         <oc-button
           id="new-collaborators-form-create-button"
           key="new-collaborator-save-button"
@@ -249,6 +251,10 @@ export default defineComponent({
       required: true
     },
     showPrivateLink: {
+      type: Boolean,
+      default: true
+    },
+    showShareOptions: {
       type: Boolean,
       default: true
     },
@@ -584,7 +590,10 @@ export default defineComponent({
     })
 
     const showShareTypeFilter = computed(
-      () => unref(shareRoleTypes).length > 1 && !isProjectSpaceResource(unref(resource))
+      () =>
+        props.showShareOptions !== false &&
+        unref(shareRoleTypes).length > 1 &&
+        !isProjectSpaceResource(unref(resource))
     )
 
     return {
