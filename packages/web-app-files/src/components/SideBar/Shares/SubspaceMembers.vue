@@ -70,17 +70,6 @@ const { setSubspace, removeSubspace, isSubspaceRoot } = useSubspaces()
 const resource = inject<Ref<Resource>>('resource')
 const space = inject<Ref<SpaceResource>>('space')
 
-// Mark folder as subspace on mount — a subspace with zero members has no
-// effect on permissions, but it ensures the SubspaceRootFilter will work
-// when the first member is added via the invite form below.
-const r = unref(resource)
-const s = unref(space)
-if (r && s && !isSubspaceRoot(r.id)) {
-  setSubspace(s, r.id).catch((e: unknown) =>
-    console.error('Failed to pre-mark folder as subspace:', e)
-  )
-}
-
 const directShares = computed(() =>
   sharesStore.collaboratorShares.filter((s: CollaboratorShare) => !s.indirect)
 )
@@ -113,14 +102,24 @@ const deleteMemberConfirm = (share: CollaboratorShare) => {
   })
 }
 
-// When all members are removed, remove the subspace marking
+// Auto-manage subspace marking based on member changes
 watch(directShares, async (shares, oldShares) => {
   const r = unref(resource)
   const s = unref(space)
   if (!r || !s) return
 
   const hadMembers = (oldShares?.length ?? 0) > 0
-  if (shares.length === 0 && hadMembers && isSubspaceRoot(r.id)) {
+  const hasNow = shares.length > 0
+
+  if (hasNow && !hadMembers && !isSubspaceRoot(r.id)) {
+    // First member added → mark as subspace
+    try {
+      await setSubspace(s, r.id)
+    } catch (e) {
+      console.error('Failed to mark folder as subspace:', e)
+    }
+  } else if (!hasNow && hadMembers && isSubspaceRoot(r.id)) {
+    // Last member removed → remove subspace marking
     try {
       await removeSubspace(s, r.id)
     } catch (e) {
