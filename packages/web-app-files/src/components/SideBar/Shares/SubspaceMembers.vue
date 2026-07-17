@@ -3,7 +3,7 @@
     <invite-collaborator-form
       v-if="canShare({ resource, space })"
       key="subspace-collaborator"
-      :label="$gettext('Search for people or groups')"
+      :label="$gettext('Share with people')"
       :save-button-label="$gettext('Add')"
       :resource="resource"
       class="mb-2"
@@ -41,25 +41,22 @@ const directShares = computed(() =>
 
 const hasMembers = computed(() => directShares.value.length > 0)
 
-// Mark the folder as subspace immediately when this panel is mounted.
-// This ensures the SubspaceRootFilter will catch any shares created via
-// the invite form. A subspace with zero grants has no effect on permissions.
-const r = unref(resource)
-const s = unref(space)
-if (r && s && !isSubspaceRoot(r.id)) {
-  setSubspace(s, r.id).catch((e: unknown) =>
-    console.error('Failed to mark folder as subspace:', e)
-  )
-}
-
-// When all shares are removed, remove the subspace marking
+// Auto-manage subspace marking: mark on first member, unmark on last removal
 watch(directShares, async (shares, oldShares) => {
   const r = unref(resource)
   const s = unref(space)
   if (!r || !s) return
 
   const hadMembers = (oldShares?.length ?? 0) > 0
-  if (shares.length === 0 && hadMembers && isSubspaceRoot(r.id)) {
+  const hasNow = shares.length > 0
+
+  if (hasNow && !hadMembers && !isSubspaceRoot(r.id)) {
+    try {
+      await setSubspace(s, r.id)
+    } catch (e) {
+      console.error('Failed to mark folder as subspace:', e)
+    }
+  } else if (!hasNow && hadMembers && isSubspaceRoot(r.id)) {
     try {
       await removeSubspace(s, r.id)
     } catch (e) {
