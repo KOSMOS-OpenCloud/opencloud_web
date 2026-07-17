@@ -75,6 +75,15 @@
       <web-dav-details v-if="showWebDavDetails" :space="resource" />
       <custom-component-target :extension-point="fileSideBarSpaceDetailsTableExtensionPoint" />
     </dl>
+    <div v-if="subspaceList.length > 0" class="mt-4">
+      <h3 class="text-sm font-semibold mb-2">{{ $gettext('Subspaces') }}</h3>
+      <ul class="space-y-1">
+        <li v-for="ss in subspaceList" :key="ss.id" class="flex items-center gap-2 text-sm">
+          <oc-icon name="shield-keyhole" size="small" fill-type="fill" />
+          <span>{{ ss.path }}</span>
+        </li>
+      </ul>
+    </div>
   </div>
 </template>
 <script setup lang="ts">
@@ -94,6 +103,7 @@ import {
   useSharesStore,
   useSideBar,
   useSpacesStore,
+  useSubspaces,
   useUserStore
 } from '../../../../composables'
 import SpaceQuota from '../../../SpaceQuota.vue'
@@ -121,8 +131,10 @@ const spacesStore = useSpacesStore()
 const { imagesLoading } = storeToRefs(spacesStore)
 
 const sharesStore = useSharesStore()
+const { subspaces: subspaceList, loadSubspaces } = useSubspaces()
 
 const resource = inject<Ref<SpaceResource>>('resource')
+loadSubspaces(unref(resource))
 const spaceImage = ref('')
 
 const { user } = storeToRefs(userStore)
