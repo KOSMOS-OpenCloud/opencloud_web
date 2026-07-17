@@ -163,7 +163,8 @@ import {
   useRoute,
   useRouteQuery,
   FolderLoaderOptions,
-  CustomComponentTarget
+  CustomComponentTarget,
+  useSubspaces
 } from '@opencloud-eu/web-pkg'
 import { genericSpaceHeaderExtensionPoint } from '../../extensionPoints'
 import CreateAndUpload from '../../components/AppBar/CreateAndUpload.vue'
@@ -385,6 +386,7 @@ const {
 })
 
 const { loadPreview } = useLoadPreview(viewMode)
+const { loadSubspaces } = useSubspaces()
 
 const keyActions = useKeyboardActions()
 useKeyboardFileNavigation(keyActions, paginatedResources, viewMode)
@@ -405,6 +407,11 @@ const performLoaderTask = async (sameRoute: boolean, path?: string, fileId?: str
       fileId || props.itemId,
       options
     )
+
+    // Load subspace list for project spaces (needed for indicators)
+    if (isProjectSpaceResource(unref(space))) {
+      loadSubspaces(unref(space))
+    }
   } catch (e) {
     console.error(e)
   }

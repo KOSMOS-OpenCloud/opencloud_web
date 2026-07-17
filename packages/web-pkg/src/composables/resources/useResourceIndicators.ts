@@ -12,6 +12,7 @@ import { useInterceptModifierClick } from '../keyboardActions'
 import { useExtensionRegistry, useResourcesStore, useSideBar, useUserStore } from '../piniaStores'
 import { IconFillType } from '../../helpers'
 import { resourceIndicatorExtensionPoint } from '../../extensionPoints'
+import { isSubspaceRootSync } from '../spaces/useSubspaces'
 
 export type ResourceIndicatorCategory = 'system' | 'sharing' | 'space'
 
@@ -234,6 +235,19 @@ export const useResourceIndicators = () => {
     }
   }
 
+  const getSubspaceIndicator = ({ resource }: { resource: Resource }): ResourceIndicator => {
+    return {
+      id: `resource-subspace-${resource.getDomSelector()}`,
+      kind: 'icon',
+      accessibleDescription: $gettext('This folder is a subspace with its own access rules'),
+      label: $gettext('Subspace'),
+      icon: 'shield-keyhole',
+      category: 'system',
+      type: 'resource-subspace',
+      fillType: 'fill'
+    }
+  }
+
   const getIndicators = ({
     space,
     resource
@@ -253,6 +267,10 @@ export const useResourceIndicators = () => {
 
     if (resource.processing) {
       indicators.push(getProcessingIndicator({ resource }))
+    }
+
+    if (resource.type === 'folder' && resource.id && isSubspaceRootSync(resource.id)) {
+      indicators.push(getSubspaceIndicator({ resource }))
     }
 
     if (isProjectSpaceResource(resource) && !resource.disabled) {

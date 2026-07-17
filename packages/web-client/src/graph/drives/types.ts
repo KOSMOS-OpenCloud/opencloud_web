@@ -3,6 +3,11 @@ import type { Drive, DriveUpdate } from '../generated'
 import { ListMyDrivesBetaSelectEnum } from '../generated'
 import type { GraphRequestOptions } from '../types'
 
+export interface SubspaceEntry {
+  id: string
+  path: string
+}
+
 export interface GraphDrives {
   getDrive: (
     id: string,
@@ -41,4 +46,15 @@ export interface GraphDrives {
     },
     requestOptions?: GraphRequestOptions
   ) => Promise<SpaceResource[]>
+  listSubspaces: (driveId: string, requestOptions?: GraphRequestOptions) => Promise<SubspaceEntry[]>
+  setSubspace: (
+    driveId: string,
+    itemId: string,
+    requestOptions?: GraphRequestOptions
+  ) => Promise<SubspaceEntry>
+  deleteSubspace: (
+    driveId: string,
+    itemId: string,
+    requestOptions?: GraphRequestOptions
+  ) => Promise<void>
 }
