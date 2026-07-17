@@ -1,21 +1,25 @@
-import { ref, unref, type Ref } from 'vue'
+import { computed, ref, unref } from 'vue'
 import { useClientService } from '../clientService'
 import type { SubspaceEntry } from '@opencloud-eu/web-client/graph'
 import type { SpaceResource } from '@opencloud-eu/web-client'
 
-// Module-level cache, also used by getIndicators for sync access
-export const subspaceCache = new Map<string, SubspaceEntry[]>()
+// Global reactive state — shared across all useSubspaces() instances
+const allSubspaces = ref<Record<string, SubspaceEntry[]>>({})
 
-// Extract the node ID from a resource ID (format: "spaceID$nodeID" or just "nodeID")
+// Extract the node ID from a resource ID (format: "storageId$spaceId!nodeId")
 function extractNodeId(resourceId: string): string {
-  const idx = resourceId.indexOf('$')
-  return idx >= 0 ? resourceId.substring(idx + 1) : resourceId
+  const bangIdx = resourceId.indexOf('!')
+  if (bangIdx >= 0) {
+    return resourceId.substring(bangIdx + 1)
+  }
+  const dollarIdx = resourceId.indexOf('$')
+  return dollarIdx >= 0 ? resourceId.substring(dollarIdx + 1) : resourceId
 }
 
-// Sync check if a resource ID is a subspace root in any cached space
+// Sync check — works in non-reactive contexts (e.g. getIndicators)
 export function isSubspaceRootSync(resourceId: string): boolean {
   const nodeId = extractNodeId(resourceId)
-  for (const entries of subspaceCache.values()) {
+  for (const entries of Object.values(allSubspaces.value)) {
     if (entries.some((s) => s.id === nodeId)) {
       return true
     }
@@ -25,44 +29,44 @@ export function isSubspaceRootSync(resourceId: string): boolean {
 
 export function useSubspaces() {
   const clientService = useClientService()
-  const subspaces: Ref<SubspaceEntry[]> = ref([])
 
-  async function loadSubspaces(space: SpaceResource): Promise<SubspaceEntry[]> {
-    const driveId = space.id
-    if (subspaceCache.has(driveId)) {
-      subspaces.value = subspaceCache.get(driveId)
-      return unref(subspaces)
-    }
-
-    try {
-      const entries = await clientService.graphAuthenticated.drives.listSubspaces(driveId)
-      subspaceCache.set(driveId, entries)
-      subspaces.value = entries
-    } catch {
-      subspaces.value = []
-    }
-    return unref(subspaces)
-  }
+  const subspaces = computed(() => {
+    return Object.values(allSubspaces.value).flat()
+  })
 
   function isSubspaceRoot(resourceId: string): boolean {
     const nodeId = extractNodeId(resourceId)
     return unref(subspaces).some((s) => s.id === nodeId)
   }
 
-  function invalidateCache(driveId: string) {
-    subspaceCache.delete(driveId)
+  async function loadSubspaces(space: SpaceResource): Promise<SubspaceEntry[]> {
+    const driveId = space.id
+    if (allSubspaces.value[driveId]) {
+      return allSubspaces.value[driveId]
+    }
+
+    try {
+      const entries = await clientService.graphAuthenticated.drives.listSubspaces(driveId)
+      allSubspaces.value = { ...allSubspaces.value, [driveId]: entries }
+    } catch {
+      // ignore
+    }
+    return allSubspaces.value[driveId] || []
   }
 
   async function setSubspace(space: SpaceResource, itemId: string): Promise<SubspaceEntry> {
     const entry = await clientService.graphAuthenticated.drives.setSubspace(space.id, itemId)
-    invalidateCache(space.id)
+    // Reload subspace list
+    delete allSubspaces.value[space.id]
+    allSubspaces.value = { ...allSubspaces.value }
     await loadSubspaces(space)
     return entry
   }
 
   async function removeSubspace(space: SpaceResource, itemId: string): Promise<void> {
     await clientService.graphAuthenticated.drives.deleteSubspace(space.id, itemId)
-    invalidateCache(space.id)
+    delete allSubspaces.value[space.id]
+    allSubspaces.value = { ...allSubspaces.value }
     await loadSubspaces(space)
   }
 
@@ -70,7 +74,6 @@ export function useSubspaces() {
     subspaces,
     loadSubspaces,
     isSubspaceRoot,
-    invalidateCache,
     setSubspace,
     removeSubspace
   }

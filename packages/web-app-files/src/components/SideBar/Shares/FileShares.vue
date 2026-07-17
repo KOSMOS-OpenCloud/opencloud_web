@@ -105,7 +105,7 @@ import {
   SpaceResource,
   CollaboratorShare
 } from '@opencloud-eu/web-client'
-import { getSharedAncestorRoute, isSubspaceRootSync } from '@opencloud-eu/web-pkg'
+import { getSharedAncestorRoute, useSubspaces } from '@opencloud-eu/web-pkg'
 import {
   fileSideBarSharesPanelSharedWithTopExtensionPoint,
   fileSideBarSharesPanelSharedWithBottomExtensionPoint
@@ -144,13 +144,15 @@ export default defineComponent({
     const resource = inject<Ref<Resource>>('resource')
     const space = inject<Ref<SpaceResource>>('space')
 
+    const { isSubspaceRoot } = useSubspaces()
+
     const collaboratorShares = computed(() => {
       let shares = sharesStore.collaboratorShares
       if (isProjectSpaceResource(unref(space))) {
         // filter out project space members, they are listed separately (see down below)
         shares = shares.filter((c) => c.resourceId !== unref(space).id)
         // filter out subspace members — shown in their own panel
-        if (isSubspaceRootSync(unref(resource)?.id)) {
+        if (isSubspaceRoot(unref(resource)?.id)) {
           shares = shares.filter((c) => c.indirect)
         }
       }
