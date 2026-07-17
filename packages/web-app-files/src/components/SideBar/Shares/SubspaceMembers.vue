@@ -3,7 +3,8 @@
     <invite-collaborator-form
       v-if="canShare({ resource, space })"
       key="subspace-collaborator"
-      :label="$gettext('Add member')"
+      :label="$gettext('Search for people or groups')"
+      :save-button-label="$gettext('Add')"
       :resource="resource"
       class="mb-2"
     />
