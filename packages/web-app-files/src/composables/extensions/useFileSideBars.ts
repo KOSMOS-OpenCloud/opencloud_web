@@ -4,6 +4,7 @@ import ExifPanel from '../../components/SideBar/Exif/ExifPanel.vue'
 import FileActions from '../../components/SideBar/Actions/FileActions.vue'
 import FileVersions from '../../components/SideBar/Versions/FileVersions.vue'
 import SharesPanel from '../../components/SideBar/Shares/SharesPanel.vue'
+import SubspaceMembers from '../../components/SideBar/Shares/SubspaceMembers.vue'
 import NoSelection from '../../components/SideBar/NoSelection.vue'
 import TrashNoSelection from '../../components/SideBar/TrashNoSelection.vue'
 import ActivitiesPanel from '../../components/SideBar/ActivitiesPanel.vue'
@@ -241,6 +242,30 @@ export const useSideBarPanels = (): SidebarPanelExtension<SpaceResource, Resourc
           }
           if (isProjectSpaceResource(items[0])) {
             // project space roots have their own "sharing" panel (= space members)
+            return false
+          }
+          return canListShares({ space: root, resource: items[0] })
+        }
+      }
+    },
+    {
+      id: 'com.github.opencloud-eu.web.files.sidebar-panel.subspace',
+      type: 'sidebarPanel',
+      extensionPointIds: [fileSideBarExtensionPoint.id],
+      panel: {
+        name: 'subspace',
+        icon: 'shield-keyhole',
+        iconFillType: 'fill',
+        title: () => $gettext('Subspace'),
+        component: markRaw(SubspaceMembers),
+        isVisible: ({ items, root }) => {
+          if (items?.length !== 1) {
+            return false
+          }
+          if (items[0].type !== 'folder') {
+            return false
+          }
+          if (!isProjectSpaceResource(root)) {
             return false
           }
           return canListShares({ space: root, resource: items[0] })
