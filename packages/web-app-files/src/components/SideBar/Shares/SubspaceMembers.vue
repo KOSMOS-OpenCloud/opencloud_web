@@ -39,13 +39,12 @@
 </template>
 
 <script setup lang="ts">
-import { computed, inject, provide, readonly, unref, watch, Ref, ref } from 'vue'
+import { computed, inject, unref, watch, Ref } from 'vue'
 import { useGettext } from 'vue3-gettext'
 import {
   SpaceResource,
   Resource,
-  CollaboratorShare,
-  ShareRole
+  CollaboratorShare
 } from '@opencloud-eu/web-client'
 import {
   useCanShare,
@@ -69,20 +68,6 @@ const { setSubspace, removeSubspace, isSubspaceRoot } = useSubspaces()
 
 const resource = inject<Ref<Resource>>('resource')
 const space = inject<Ref<SpaceResource>>('space')
-
-// Override available roles: use ALL space roles (Viewer/Editor/Manager)
-// instead of the item-level roles (only Viewer for folders).
-const spaceRoles = computed<ShareRole[]>(() => {
-  const rolesArray = Object.values(sharesStore.graphRoles)
-  // Space roles have the condition "exists @Resource.Root"
-  return rolesArray.filter(
-    (r) =>
-      r.rolePermissions?.some((rp: { condition?: string }) =>
-        rp.condition?.includes('@Resource.Root')
-      ) && r.displayName !== 'Denied'
-  )
-})
-provide('availableInternalShareRoles', readonly(spaceRoles))
 
 const directShares = computed(() =>
   sharesStore.collaboratorShares.filter((s: CollaboratorShare) => !s.indirect)
