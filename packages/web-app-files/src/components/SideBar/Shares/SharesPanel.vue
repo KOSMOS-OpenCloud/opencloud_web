@@ -4,6 +4,7 @@
     <template v-else>
       <space-members v-if="showSpaceMembers" class="px-2 py-2" />
       <file-shares v-else class="px-2 py-2" />
+      <subspace-members v-if="!showSpaceMembers" class="px-2 py-2" />
       <file-links v-if="showLinks" class="px-2 py-2" />
     </template>
   </div>
@@ -14,6 +15,7 @@ import { defineComponent } from 'vue'
 import FileLinks from './FileLinks.vue'
 import FileShares from './FileShares.vue'
 import SpaceMembers from './SpaceMembers.vue'
+import SubspaceMembers from './SubspaceMembers.vue'
 import { useSharesStore } from '@opencloud-eu/web-pkg'
 import { storeToRefs } from 'pinia'
 
@@ -22,7 +24,8 @@ export default defineComponent({
   components: {
     FileLinks,
     FileShares,
-    SpaceMembers
+    SpaceMembers,
+    SubspaceMembers
   },
   props: {
     showSpaceMembers: { type: Boolean, default: false },

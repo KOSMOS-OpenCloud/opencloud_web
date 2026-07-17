@@ -19,8 +19,7 @@ import {
   useFileActionsDownloadFile,
   useFileActionsNavigate,
   useFileActionsImmutable,
-  useFileActionsRestore,
-  useFileActionsSetSubspace
+  useFileActionsRestore
 } from './index'
 import {
   ActionExtension,
@@ -60,14 +59,12 @@ export const useFileActions = () => {
   const { actions: navigateActions } = useFileActionsNavigate()
   const { actions: restoreActions } = useFileActionsRestore()
   const { actions: immutableActions } = useFileActionsImmutable()
-  const { actions: subspaceActions } = useFileActionsSetSubspace()
 
   const systemActions = computed<FileAction<any>[]>(() => [
     ...unref(downloadFileActions),
     ...unref(deleteActions),
     ...unref(restoreActions),
-    ...unref(immutableActions),
-    ...unref(subspaceActions)
+    ...unref(immutableActions)
   ])
 
   const extensionsContextActions = computed(() => {

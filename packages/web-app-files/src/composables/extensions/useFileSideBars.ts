@@ -26,7 +26,6 @@ import { isProjectSpaceResource, SpaceResource } from '@opencloud-eu/web-client'
 import { Resource } from '@opencloud-eu/web-client'
 import { useGettext } from 'vue3-gettext'
 import { markRaw, unref } from 'vue'
-import { isSubspaceRootSync } from '@opencloud-eu/web-pkg'
 import { fileSideBarExtensionPoint } from '../../extensionPoints'
 import AudioMetaPanel from '../../components/SideBar/Audio/AudioMetaPanel.vue'
 import MetadataPanel from '../../components/SideBar/Metadata/MetadataPanel.vue'
@@ -228,12 +227,7 @@ export const useSideBarPanels = (): SidebarPanelExtension<SpaceResource, Resourc
         name: 'sharing',
         icon: 'user-add',
         iconFillType: 'line',
-        title: ({ items }) => {
-          if (items?.length === 1 && items[0].type === 'folder' && isSubspaceRootSync(items[0].id)) {
-            return $gettext('Subspace members')
-          }
-          return $gettext('Shares')
-        },
+        title: () => $gettext('Shares'),
         component: markRaw(SharesPanel),
         componentAttrs: () => ({
           showSpaceMembers: false,
