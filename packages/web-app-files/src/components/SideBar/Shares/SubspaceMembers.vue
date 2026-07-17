@@ -70,6 +70,15 @@ const { setSubspace, removeSubspace, isSubspaceRoot } = useSubspaces()
 const resource = inject<Ref<Resource>>('resource')
 const space = inject<Ref<SpaceResource>>('space')
 
+// Mark folder as subspace when panel opens (before any invite).
+// A subspace with zero members has no effect on permissions.
+// This ensures SubspaceRootFilter works when the first share is created.
+if (unref(resource) && unref(space) && !isSubspaceRoot(unref(resource).id)) {
+  setSubspace(unref(space), unref(resource).id).catch((e: unknown) =>
+    console.warn('Subspace pre-mark:', e)
+  )
+}
+
 const directShares = computed(() =>
   sharesStore.collaboratorShares.filter((s: CollaboratorShare) => !s.indirect)
 )

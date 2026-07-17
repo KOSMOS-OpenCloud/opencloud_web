@@ -72,7 +72,7 @@ export const DrivesFactory = ({ axiosClient, config }: GraphFactoryOptions): Gra
 
     async listSubspaces(driveId, requestOptions) {
       const { data } = await axiosClient.get(
-        `${config.basePath}/v1beta1/drives/${driveId}/subspaces`,
+        `${config.basePath}/v1beta1/drives/${encodeURIComponent(driveId)}/subspaces`,
         requestOptions
       )
       return data.value || []
@@ -80,7 +80,7 @@ export const DrivesFactory = ({ axiosClient, config }: GraphFactoryOptions): Gra
 
     async setSubspace(driveId, itemId, requestOptions) {
       const { data } = await axiosClient.post(
-        `${config.basePath}/v1beta1/drives/${driveId}/items/${itemId}/subspace`,
+        `${config.basePath}/v1beta1/drives/${encodeURIComponent(driveId)}/items/${encodeURIComponent(itemId)}/subspace`,
         null,
         requestOptions
       )
@@ -89,7 +89,7 @@ export const DrivesFactory = ({ axiosClient, config }: GraphFactoryOptions): Gra
 
     async deleteSubspace(driveId, itemId, requestOptions) {
       await axiosClient.delete(
-        `${config.basePath}/v1beta1/drives/${driveId}/items/${itemId}/subspace`,
+        `${config.basePath}/v1beta1/drives/${encodeURIComponent(driveId)}/items/${encodeURIComponent(itemId)}/subspace`,
         requestOptions
       )
     }
