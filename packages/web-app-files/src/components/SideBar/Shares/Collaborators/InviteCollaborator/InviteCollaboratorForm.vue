@@ -270,7 +270,7 @@ export default defineComponent({
     }
   },
 
-  setup() {
+  setup(props) {
     const { $gettext, $ngettext } = useGettext()
     const clientService = useClientService()
     const { showMessage, showErrorMessage } = useMessages()
