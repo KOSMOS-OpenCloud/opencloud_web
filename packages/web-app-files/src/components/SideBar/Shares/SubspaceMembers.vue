@@ -115,7 +115,7 @@ watch(directShares, async (shares, oldShares) => {
   const hasNow = shares.length > 0
 
   if (hasNow && !hadMembers && !isSubspaceRoot(r.id)) {
-    // First member added → mark as subspace (skip if pre-mark already handled it)
+    // First member added → register as subspace in backend
     try {
       await setSubspace(s, r.id)
     } catch (e) {
