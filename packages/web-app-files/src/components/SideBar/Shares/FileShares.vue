@@ -172,7 +172,16 @@ export default defineComponent({
     loadSpaceContext()
     watch(resource, loadSpaceContext)
 
-    const isInsideSubspace = computed(() => spaceContext.value?.type === 'subspace')
+    const isInsideSubspace = computed(() => {
+      if (spaceContext.value?.type !== 'subspace') return false
+      // The subspace root itself is not "inside" a subspace — it IS the subspace.
+      // Only show the "inside subspace" hint for items below the subspace root.
+      const r = unref(resource)
+      if (!r) return false
+      const subspaceNodeId = spaceContext.value.id
+      const resourceNodeId = r.id?.split('!').pop() || r.id
+      return resourceNodeId !== subspaceNodeId
+    })
     const subspacePath = computed(() => spaceContext.value?.path || '')
 
     const collaboratorShares = computed(() => {
