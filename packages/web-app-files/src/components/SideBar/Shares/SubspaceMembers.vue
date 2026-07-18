@@ -40,7 +40,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, inject, unref, watch, Ref } from 'vue'
+import { computed, inject, unref, Ref } from 'vue'
 import { useGettext } from 'vue3-gettext'
 import {
   SpaceResource,
@@ -52,7 +52,6 @@ import {
   useMessages,
   useModals,
   useSharesStore,
-  useSubspaces,
   useClientService
 } from '@opencloud-eu/web-pkg'
 import InviteCollaboratorForm from './Collaborators/InviteCollaborator/InviteCollaboratorForm.vue'
@@ -65,13 +64,9 @@ const { dispatchModal } = useModals()
 const clientService = useClientService()
 const sharesStore = useSharesStore()
 const { deleteShare } = sharesStore
-const { setSubspace, removeSubspace, isSubspaceRoot } = useSubspaces()
 
 const resource = inject<Ref<Resource>>('resource')
 const space = inject<Ref<SpaceResource>>('space')
-
-// Do NOT pre-mark folders as subspaces on panel open.
-// Marking happens automatically when the first member is added (see watch below).
 
 const directShares = computed(() =>
   sharesStore.collaboratorShares.filter((s: CollaboratorShare) => !s.indirect)
@@ -105,29 +100,8 @@ const deleteMemberConfirm = (share: CollaboratorShare) => {
   })
 }
 
-// Auto-manage subspace marking based on member changes
-watch(directShares, async (shares, oldShares) => {
-  const r = unref(resource)
-  const s = unref(space)
-  if (!r || !s) return
-
-  const hadMembers = (oldShares?.length ?? 0) > 0
-  const hasNow = shares.length > 0
-
-  if (hasNow && !hadMembers && !isSubspaceRoot(r.id)) {
-    // First member added → register as subspace in backend
-    try {
-      await setSubspace(s, r.id)
-    } catch (e) {
-      console.error('Failed to mark folder as subspace:', e)
-    }
-  } else if (!hasNow && hadMembers && isSubspaceRoot(r.id)) {
-    // Last member removed → remove subspace marking
-    try {
-      await removeSubspace(s, r.id)
-    } catch (e) {
-      console.error('Failed to remove subspace marking:', e)
-    }
-  }
-})
+// Subspace registration is handled automatically by reva:
+// AddGrant → auto-registers folder as subspace
+// RemoveGrant → auto-removes subspace when last grant is gone
+// No UI-side marking needed.
 </script>
