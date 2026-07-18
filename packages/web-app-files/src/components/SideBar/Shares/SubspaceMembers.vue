@@ -40,7 +40,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, inject, unref, watch, Ref } from 'vue'
+import { computed, inject, ref, unref, watch, Ref } from 'vue'
 import { useGettext } from 'vue3-gettext'
 import {
   SpaceResource,
@@ -73,11 +73,18 @@ const space = inject<Ref<SpaceResource>>('space')
 // Mark folder as subspace when panel opens (before any invite).
 // A subspace with zero members has no effect on permissions.
 // This ensures SubspaceRootFilter works when the first share is created.
-if (unref(resource) && unref(space) && !isSubspaceRoot(unref(resource).id)) {
-  setSubspace(unref(space), unref(resource).id).catch((e: unknown) =>
-    console.warn('Subspace pre-mark:', e)
-  )
+const preMarkDone = ref(false)
+async function preMarkSubspace() {
+  if (unref(resource) && unref(space) && !isSubspaceRoot(unref(resource).id)) {
+    try {
+      await setSubspace(unref(space), unref(resource).id)
+    } catch (e: unknown) {
+      console.warn('Subspace pre-mark:', e)
+    }
+  }
+  preMarkDone.value = true
 }
+preMarkSubspace()
 
 const directShares = computed(() =>
   sharesStore.collaboratorShares.filter((s: CollaboratorShare) => !s.indirect)
@@ -120,8 +127,8 @@ watch(directShares, async (shares, oldShares) => {
   const hadMembers = (oldShares?.length ?? 0) > 0
   const hasNow = shares.length > 0
 
-  if (hasNow && !hadMembers && !isSubspaceRoot(r.id)) {
-    // First member added → mark as subspace
+  if (hasNow && !hadMembers && unref(preMarkDone) && !isSubspaceRoot(r.id)) {
+    // First member added → mark as subspace (skip if pre-mark already handled it)
     try {
       await setSubspace(s, r.id)
     } catch (e) {

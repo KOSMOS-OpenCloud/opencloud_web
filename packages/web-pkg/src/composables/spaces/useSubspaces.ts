@@ -27,24 +27,13 @@ export function isSubspaceRootSync(resourceId: string): boolean {
   return false
 }
 
-// Returns the most specific (deepest) subspace path that contains the given path.
-export function getContainingSubspacePath(resourcePath: string): string {
-  if (!resourcePath) return ''
-  let best = ''
-  for (const entries of Object.values(allSubspaces.value)) {
-    for (const ss of entries) {
-      if (resourcePath === ss.path || resourcePath.startsWith(ss.path + '/')) {
-        if (ss.path.length > best.length) {
-          best = ss.path
-        }
-      }
-    }
-  }
-  return best
+// Test helpers — allow tests to populate/reset the cache without API calls.
+export function setSubspaceCache(spaceId: string, entries: SubspaceEntry[]): void {
+  allSubspaces.value = { ...allSubspaces.value, [spaceId]: entries }
 }
 
-export function isInsideSubspaceSync(resourcePath: string): boolean {
-  return getContainingSubspacePath(resourcePath) !== ''
+export function clearSubspaceCache(): void {
+  allSubspaces.value = {}
 }
 
 export function useSubspaces() {
@@ -68,8 +57,8 @@ export function useSubspaces() {
     try {
       const entries = await clientService.graphAuthenticated.drives.listSubspaces(driveId)
       allSubspaces.value = { ...allSubspaces.value, [driveId]: entries }
-    } catch {
-      // ignore
+    } catch (error) {
+      console.error('useSubspaces: failed to load subspaces for space', driveId, error)
     }
     return allSubspaces.value[driveId] || []
   }
