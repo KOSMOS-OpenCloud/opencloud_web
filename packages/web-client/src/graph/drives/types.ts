@@ -8,6 +8,12 @@ export interface SubspaceEntry {
   path: string
 }
 
+export interface SpaceContext {
+  type: 'space' | 'subspace'
+  id: string
+  path: string
+}
+
 export interface GraphDrives {
   getDrive: (
     id: string,
@@ -57,4 +63,9 @@ export interface GraphDrives {
     itemId: string,
     requestOptions?: GraphRequestOptions
   ) => Promise<void>
+  getItemSpaceContext: (
+    driveId: string,
+    itemId: string,
+    requestOptions?: GraphRequestOptions
+  ) => Promise<SpaceContext>
 }

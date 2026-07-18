@@ -92,6 +92,14 @@ export const DrivesFactory = ({ axiosClient, config }: GraphFactoryOptions): Gra
         `${config.basePath}/v1beta1/drives/${encodeURIComponent(driveId)}/items/${encodeURIComponent(itemId)}/subspace`,
         requestOptions
       )
+    },
+
+    async getItemSpaceContext(driveId, itemId, requestOptions) {
+      const { data } = await axiosClient.get(
+        `${config.basePath}/v1beta1/drives/${encodeURIComponent(driveId)}/items/${encodeURIComponent(itemId)}/space`,
+        requestOptions
+      )
+      return data
     }
   }
 }
