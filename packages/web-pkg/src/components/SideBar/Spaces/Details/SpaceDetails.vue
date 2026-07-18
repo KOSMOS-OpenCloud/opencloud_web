@@ -131,10 +131,15 @@ const spacesStore = useSpacesStore()
 const { imagesLoading } = storeToRefs(spacesStore)
 
 const sharesStore = useSharesStore()
-const { subspaces: subspaceList, loadSubspaces } = useSubspaces()
+const { loadSubspaces } = useSubspaces()
 
 const resource = inject<Ref<SpaceResource>>('resource')
-loadSubspaces(unref(resource))
+const subspaceList = ref<{ id: string; path: string }[]>([])
+async function refreshSubspaces() {
+  const entries = await loadSubspaces(unref(resource))
+  subspaceList.value = entries
+}
+refreshSubspaces()
 const spaceImage = ref('')
 
 const { user } = storeToRefs(userStore)
