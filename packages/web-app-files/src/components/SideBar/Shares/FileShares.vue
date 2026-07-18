@@ -105,7 +105,7 @@ import {
   SpaceResource,
   CollaboratorShare
 } from '@opencloud-eu/web-client'
-import { getSharedAncestorRoute, isSubspaceRootSync } from '@opencloud-eu/web-pkg'
+import { getSharedAncestorRoute, isSubspaceRootSync, isInsideSubspaceSync } from '@opencloud-eu/web-pkg'
 import {
   fileSideBarSharesPanelSharedWithTopExtensionPoint,
   fileSideBarSharesPanelSharedWithBottomExtensionPoint
@@ -284,7 +284,14 @@ export default defineComponent({
     },
 
     showSpaceMembers() {
-      return isProjectSpaceResource(this.space) && this.resource.type !== 'space'
+      if (!isProjectSpaceResource(this.space) || this.resource.type === 'space') {
+        return false
+      }
+      // Inside a subspace → space members don't apply, subspace panel handles it
+      if (isInsideSubspaceSync(this.resource.path)) {
+        return false
+      }
+      return true
     }
   },
   methods: {

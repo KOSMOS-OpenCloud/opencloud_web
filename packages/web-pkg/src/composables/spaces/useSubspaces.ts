@@ -27,6 +27,19 @@ export function isSubspaceRootSync(resourceId: string): boolean {
   return false
 }
 
+// Sync check — is a path inside any subspace?
+export function isInsideSubspaceSync(resourcePath: string): boolean {
+  if (!resourcePath) return false
+  for (const entries of Object.values(allSubspaces.value)) {
+    for (const ss of entries) {
+      if (resourcePath === ss.path || resourcePath.startsWith(ss.path + '/')) {
+        return true
+      }
+    }
+  }
+  return false
+}
+
 export function useSubspaces() {
   const clientService = useClientService()
 
