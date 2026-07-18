@@ -1,6 +1,7 @@
 import { ref, onUnmounted } from 'vue'
 import { useJobService, Job } from './useJobService'
 import { useMessages } from '../piniaStores/messages'
+import { addActiveJob, removeActiveJob } from './activeJobs'
 
 export const useJobProgress = () => {
   const jobService = useJobService()
@@ -8,8 +9,8 @@ export const useJobProgress = () => {
   const activePolls = ref(new Map<string, ReturnType<typeof setInterval>>())
 
   const pollJob = (jobId: string, onComplete?: (job: Job) => void) => {
-    // Don't poll same job twice
     if (activePolls.value.has(jobId)) return
+    addActiveJob(jobId)
 
     const interval = setInterval(async () => {
       try {
@@ -52,6 +53,7 @@ export const useJobProgress = () => {
       clearInterval(interval)
       activePolls.value.delete(jobId)
     }
+    removeActiveJob(jobId)
   }
 
   const showJobProgress = async (jobId: string, onComplete?: (job: Job) => void) => {

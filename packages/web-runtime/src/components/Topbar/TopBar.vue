@@ -29,6 +29,21 @@
         <audio-player />
         <custom-component-target :extension-point="topBarRightExtensionPoint" />
         <feedback-link v-if="isFeedbackLinkEnabled" v-bind="feedbackLinkOptions" />
+        <oc-button
+          v-if="activeJobCount > 0"
+          v-oc-tooltip="activeJobCount + ' ' + $gettext('Jobs aktiv')"
+          appearance="raw-inverse"
+          color-role="chrome"
+          :aria-label="activeJobCount + ' ' + $gettext('Jobs aktiv')"
+          no-hover
+          class="relative"
+        >
+          <oc-icon class="cursor-pointer flex items-center" name="loader-4" fill-type="line" />
+          <span
+            class="badge absolute top-[-6px] right-[-9px] p-1 text-xs leading-2 font-light text-center bg-blue-600 text-white rounded-4xl box-content min-w-2 h-2 shadow-sm"
+            v-text="activeJobCount > 99 ? '99+' : activeJobCount"
+          />
+        </oc-button>
         <notifications v-if="isNotificationBellEnabled" />
         <side-bar-toggle
           v-if="isSideBarToggleVisible && !appModeStore.isEnabled"
@@ -63,7 +78,8 @@ import {
   useAppModeStore,
   useExtensionRegistry,
   useRouter,
-  useThemeStore
+  useThemeStore,
+  activeJobCount
 } from '@opencloud-eu/web-pkg'
 import SidebarNavMobile from '../SidebarNav/SidebarNavMobile.vue'
 import { routeNames } from '../../router/names'

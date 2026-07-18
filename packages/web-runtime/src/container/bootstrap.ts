@@ -52,7 +52,8 @@ import {
   LoadingService,
   getExtensionNavItems,
   getBackendVersion,
-  getWebVersion
+  getWebVersion,
+  initActiveJobs
 } from '@opencloud-eu/web-pkg'
 import { authService } from '../services/auth'
 import { init as sentryInit } from '@sentry/vue'
@@ -1114,6 +1115,9 @@ export const registerSSEEventListeners = ({
       method: onSSEJobFinishedEvent
     })
   )
+
+  // One-time: load active jobs so the counter shows correct state on page load
+  initActiveJobs(clientService.httpAuthenticated)
 }
 
 export const setViewOptions = ({ resourcesStore }: { resourcesStore: ResourcesStore }) => {

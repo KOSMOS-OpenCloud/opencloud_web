@@ -1,4 +1,5 @@
 import { useClientService } from '../clientService'
+import { addActiveJob } from './activeJobs'
 import { usePasswordPolicyService } from '../passwordPolicyService'
 import type { Resource, SpaceResource } from '@opencloud-eu/web-client'
 import { SharingLinkType } from '@opencloud-eu/web-client/graph/generated'
@@ -66,6 +67,7 @@ export const useJobService = () => {
   const submitJob = async (submission: JobSubmission): Promise<Job> => {
     const httpClient = (clientService as any).httpAuthenticated
     const { data } = await httpClient.post('/api/v0/jobs', submission)
+    addActiveJob(data.jobId)
     return data
   }
 
