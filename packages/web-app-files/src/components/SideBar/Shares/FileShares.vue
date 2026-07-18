@@ -74,13 +74,30 @@
         </oc-button>
       </div>
     </template>
-    <template v-else-if="isInsideSubspace">
+    <template v-else-if="showSubspaceMembers">
       <div class="flex items-center mt-2 gap-2">
         <oc-icon name="shield-keyhole" size="small" fill-type="fill" />
-        <h4 class="font-semibold my-2" v-text="$gettext('Subspace')" />
+        <h4 class="font-semibold my-2" v-text="subspaceMemberLabel" />
       </div>
-      <p class="text-sm text-role-on-surface-variant m-0">
+      <p v-if="isInsideSubspace" class="text-sm text-role-on-surface-variant m-0">
         {{ $gettext('This folder is inside the subspace "%{path}". Access is managed there.', { path: subspacePath }) }}
+      </p>
+      <ul
+        v-if="subspaceCollaborators.length"
+        class="oc-list oc-list-divider overflow-hidden m-0 mt-2"
+        :aria-label="subspaceMemberLabel"
+      >
+        <li v-for="collaborator in subspaceCollaborators" :key="collaborator.id">
+          <collaborator-list-item
+            :share="collaborator"
+            :resource-name="resource.name"
+            :modifiable="false"
+            :is-space-share="true"
+          />
+        </li>
+      </ul>
+      <p v-else class="text-sm text-role-on-surface-variant mt-2 m-0">
+        {{ $gettext('No subspace members yet.') }}
       </p>
     </template>
   </div>
@@ -186,6 +203,17 @@ export default defineComponent({
     })
     const subspacePath = computed(() => spaceContext.value?.path || '')
 
+    const subspaceCollaborators = computed(() => {
+      if (!spaceContext.value || spaceContext.value.type !== 'subspace') return []
+      const shares = sharesStore.collaboratorShares
+      if (unref(isSubspaceRoot)) {
+        // On the subspace root: show direct shares (= subspace members)
+        return shares.filter((c: CollaboratorShare) => !c.indirect)
+      }
+      // Inside subspace: show shares inherited from the subspace root
+      return shares.filter((c: CollaboratorShare) => c.indirect)
+    })
+
     const collaboratorShares = computed(() => {
       let shares = sharesStore.collaboratorShares
       if (isProjectSpaceResource(unref(space))) {
@@ -270,6 +298,7 @@ export default defineComponent({
       isSubspaceRoot,
       isInsideSubspace,
       subspacePath,
+      subspaceCollaborators,
       fileSideBarSharesPanelSharedWithTopExtensionPoint,
       fileSideBarSharesPanelSharedWithBottomExtensionPoint
     }
@@ -330,6 +359,12 @@ export default defineComponent({
 
     showSpaceMembers() {
       return isProjectSpaceResource(this.space) && this.resource.type !== 'space' && !this.isInsideSubspace && !this.isSubspaceRoot
+    },
+    showSubspaceMembers() {
+      return this.isSubspaceRoot || this.isInsideSubspace
+    },
+    subspaceMemberLabel() {
+      return this.isSubspaceRoot ? this.$gettext('Subspace members') : this.$gettext('Subspace')
     }
   },
   methods: {
