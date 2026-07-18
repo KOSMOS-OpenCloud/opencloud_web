@@ -219,8 +219,9 @@ export default defineComponent({
       if (isProjectSpaceResource(unref(space))) {
         // filter out project space members, they are listed separately (see down below)
         shares = shares.filter((c) => c.resourceId !== unref(space).id)
-        // filter out subspace members — shown in their own panel
-        if (unref(isInsideSubspace)) {
+        // On subspace root: hide direct shares (shown in subspace section)
+        // Inside subspace: hide direct shares (managed at subspace root)
+        if (unref(isSubspaceRoot) || unref(isInsideSubspace)) {
           shares = shares.filter((c) => c.indirect)
         }
       }
