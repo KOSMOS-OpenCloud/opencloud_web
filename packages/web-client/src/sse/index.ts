@@ -24,7 +24,8 @@ export enum MESSAGE_TYPE {
   LINK_CREATED = 'link-created',
   LINK_REMOVED = 'link-removed',
   LINK_UPDATED = 'link-updated',
-  BACKCHANNEL_LOGOUT = 'backchannel-logout'
+  BACKCHANNEL_LOGOUT = 'backchannel-logout',
+  JOB_FINISHED = 'job-finished'
 }
 
 export class RetriableError extends Error {

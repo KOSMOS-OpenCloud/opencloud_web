@@ -81,6 +81,7 @@ import {
   sseEventWrapper,
   onSSELinkUpdatedEvent,
   onSSEBackchannelLogoutEvent,
+  onSSEJobFinishedEvent,
   SseEventWrapperOptions,
   onSSESpaceCreatedEvent,
   onSSESpaceDisabledEvent,
@@ -1102,6 +1103,15 @@ export const registerSSEEventListeners = ({
       msg,
       ...sseEventWrapperOptions,
       method: onSSEBackchannelLogoutEvent
+    })
+  )
+
+  clientService.sseAuthenticated.addEventListener(MESSAGE_TYPE.JOB_FINISHED, (msg) =>
+    sseEventWrapper({
+      topic: MESSAGE_TYPE.JOB_FINISHED,
+      msg,
+      ...sseEventWrapperOptions,
+      method: onSSEJobFinishedEvent
     })
   )
 }
