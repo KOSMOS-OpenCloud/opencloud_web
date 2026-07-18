@@ -74,13 +74,13 @@
         </oc-button>
       </div>
     </template>
-    <template v-else-if="insideSubspacePath">
+    <template v-else-if="isInsideSubspace">
       <div class="flex items-center mt-2 gap-2">
         <oc-icon name="shield-keyhole" size="small" fill-type="fill" />
         <h4 class="font-semibold my-2" v-text="$gettext('Subspace')" />
       </div>
       <p class="text-sm text-role-on-surface-variant m-0">
-        {{ $gettext('This folder is inside the subspace "%{path}". Access is managed there.', { path: insideSubspacePath }) }}
+        {{ $gettext('This folder is inside the subspace "%{path}". Access is managed there.', { path: subspacePath }) }}
       </p>
     </template>
   </div>
@@ -107,14 +107,14 @@ import { isShareSpaceResource, ShareTypes } from '@opencloud-eu/web-client'
 import InviteCollaboratorForm from './Collaborators/InviteCollaborator/InviteCollaboratorForm.vue'
 import CollaboratorListItem from './Collaborators/ListItem.vue'
 import { useContextualHelpers } from '../../../composables/contextualHelpers'
-import { computed, defineComponent, inject, ref, Ref, unref } from 'vue'
+import { computed, defineComponent, inject, ref, Ref, unref, watch } from 'vue'
 import {
   isProjectSpaceResource,
   Resource,
   SpaceResource,
   CollaboratorShare
 } from '@opencloud-eu/web-client'
-import { getSharedAncestorRoute, isSubspaceRootSync, getContainingSubspacePath } from '@opencloud-eu/web-pkg'
+import { getSharedAncestorRoute, useClientService } from '@opencloud-eu/web-pkg'
 import {
   fileSideBarSharesPanelSharedWithTopExtensionPoint,
   fileSideBarSharesPanelSharedWithBottomExtensionPoint
@@ -152,6 +152,28 @@ export default defineComponent({
 
     const resource = inject<Ref<Resource>>('resource')
     const space = inject<Ref<SpaceResource>>('space')
+    const clientService = useClientService()
+
+    // Server-side space context: "space" or "subspace"
+    const spaceContext = ref<{ type: string; id: string; path: string } | null>(null)
+    const loadSpaceContext = async () => {
+      const r = unref(resource)
+      const s = unref(space)
+      if (!r || !s || !isProjectSpaceResource(s) || r.type === 'space') {
+        spaceContext.value = null
+        return
+      }
+      try {
+        spaceContext.value = await clientService.graphAuthenticated.drives.getItemSpaceContext(s.id, r.id)
+      } catch {
+        spaceContext.value = null
+      }
+    }
+    loadSpaceContext()
+    watch(resource, loadSpaceContext)
+
+    const isInsideSubspace = computed(() => spaceContext.value?.type === 'subspace')
+    const subspacePath = computed(() => spaceContext.value?.path || '')
 
     const collaboratorShares = computed(() => {
       let shares = sharesStore.collaboratorShares
@@ -159,7 +181,7 @@ export default defineComponent({
         // filter out project space members, they are listed separately (see down below)
         shares = shares.filter((c) => c.resourceId !== unref(space).id)
         // filter out subspace members — shown in their own panel
-        if (isSubspaceRootSync(unref(resource)?.id)) {
+        if (unref(isInsideSubspace)) {
           shares = shares.filter((c) => c.indirect)
         }
       }
@@ -234,6 +256,8 @@ export default defineComponent({
       showMessage,
       showErrorMessage,
       inviteCollaboratorHelp,
+      isInsideSubspace,
+      subspacePath,
       fileSideBarSharesPanelSharedWithTopExtensionPoint,
       fileSideBarSharesPanelSharedWithBottomExtensionPoint
     }
@@ -292,17 +316,8 @@ export default defineComponent({
       return this.resource.type === 'file' ? translatedFile : translatedFolder
     },
 
-    insideSubspacePath() {
-      if (!isProjectSpaceResource(this.space) || this.resource.type === 'space') {
-        return ''
-      }
-      return getContainingSubspacePath(this.resource.path)
-    },
     showSpaceMembers() {
-      if (!isProjectSpaceResource(this.space) || this.resource.type === 'space') {
-        return false
-      }
-      return !this.insideSubspacePath
+      return isProjectSpaceResource(this.space) && this.resource.type !== 'space' && !this.isInsideSubspace
     }
   },
   methods: {
