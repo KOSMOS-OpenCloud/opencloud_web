@@ -27,17 +27,24 @@ export function isSubspaceRootSync(resourceId: string): boolean {
   return false
 }
 
-// Sync check — is a path inside any subspace?
-export function isInsideSubspaceSync(resourcePath: string): boolean {
-  if (!resourcePath) return false
+// Returns the most specific (deepest) subspace path that contains the given path.
+export function getContainingSubspacePath(resourcePath: string): string {
+  if (!resourcePath) return ''
+  let best = ''
   for (const entries of Object.values(allSubspaces.value)) {
     for (const ss of entries) {
       if (resourcePath === ss.path || resourcePath.startsWith(ss.path + '/')) {
-        return true
+        if (ss.path.length > best.length) {
+          best = ss.path
+        }
       }
     }
   }
-  return false
+  return best
+}
+
+export function isInsideSubspaceSync(resourcePath: string): boolean {
+  return getContainingSubspacePath(resourcePath) !== ''
 }
 
 export function useSubspaces() {

@@ -74,6 +74,15 @@
         </oc-button>
       </div>
     </template>
+    <template v-else-if="insideSubspacePath">
+      <div class="flex items-center mt-2 gap-2">
+        <oc-icon name="shield-keyhole" size="small" fill-type="fill" />
+        <h4 class="font-semibold my-2" v-text="$gettext('Subspace')" />
+      </div>
+      <p class="text-sm text-role-on-surface-variant m-0">
+        {{ $gettext('This folder is inside the subspace "%{path}". Access is managed there.', { path: insideSubspacePath }) }}
+      </p>
+    </template>
   </div>
 </template>
 
@@ -105,7 +114,7 @@ import {
   SpaceResource,
   CollaboratorShare
 } from '@opencloud-eu/web-client'
-import { getSharedAncestorRoute, isSubspaceRootSync, isInsideSubspaceSync } from '@opencloud-eu/web-pkg'
+import { getSharedAncestorRoute, isSubspaceRootSync, getContainingSubspacePath } from '@opencloud-eu/web-pkg'
 import {
   fileSideBarSharesPanelSharedWithTopExtensionPoint,
   fileSideBarSharesPanelSharedWithBottomExtensionPoint
@@ -283,15 +292,17 @@ export default defineComponent({
       return this.resource.type === 'file' ? translatedFile : translatedFolder
     },
 
+    insideSubspacePath() {
+      if (!isProjectSpaceResource(this.space) || this.resource.type === 'space') {
+        return ''
+      }
+      return getContainingSubspacePath(this.resource.path)
+    },
     showSpaceMembers() {
       if (!isProjectSpaceResource(this.space) || this.resource.type === 'space') {
         return false
       }
-      // Inside a subspace → space members don't apply, subspace panel handles it
-      if (isInsideSubspaceSync(this.resource.path)) {
-        return false
-      }
-      return true
+      return !this.insideSubspacePath
     }
   },
   methods: {
