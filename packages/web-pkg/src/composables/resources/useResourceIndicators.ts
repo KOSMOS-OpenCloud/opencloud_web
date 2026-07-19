@@ -241,7 +241,7 @@ export const useResourceIndicators = () => {
       kind: 'icon',
       accessibleDescription: $gettext('This folder is a subspace with its own access rules'),
       label: $gettext('Subspace'),
-      icon: 'shield-keyhole',
+      icon: 'layout-grid',
       category: 'system',
       type: 'resource-subspace',
       fillType: 'fill'

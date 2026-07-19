@@ -79,7 +79,7 @@
       <h3 class="text-sm font-semibold mb-2">{{ $gettext('Subspaces') }}</h3>
       <ul class="space-y-1">
         <li v-for="ss in subspaceList" :key="ss.id" class="flex items-center gap-2 text-sm">
-          <oc-icon name="shield-keyhole" size="small" fill-type="fill" />
+          <oc-icon name="layout-grid" size="small" fill-type="fill" />
           <span>{{ ss.path }}</span>
         </li>
       </ul>

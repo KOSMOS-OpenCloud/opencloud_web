@@ -254,7 +254,7 @@ export const useSideBarPanels = (): SidebarPanelExtension<SpaceResource, Resourc
       extensionPointIds: [fileSideBarExtensionPoint.id],
       panel: {
         name: 'subspace',
-        icon: 'shield-keyhole',
+        icon: 'layout-grid',
         iconFillType: 'fill',
         title: () => $gettext('Subspace'),
         component: markRaw(SubspaceMembers),

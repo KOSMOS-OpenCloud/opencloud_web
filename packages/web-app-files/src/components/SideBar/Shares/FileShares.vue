@@ -76,7 +76,7 @@
     </template>
     <template v-else-if="showSubspaceMembers">
       <div class="flex items-center mt-2 gap-2">
-        <oc-icon name="shield-keyhole" size="small" fill-type="fill" />
+        <oc-icon name="layout-grid" size="small" fill-type="fill" />
         <h4 class="font-semibold my-2" v-text="subspaceMemberLabel" />
       </div>
       <p v-if="isInsideSubspace" class="text-sm text-role-on-surface-variant m-0">
