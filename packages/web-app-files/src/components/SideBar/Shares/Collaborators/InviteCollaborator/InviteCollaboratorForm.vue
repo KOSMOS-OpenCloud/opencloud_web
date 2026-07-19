@@ -501,7 +501,7 @@ export default defineComponent({
       }
 
       if (addedShares.length > 0) {
-        showMessage({ title: this.successMessage || $gettext('Share was added successfully') })
+        showMessage({ title: props.successMessage || $gettext('Share was added successfully') })
       }
 
       if (invitedContactCount > 0) {
@@ -517,8 +517,8 @@ export default defineComponent({
 
       errors.forEach((e) => {
         showErrorMessage({
-          title: this.errorMessage
-            ? `${this.errorMessage} "${e.displayName}"`
+          title: props.errorMessage
+            ? `${props.errorMessage} "${e.displayName}"`
             : $gettext('Failed to add share for "%{displayName}"', {
                 displayName: e.displayName
               }),
