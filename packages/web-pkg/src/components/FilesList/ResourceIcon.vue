@@ -31,6 +31,7 @@ import {
   ResourceIconMapping,
   resourceIconMappingInjectionKey
 } from '../../helpers'
+import { isSubspaceRootSync } from '../../composables/spaces/useSubspaces'
 
 const defaultFolderIcon: IconType = {
   name: 'resource-type-folder',
@@ -67,7 +68,7 @@ const { resource, size = 'large' } = defineProps<{
 const iconMappingInjection = inject<ResourceIconMapping>(resourceIconMappingInjectionKey)
 
 const hasFolderIcon = computed(() => {
-  return unref(icon)?.name === defaultFolderIcon.name
+  return unref(icon)?.name === defaultFolderIcon.name && !unref(isSubspace)
 })
 
 const hasSpaceIcon = computed(() => {
@@ -78,7 +79,14 @@ const hasDisabledSpaceIcon = computed(() => {
   return isProjectSpaceResource(resource) && resource.disabled === true
 })
 
+const isSubspace = computed(() => {
+  return resource.type === 'folder' && resource.id && isSubspaceRootSync(resource.id)
+})
+
 const fallbackIcon = computed(() => {
+  if (unref(isSubspace)) {
+    return defaultSpaceIcon
+  }
   if (resource.type === 'folder' || resource.isFolder) {
     return defaultFolderIcon
   }
