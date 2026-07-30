@@ -1,6 +1,7 @@
 import { WebDavOptions } from './types'
 import { urlJoin } from '../utils'
 import { DAV, DAVRequestOptions } from './client'
+import { DavProperties } from './constants'
 import { buildResource } from '../helpers'
 
 export const ListFileVersionsFactory = (dav: DAV, options: WebDavOptions) => {
@@ -9,7 +10,7 @@ export const ListFileVersionsFactory = (dav: DAV, options: WebDavOptions) => {
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const [currentFolder, ...versions] = await dav.propfind(
         urlJoin('meta', id, 'v', { leadingSlash: true }),
-        opts
+        { properties: DavProperties.Default, ...opts }
       )
       return versions.map((v) => buildResource(v, dav.extraProps))
     }
