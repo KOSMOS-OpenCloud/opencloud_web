@@ -136,6 +136,13 @@
             data-testid="files-tiles-size-slider"
           />
         </li>
+        <li
+          v-for="ext in viewOptionsEntries"
+          :key="ext.id"
+          class="mt-2 mb-4 last:mb-0 [&>*]:flex [&>*]:justify-between"
+        >
+          <component :is="ext.component" />
+        </li>
       </oc-list>
     </oc-drop>
   </div>
@@ -158,6 +165,7 @@ import {
 } from '../composables'
 import { FolderView } from '../ui/types'
 import { storeToRefs } from 'pinia'
+import { useViewOptionsStore } from '../composables/piniaStores/viewOptions'
 import { isLocationSpacesActive, isLocationTrashActive } from '../router'
 import { PageSizeOption } from '@opencloud-eu/design-system/helpers'
 
@@ -187,6 +195,7 @@ const router = useRouter()
 const currentRoute = useRoute()
 const { $gettext } = useGettext()
 
+const { entries: viewOptionsEntries } = storeToRefs(useViewOptionsStore())
 const resourcesStore = useResourcesStore()
 const {
   setAreHiddenFilesShown,
