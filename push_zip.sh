@@ -2,7 +2,7 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-. "$SCRIPT_DIR/DIST"
+[ -f "$SCRIPT_DIR/DIST" ] && . "$SCRIPT_DIR/DIST"
 
 PACKAGE="${PACKAGE_NAME:-opencloud-web}"
 TAG="${TAG:-$(date +%Y%m%d-%H%M)}"
@@ -19,8 +19,8 @@ rm -f "$TMPZIP"
 echo "[zip] $(du -h "$TMPZIP" | cut -f1)"
 
 # Push to GitHub Release
-GITHUB_TOKEN="${PUSH_TOKEN:-${CODEBERG_TOKEN:-}}"
-GITHUB_REPO="${GIT_BASE##*/}/${REPO}"  # e.g. KOSMOS-OpenCloud/opencloud_web
+GITHUB_TOKEN="${PACKAGES_TOKEN:-${PUSH_TOKEN:-${CODEBERG_TOKEN:-}}}"
+GITHUB_REPO="${PUSH_ORG:-${GIT_BASE##*/}}/${REPO:-opencloud_web}"
 GITHUB_API="https://api.github.com/repos/${GITHUB_REPO}"
 
 echo "[github] Creating release ${TAG}..."
