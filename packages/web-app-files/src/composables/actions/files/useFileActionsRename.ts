@@ -119,6 +119,18 @@ export const useFileActionsRename = () => {
   }
 
   const handler = async ({ space, resources }: FileActionOptions) => {
+    // Extension point: allow extensions to provide a custom rename handler
+    // Handler receives (space, resource, renameResource) and returns true if handled
+    const renameHandlers = extensionRegistry.requestExtensions({
+      id: 'global.files.rename-handler',
+      extensionType: 'renameHandler'
+    }) as any[]
+    for (const ext of renameHandlers) {
+      if (ext.handler?.({ space, resource: resources[0], renameResource })) {
+        return
+      }
+    }
+
     const currentFolder = resourcesStore.currentFolder
     let parentResources: Resource[]
     if (isSameResource(resources[0], currentFolder)) {

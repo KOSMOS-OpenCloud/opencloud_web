@@ -4,16 +4,8 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 . "$SCRIPT_DIR/DIST"
 
-REGISTRY="codeberg.org"
-OWNER="${PUSH_ORG:-kosmos-opencloud}"
 PACKAGE="${PACKAGE_NAME:-opencloud-web}"
 TAG="${TAG:-$(date +%Y%m%d-%H%M)}"
-
-# Token
-if [ -z "${CODEBERG_TOKEN:-}" ] && [ -f ~/.codeberg-token ]; then
-    CODEBERG_TOKEN="$(cat ~/.codeberg-token)"
-fi
-: "${CODEBERG_TOKEN:?Set CODEBERG_TOKEN or create ~/.codeberg-token}"
 
 # Build
 if [ -z "${SKIP_BUILD:-}" ]; then
@@ -26,15 +18,35 @@ rm -f "$TMPZIP"
 (cd "$SCRIPT_DIR/dist" && zip -qr "$TMPZIP" .)
 echo "[zip] $(du -h "$TMPZIP" | cut -f1)"
 
-# Push
-UPLOAD_URL="https://${REGISTRY}/api/packages/${OWNER}/generic/${PACKAGE}/${TAG}/${PACKAGE}.zip"
-echo "[push] $UPLOAD_URL"
-curl -sf -X PUT "$UPLOAD_URL" \
-    -H "Authorization: token ${CODEBERG_TOKEN}" \
-    --upload-file "$TMPZIP"
+# Push to GitHub Release
+GITHUB_TOKEN="${PUSH_TOKEN:-${CODEBERG_TOKEN:-}}"
+GITHUB_REPO="${GIT_BASE##*/}/${REPO}"  # e.g. KOSMOS-OpenCloud/opencloud_web
+GITHUB_API="https://api.github.com/repos/${GITHUB_REPO}"
 
-# Also push as latest
-LATEST_URL="https://${REGISTRY}/api/packages/${OWNER}/generic/${PACKAGE}/latest/${PACKAGE}.zip"
-curl -sf -X DELETE "$LATEST_URL" -H "Authorization: token ${CODEBERG_TOKEN}" -o /dev/null 2>/dev/null || true
-curl -sf -X PUT "$LATEST_URL" -H "Authorization: token ${CODEBERG_TOKEN}" --upload-file "$TMPZIP"
-echo "=== Pushed: ${PACKAGE}:${TAG} ==="
+echo "[github] Creating release ${TAG}..."
+RELEASE_ID=$(curl -sf -X POST "${GITHUB_API}/releases" \
+    -H "Authorization: token ${GITHUB_TOKEN}" \
+    -H "Content-Type: application/json" \
+    -d "{\"tag_name\":\"${TAG}\",\"name\":\"${PACKAGE} ${TAG}\",\"draft\":false}" \
+    | python3 -c "import sys,json; print(json.load(sys.stdin)['id'])" 2>/dev/null)
+
+if [ -n "$RELEASE_ID" ]; then
+    echo "[github] Uploading ${PACKAGE}.zip to release ${RELEASE_ID}..."
+    curl -sf -X POST "https://uploads.github.com/repos/${GITHUB_REPO}/releases/${RELEASE_ID}/assets?name=${PACKAGE}.zip" \
+        -H "Authorization: token ${GITHUB_TOKEN}" \
+        -H "Content-Type: application/zip" \
+        --data-binary "@${TMPZIP}"
+    echo ""
+    echo "=== Pushed to GitHub: ${GITHUB_REPO} release ${TAG} ==="
+else
+    echo "[github] Release creation failed, trying Codeberg fallback..."
+    REGISTRY="codeberg.org"
+    OWNER="${PUSH_ORG:-kosmos-opencloud}"
+    CODEBERG_TOKEN="${PUSH_TOKEN:-${CODEBERG_TOKEN:-}}"
+    UPLOAD_URL="https://${REGISTRY}/api/packages/${OWNER}/generic/${PACKAGE}/${TAG}/${PACKAGE}.zip"
+    curl -sf -X PUT "$UPLOAD_URL" -H "Authorization: token ${CODEBERG_TOKEN}" --upload-file "$TMPZIP"
+    LATEST_URL="https://${REGISTRY}/api/packages/${OWNER}/generic/${PACKAGE}/latest/${PACKAGE}.zip"
+    curl -sf -X DELETE "$LATEST_URL" -H "Authorization: token ${CODEBERG_TOKEN}" -o /dev/null 2>/dev/null || true
+    curl -sf -X PUT "$LATEST_URL" -H "Authorization: token ${CODEBERG_TOKEN}" --upload-file "$TMPZIP"
+    echo "=== Pushed to Codeberg: ${PACKAGE}:${TAG} ==="
+fi
