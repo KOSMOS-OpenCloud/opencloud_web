@@ -71,19 +71,7 @@ self.onmessage = async (e: MessageEvent) => {
           resource.id = undefined
           resource.fileId = undefined
         } else {
-          try {
-            await doMove(data)
-          } catch (moveErr) {
-            if (moveErr.statusCode === 502) {
-              // Server doesn't support cross-space move — fallback to copy + delete
-              await doCopy(data)
-              await webdav.deleteFile(data.sourceSpace, { path: resource.path })
-              resource.id = undefined
-              resource.fileId = undefined
-            } else {
-              throw moveErr
-            }
-          }
+          await doMove(data)
         }
 
         resource.path = join(data.targetFolder.path, resource.name)
@@ -96,7 +84,7 @@ self.onmessage = async (e: MessageEvent) => {
           resourceName: resource.name,
           message: e.message,
           statusCode: e.statusCode,
-          xReqId: e.response?.headers?.get('x-request-id')
+          xReqId: e.response.headers?.get('x-request-id')
         })
       }
     })
