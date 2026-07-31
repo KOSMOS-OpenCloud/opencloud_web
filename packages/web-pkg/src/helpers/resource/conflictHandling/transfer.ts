@@ -102,13 +102,8 @@ export class ResourceTransfer extends ConflictDialog {
       this.showRecursionErrorMessage()
       return []
     }
-    if (this.sourceSpace.id !== this.targetSpace.id && transferType === TransferType.MOVE) {
-      const doCopyInsteadOfMove = await this.resolveDoCopyInsteadOfMoveForSpaces()
-      if (!doCopyInsteadOfMove) {
-        return []
-      }
-      transferType = TransferType.COPY
-    }
+    // Cross-space MOVE is handled server-side (with metadata preservation).
+    // If the server doesn't support it (502), the paste worker reports it as failed.
 
     const targetFolderResources = (
       await this.clientService.webdav.listFiles(this.targetSpace, this.targetFolder)
