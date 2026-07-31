@@ -4,7 +4,7 @@ import { ResolveStrategy, TransferType, type TransferData } from './types'
 import { ConflictDialog } from './conflictDialog'
 import { resolveFileNameDuplicate, isResourceBeeingMovedToSameLocation } from './conflictUtils'
 import type { ClientService } from '../../../services'
-import { useMessages } from '../../../composables'
+import { useMessages, useResourcesStore } from '../../../composables'
 import { Ref, unref } from 'vue'
 import type { Language } from 'vue3-gettext'
 import { HttpError } from '@opencloud-eu/web-client'
@@ -103,11 +103,16 @@ export class ResourceTransfer extends ConflictDialog {
       return []
     }
     if (this.sourceSpace.id !== this.targetSpace.id && transferType === TransferType.MOVE) {
-      const doCopyInsteadOfMove = await this.resolveDoCopyInsteadOfMoveForSpaces()
-      if (!doCopyInsteadOfMove) {
-        return []
+      const resourcesStore = useResourcesStore()
+      if (!resourcesStore.isCrossSpaceMoveEnabled) {
+        // User has not enabled cross-space move — fall back to copy (with confirmation)
+        const doCopyInsteadOfMove = await this.resolveDoCopyInsteadOfMoveForSpaces()
+        if (!doCopyInsteadOfMove) {
+          return []
+        }
+        transferType = TransferType.COPY
       }
-      transferType = TransferType.COPY
+      // else: user wants cross-space move — keep TransferType.MOVE, server handles it
     }
 
     const targetFolderResources = (

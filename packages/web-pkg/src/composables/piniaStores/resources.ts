@@ -163,6 +163,7 @@ export const useResourcesStore = defineStore('resources', () => {
   const areWebDavDetailsShown = ref(false)
   const areDisabledSpacesShown = ref(true)
   const areEmptyTrashesShown = ref(true)
+  const isCrossSpaceMoveEnabled = ref(window.localStorage.getItem('oc_crossSpaceMove') === 'true')
 
   const setAreHiddenFilesShown = (value: boolean) => {
     areHiddenFilesShown.value = value
@@ -183,6 +184,10 @@ export const useResourcesStore = defineStore('resources', () => {
   const setAreEmptyTrashesShown = (value: boolean) => {
     areEmptyTrashesShown.value = value
     window.localStorage.setItem('oc_emptyTrashesShown', value.toString())
+  }
+  const setIsCrossSpaceMoveEnabled = (value: boolean) => {
+    isCrossSpaceMoveEnabled.value = value
+    window.localStorage.setItem('oc_crossSpaceMove', value.toString())
   }
 
   const setAncestorMetaData = (value: AncestorMetaData) => {
@@ -326,11 +331,13 @@ export const useResourcesStore = defineStore('resources', () => {
     areWebDavDetailsShown,
     areDisabledSpacesShown,
     areEmptyTrashesShown,
+    isCrossSpaceMoveEnabled,
     setAreHiddenFilesShown,
     setAreFileExtensionsShown,
     setAreWebDavDetailsShown,
     setAreDisabledSpacesShown,
     setAreEmptyTrashesShown,
+    setIsCrossSpaceMoveEnabled,
 
     ancestorMetaData,
     setAncestorMetaData,

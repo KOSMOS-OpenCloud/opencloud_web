@@ -90,6 +90,22 @@
             />
           </oc-table-td>
         </oc-table-tr>
+        <oc-table-tr class="account-page-cross-space-move">
+          <oc-table-td>{{ $gettext('Move between spaces') }}</oc-table-td>
+          <oc-table-td v-if="!isMobile">
+            <span v-text="$gettext('Preserve metadata when moving files between spaces (shares will not be preserved)')" />
+          </oc-table-td>
+          <oc-table-td data-testid="cross-space-move">
+            <oc-checkbox
+              :model-value="crossSpaceMoveValue"
+              size="large"
+              :label="$gettext('Preserve metadata when moving files between spaces')"
+              :label-hidden="!isMobile"
+              data-testid="account-page-cross-space-move-checkbox"
+              @update:model-value="updateCrossSpaceMove"
+            />
+          </oc-table-td>
+        </oc-table-tr>
       </account-table>
       <template v-if="showNotifications && canConfigureSpecificNotifications">
         <h2 class="mt-8" v-text="$gettext('Notifications')" />
@@ -193,6 +209,7 @@ const configStore = useConfigStore()
 const { isMobile } = useIsMobile()
 const disableEmailNotificationsValue = ref<boolean>()
 const viewOptionWebDavDetailsValue = ref<boolean>(resourcesStore.areWebDavDetailsShown)
+const crossSpaceMoveValue = ref<boolean>(resourcesStore.isCrossSpaceMoveEnabled)
 const selectedLanguageValue = ref<LanguageOption>()
 const valuesList = ref<SettingsValue[]>()
 const graphUser = ref<User>()
@@ -386,6 +403,20 @@ const updateViewOptionsWebDavDetails = (option: boolean) => {
   try {
     resourcesStore.setAreWebDavDetailsShown(option)
     viewOptionWebDavDetailsValue.value = option
+    showMessage({ title: $gettext('Preference saved.') })
+  } catch (e) {
+    console.error(e)
+    showErrorMessage({
+      title: $gettext('Unable to save preference…'),
+      errors: [e]
+    })
+  }
+}
+
+const updateCrossSpaceMove = (option: boolean) => {
+  try {
+    resourcesStore.setIsCrossSpaceMoveEnabled(option)
+    crossSpaceMoveValue.value = option
     showMessage({ title: $gettext('Preference saved.') })
   } catch (e) {
     console.error(e)
