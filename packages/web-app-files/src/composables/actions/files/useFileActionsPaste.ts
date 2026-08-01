@@ -74,13 +74,23 @@ export const useFileActionsPaste = () => {
       return
     }
 
+    // Determine actual transfer type (may have been changed to COPY by modal)
+    const actualTransferType = transferData[0]?.transferType ?? unref(transferType)
+    const isCrossSpaceMove =
+      actualTransferType === TransferType.MOVE && sourceSpace.id !== targetSpace.id
+
     const originalCurrentFolderId = unref(currentFolder)?.id
 
     startWorker(transferData, async ({ successful, failed }) => {
-      resourceTransfer.showResultMessage(failed, successful, unref(transferType))
+      resourceTransfer.showResultMessage(failed, successful, actualTransferType)
 
       if (!successful.length) {
         return
+      }
+
+      // For cross-space moves: remove source resources from current listing
+      if (isCrossSpaceMove) {
+        resourcesStore.removeResources(successful)
       }
 
       // user has navigated to another location meanwhile -> no need to update store
@@ -88,15 +98,20 @@ export const useFileActionsPaste = () => {
         return
       }
 
-      // handle store update, fetch resources first
+      // handle store update, fetch resources at target
       const loadingResources: Promise<void>[] = []
       const fetchedResources: Resource[] = []
 
       for (const resource of successful) {
         loadingResources.push(
           (async () => {
-            const movedResource = await clientService.webdav.getFileInfo(targetSpace, resource)
-            fetchedResources.push(movedResource)
+            try {
+              const targetResource = { ...resource, path: resource.path }
+              const movedResource = await clientService.webdav.getFileInfo(targetSpace, targetResource)
+              fetchedResources.push(movedResource)
+            } catch {
+              // Resource may not be findable by old path after cross-space move
+            }
           })()
         )
       }
@@ -110,7 +125,9 @@ export const useFileActionsPaste = () => {
         })
       }
 
-      resourcesStore.upsertResources(fetchedResources)
+      if (fetchedResources.length) {
+        resourcesStore.upsertResources(fetchedResources)
+      }
     })
   }
 
