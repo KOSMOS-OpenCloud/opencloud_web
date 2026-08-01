@@ -88,30 +88,31 @@ export const useFileActionsPaste = () => {
         return
       }
 
-      // For cross-space moves: remove source resources from current listing
-      if (isCrossSpaceMove) {
-        resourcesStore.removeResources(successful)
-      }
-
       // user has navigated to another location meanwhile -> no need to update store
       if (unref(currentFolder) && originalCurrentFolderId !== unref(currentFolder).id) {
         return
       }
 
-      // handle store update, fetch resources at target
+      if (isCrossSpaceMove) {
+        // Cross-space move: reload the current folder listing to show new files
+        const { resource: folder, children } = await clientService.webdav.listFiles(
+          targetSpace,
+          unref(currentFolder)
+        )
+        resourcesStore.setCurrentFolder(folder)
+        resourcesStore.initResourceList({ currentFolder: folder, resources: children })
+        return
+      }
+
+      // Same-space: fetch individual resources
       const loadingResources: Promise<void>[] = []
       const fetchedResources: Resource[] = []
 
       for (const resource of successful) {
         loadingResources.push(
           (async () => {
-            try {
-              const targetResource = { ...resource, path: resource.path }
-              const movedResource = await clientService.webdav.getFileInfo(targetSpace, targetResource)
-              fetchedResources.push(movedResource)
-            } catch {
-              // Resource may not be findable by old path after cross-space move
-            }
+            const movedResource = await clientService.webdav.getFileInfo(targetSpace, resource)
+            fetchedResources.push(movedResource)
           })()
         )
       }
@@ -125,9 +126,7 @@ export const useFileActionsPaste = () => {
         })
       }
 
-      if (fetchedResources.length) {
-        resourcesStore.upsertResources(fetchedResources)
-      }
+      resourcesStore.upsertResources(fetchedResources)
     })
   }
 
