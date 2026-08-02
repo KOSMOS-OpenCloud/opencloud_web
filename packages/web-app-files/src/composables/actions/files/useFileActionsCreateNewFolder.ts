@@ -7,6 +7,7 @@ import {
   FileAction,
   resolveFileNameDuplicate,
   useClientService,
+  useExtensionRegistry,
   useIsResourceNameValid,
   useMessages,
   useModals,
@@ -25,6 +26,7 @@ export const useFileActionsCreateNewFolder = ({ space }: { space?: Ref<SpaceReso
 
   const clientService = useClientService()
   const { isFileNameValid } = useIsResourceNameValid()
+  const extensionRegistry = useExtensionRegistry()
 
   const addNewFolder = async (folderName: string) => {
     folderName = folderName.trimEnd()
@@ -54,6 +56,17 @@ export const useFileActionsCreateNewFolder = ({ space }: { space?: Ref<SpaceReso
   }
 
   const handler = () => {
+    // Extension point: allow extensions to provide a custom create-folder handler
+    const createFolderHandlers = extensionRegistry.requestExtensions({
+      id: 'global.files.create-folder-handler',
+      extensionType: 'createFolderHandler'
+    }) as any[]
+    for (const ext of createFolderHandlers) {
+      if (ext.handler?.({ space: unref(space), currentFolder: unref(currentFolder), addNewFolder })) {
+        return
+      }
+    }
+
     let defaultName = $gettext('New folder')
 
     if (unref(resources).some((f) => f.name === defaultName)) {
