@@ -6,18 +6,6 @@
     class="flex"
     data-custom-key-bindings-disabled="true"
   >
-    <oc-button
-      v-oc-tooltip="contentSearchActive ? $gettext('Content search active') : $gettext('Content search off')"
-      :aria-label="$gettext('Toggle content search')"
-      class="hidden sm:inline-flex mr-1 self-center"
-      :appearance="contentSearchActive ? 'filled' : 'raw-inverse'"
-      :color-role="contentSearchActive ? 'primary' : 'chrome'"
-      size="small"
-      no-hover
-      @click="contentSearchActive = !contentSearchActive"
-    >
-      <oc-icon :name="contentSearchActive ? 'file-text' : 'file-text'" fill-type="line" size="small"></oc-icon>
-    </oc-button>
     <oc-search-bar
       id="files-global-search-bar"
       ref="searchInputRef"
@@ -44,13 +32,21 @@
       @keydown.tab="hideOptionsDrop"
     >
       <template #locationFilter>
-        <search-bar-filter
-          v-if="locationFilterAvailable"
-          id="files-global-search-filter"
-          :current-folder-available="currentFolderAvailable"
-          :current-folder-is-in-vault="currentFolderIsInVault"
-          @update:model-value="onLocationFilterChange"
-        />
+        <div class="flex items-center gap-1">
+          <oc-switch
+            :checked="contentSearchActive"
+            :label="$gettext('Content')"
+            class="oc-mr-xs"
+            @update:checked="contentSearchActive = $event"
+          />
+          <search-bar-filter
+            v-if="locationFilterAvailable"
+            id="files-global-search-filter"
+            :current-folder-available="currentFolderAvailable"
+            :current-folder-is-in-vault="currentFolderIsInVault"
+            @update:model-value="onLocationFilterChange"
+          />
+        </div>
       </template>
     </oc-search-bar>
     <oc-button
