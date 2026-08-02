@@ -185,7 +185,7 @@ export default defineComponent({
     const spacesStore = useSpacesStore()
     const extensionRegistry = useExtensionRegistry()
 
-    const locationFilterId = ref(SearchLocationFilterConstants.allFiles)
+    const locationFilterId = ref(SearchLocationFilterConstants.currentSpace)
     const optionsDropRef = useTemplateRef<ComponentPublicInstance<typeof OcDrop>>('optionsDropRef')
     const searchInputRef = useTemplateRef<ComponentPublicInstance>('searchInputRef')
     const searchBarRef = useTemplateRef<HTMLElement>('searchBar')
