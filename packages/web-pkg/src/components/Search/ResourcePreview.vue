@@ -1,16 +1,25 @@
 <template>
-  <resource-list-item
-    ref="resourceListItem"
-    :resource="resource"
-    :path-prefix="pathPrefix"
-    :is-path-displayed="true"
-    :link="resourceLink"
-    :is-extension-displayed="areFileExtensionsShown"
-    :parent-folder-link-icon-additional-attributes="parentFolderLinkIconAdditionalAttributes"
-    :parent-folder-name="parentFolderName"
-    :is-thumbnail-displayed="!!previewData"
-    v-bind="additionalAttrs"
-  />
+  <div>
+    <resource-list-item
+      ref="resourceListItem"
+      :resource="resource"
+      :path-prefix="pathPrefix"
+      :is-path-displayed="true"
+      :link="resourceLink"
+      :is-extension-displayed="areFileExtensionsShown"
+      :parent-folder-link-icon-additional-attributes="parentFolderLinkIconAdditionalAttributes"
+      :parent-folder-name="parentFolderName"
+      :is-thumbnail-displayed="!!previewData"
+      v-bind="additionalAttrs"
+    />
+    <!-- eslint-disable vue/no-v-html -->
+    <span
+      v-if="resource.highlights"
+      class="block truncate text-xs text-role-on-surface-variant pl-10 -mt-1"
+      v-html="resource.highlights"
+    />
+    <!--eslint-enable-->
+  </div>
 </template>
 
 <script setup lang="ts">
