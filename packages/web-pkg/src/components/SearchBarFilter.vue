@@ -136,7 +136,7 @@ export default defineComponent({
         }
 
         currentSelection.value = unref(locationOptions).find(
-          ({ id }) => id === SearchLocationFilterConstants.allFiles
+          ({ id }) => id === SearchLocationFilterConstants.currentSpace
         )
       },
       { immediate: true }
