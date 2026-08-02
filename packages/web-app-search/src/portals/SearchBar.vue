@@ -32,16 +32,16 @@
       @keydown.tab="hideOptionsDrop"
     >
       <template #locationFilter>
-        <div
+        <span
           v-oc-tooltip="contentSearchActive ? $gettext('Content search active') : $gettext('Content search off')"
-          class="z-[var(--z-index-modal)] absolute top-[50%] transform-[translateY(-50%)] right-0 mr-[170px]"
+          class="z-[var(--z-index-modal)] absolute top-[50%] transform-[translateY(-50%)] right-0 mr-[170px] inline-flex items-center cursor-pointer [&_.oc-switch>span:first-child]:sr-only"
         >
           <oc-switch
             :checked="contentSearchActive"
-            label=""
+            :label="$gettext('Content search')"
             @update:checked="contentSearchActive = $event"
           />
-        </div>
+        </span>
         <search-bar-filter
           v-if="locationFilterAvailable"
           id="files-global-search-filter"
