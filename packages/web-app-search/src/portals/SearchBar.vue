@@ -6,6 +6,18 @@
     class="flex"
     data-custom-key-bindings-disabled="true"
   >
+    <oc-button
+      v-oc-tooltip="contentSearchActive ? $gettext('Content search active') : $gettext('Content search off')"
+      :aria-label="$gettext('Toggle content search')"
+      class="hidden sm:inline-flex mr-1 self-center"
+      :appearance="contentSearchActive ? 'filled' : 'raw-inverse'"
+      :color-role="contentSearchActive ? 'primary' : 'chrome'"
+      size="small"
+      no-hover
+      @click="contentSearchActive = !contentSearchActive"
+    >
+      <oc-icon :name="contentSearchActive ? 'file-text' : 'file-text'" fill-type="line" size="small"></oc-icon>
+    </oc-button>
     <oc-search-bar
       id="files-global-search-bar"
       ref="searchInputRef"
@@ -186,6 +198,8 @@ export default defineComponent({
     const extensionRegistry = useExtensionRegistry()
 
     const locationFilterId = ref(SearchLocationFilterConstants.currentSpace)
+    const contentSearchQueryValue = useRouteQuery('contentSearch')
+    const contentSearchActive = ref(queryItemAsString(unref(contentSearchQueryValue)) === 'true')
     const optionsDropRef = useTemplateRef<ComponentPublicInstance<typeof OcDrop>>('optionsDropRef')
     const searchInputRef = useTemplateRef<ComponentPublicInstance>('searchInputRef')
     const searchBarRef = useTemplateRef<HTMLElement>('searchBar')
@@ -300,7 +314,7 @@ export default defineComponent({
       const terms: string[] = []
 
       let nameQuery = `name:"*${unref(term)}*"`
-      if (unref(fullTextSearchEnabled)) {
+      if (unref(contentSearchActive) && unref(fullTextSearchEnabled)) {
         nameQuery = `(name:"*${unref(term)}*" OR content:"${unref(term)}")`
       }
 
@@ -377,7 +391,8 @@ export default defineComponent({
           term: unref(term),
           ...(unref(scope) && { scope: unref(scope) }),
           useScope: unref(useScope).toString(),
-          provider: providerId
+          provider: providerId,
+          ...(unref(contentSearchActive) && { contentSearch: 'true' })
         }
       })
     }
@@ -487,7 +502,8 @@ export default defineComponent({
       showDrop,
       isAppActive,
       getFocusableElements,
-      onSearchShortcut
+      onSearchShortcut,
+      contentSearchActive
     }
   },
 
