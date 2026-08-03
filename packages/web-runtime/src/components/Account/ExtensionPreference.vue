@@ -69,29 +69,27 @@ export default defineComponent({
       })
     })
 
-    // Checkbox mode: exactly 2 extensions expected (enabled/disabled),
-    // checked = first extension selected, unchecked = second (or none)
+    // Checkbox mode: exactly 2 extensions expected.
+    // exts[0] = default (sorted first) = unchecked state.
+    // exts[1] = non-default = checked state.
+    // So defaultExtensionId=DISABLED → unchecked by default → correct.
     const checkboxModel = computed(() => {
       const preference = extensionPreferences.getExtensionPreference(
         props.extensionPoint.id,
         unref(defaultExtensionIds)
       )
       const exts = unref(extensions)
-      if (!exts.length) return false
-      return preference.selectedExtensionIds.includes(exts[0].id)
+      if (exts.length < 2) return false
+      return preference.selectedExtensionIds.includes(exts[1].id)
     })
 
     const updateCheckbox = (checked: boolean) => {
       const exts = unref(extensions)
-      if (!exts.length) return
-      if (checked) {
-        extensionPreferences.setSelectedExtensionIds(props.extensionPoint.id, [exts[0].id])
-      } else {
-        extensionPreferences.setSelectedExtensionIds(
-          props.extensionPoint.id,
-          exts.length > 1 ? [exts[1].id] : []
-        )
-      }
+      if (exts.length < 2) return
+      extensionPreferences.setSelectedExtensionIds(
+        props.extensionPoint.id,
+        [checked ? exts[1].id : exts[0].id]
+      )
     }
 
     // Select mode (existing logic)
