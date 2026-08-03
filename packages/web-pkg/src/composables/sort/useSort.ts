@@ -140,11 +140,12 @@ export const sortHelper = <T extends SortableItem>(
 
   if (sortBy === 'name') {
     const isFolder = (item: T) => item.type === 'folder' && !item.extension
+    const sortProp = field.prop || field.name
     const folders = [...items.filter((i) => isFolder(i))].sort((a, b) =>
-      compare(a, b, collator, sortBy, sortDir, sortable)
+      compare(a, b, collator, sortProp, sortDir, sortable)
     )
     const files = [...items.filter((i) => !isFolder(i))].sort((a, b) =>
-      compare(a, b, collator, sortBy, sortDir, sortable)
+      compare(a, b, collator, sortProp, sortDir, sortable)
     )
     if (sortDir === SortDir.Asc) {
       return folders.concat(files)

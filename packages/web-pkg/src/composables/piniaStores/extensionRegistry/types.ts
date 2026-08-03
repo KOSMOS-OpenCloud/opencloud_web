@@ -6,6 +6,7 @@ import { FolderView } from '../../../ui'
 import { Component, Slot } from 'vue'
 import { RouteLocationNamedRaw } from 'vue-router'
 import { StringUnionOrAnyString } from '../../../utils'
+import { SortField } from '../../sort'
 import type { ResourceIndicator } from '../../resources/useResourceIndicators'
 
 export type ExtensionType = StringUnionOrAnyString<
@@ -21,6 +22,7 @@ export type ExtensionType = StringUnionOrAnyString<
   | 'folderVault'
   | 'resourceIndicator'
   | 'resourceTransformer'
+  | 'sortFieldModifier'
 >
 
 export type Extension = {
@@ -197,6 +199,11 @@ export interface FolderVaultExtension extends Extension {
 export interface ResourceTransformerExtension extends Extension {
   type: 'resourceTransformer'
   transformResources(resources: Resource[]): Resource[]
+}
+
+export interface SortFieldModifierExtension extends Extension {
+  type: 'sortFieldModifier'
+  modifySortFields(fields: SortField[]): SortField[]
 }
 
 export interface ResourceIndicatorExtension extends Extension {

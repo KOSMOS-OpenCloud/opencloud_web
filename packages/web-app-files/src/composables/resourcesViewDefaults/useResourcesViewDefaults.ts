@@ -9,7 +9,8 @@ import {
   useExtensionRegistry,
   ExtensionPoint,
   FolderViewExtension,
-  FolderView
+  FolderView,
+  sortFieldModifierExtensionPoint
 } from '@opencloud-eu/web-pkg'
 import { queryItemAsString, useRouteQuery } from '@opencloud-eu/web-pkg'
 import {
@@ -98,10 +99,14 @@ export const useResourcesViewDefaults = <T extends Resource, TT, TU extends any[
   })
 
   const sortFields = computed((): SortField[] => {
-    if (unref(viewMode) === FolderViewModeConstants.name.tiles) {
-      return translateSortFields(determineResourceTilesSortFields(unref(storeItems)[0]), language)
+    let fields = unref(viewMode) === FolderViewModeConstants.name.tiles
+      ? translateSortFields(determineResourceTilesSortFields(unref(storeItems)[0]), language)
+      : determineResourceTableSortFields(unref(storeItems)[0])
+    const modifiers = extensionRegistry.requestExtensions(sortFieldModifierExtensionPoint)
+    for (const mod of modifiers) {
+      fields = mod.modifySortFields(fields)
     }
-    return determineResourceTableSortFields(unref(storeItems)[0])
+    return fields
   })
 
   const { sortBy, sortDir, items, handleSort } = useSort<T>({

@@ -2,7 +2,8 @@ import {
   CustomComponentExtension,
   ExtensionPoint,
   ResourceIndicatorExtension,
-  ResourceTransformerExtension
+  ResourceTransformerExtension,
+  SortFieldModifierExtension
 } from './composables'
 import { computed } from 'vue'
 
@@ -24,12 +25,19 @@ export const resourceTransformerExtensionPoint: ExtensionPoint<ResourceTransform
   multiple: true
 }
 
+export const sortFieldModifierExtensionPoint: ExtensionPoint<SortFieldModifierExtension> = {
+  id: 'global.files.sort-field-modifier',
+  extensionType: 'sortFieldModifier',
+  multiple: true
+}
+
 export const extensionPoints = () => {
   return computed<ExtensionPoint<any>[]>(() => {
     return [
       fileSideBarSpaceDetailsTableExtensionPoint,
       resourceIndicatorExtensionPoint,
-      resourceTransformerExtensionPoint
+      resourceTransformerExtensionPoint,
+      sortFieldModifierExtensionPoint
     ]
   })
 }
