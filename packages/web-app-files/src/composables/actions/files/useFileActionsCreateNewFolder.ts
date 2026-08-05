@@ -55,14 +55,14 @@ export const useFileActionsCreateNewFolder = ({ space }: { space?: Ref<SpaceReso
     }
   }
 
-  const handler = () => {
+  const handler = async () => {
     // Extension point: allow extensions to provide a custom create-folder handler
     const createFolderHandlers = extensionRegistry.requestExtensions({
       id: 'global.files.create-folder-handler',
       extensionType: 'createFolderHandler'
     }) as any[]
     for (const ext of createFolderHandlers) {
-      if (ext.handler?.({ space: unref(space), currentFolder: unref(currentFolder), addNewFolder })) {
+      if (await ext.handler?.({ space: unref(space), currentFolder: unref(currentFolder), addNewFolder })) {
         return
       }
     }

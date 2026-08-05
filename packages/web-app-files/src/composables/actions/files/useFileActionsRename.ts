@@ -126,7 +126,7 @@ export const useFileActionsRename = () => {
       extensionType: 'renameHandler'
     }) as any[]
     for (const ext of renameHandlers) {
-      if (ext.handler?.({ space, resource: resources[0], renameResource })) {
+      if (await ext.handler?.({ space, resource: resources[0], renameResource })) {
         return
       }
     }
