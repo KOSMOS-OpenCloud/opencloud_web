@@ -126,7 +126,7 @@ export class AuthService implements AuthServiceInterface {
 
       if (user?.expired) {
         try {
-          await this.userManager.signinSilent()
+          await this.userManager.signinSilent({ silentRequestTimeoutInSeconds: 5 })
         } catch {
           await this.userManager.removeUser()
         }

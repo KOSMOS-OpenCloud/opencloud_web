@@ -57,10 +57,22 @@ export class UserManager extends OidcUserManager {
       prefix: storePrefix,
       store: browserStorage
     })
+    // Silent renew mode: "iframe" (default, legacy) or "refresh_token" (modern, no iframe)
+    // When using refresh_token mode, signinSilent() uses the refresh token directly
+    // instead of an iframe. This avoids Third-Party-Cookie issues with external IDPs
+    // (Keycloak, Azure AD) and modern browser privacy settings (Brave, Firefox Strict).
+    // Configure via web config: openIdConnect.silentRenewMode = "refresh_token"
+    const silentRenewMode = options.configStore.openIdConnect?.silentRenewMode || 'iframe'
+    const useRefreshTokenRenew = silentRenewMode === 'refresh_token'
+
     const openIdConfig: UserManagerSettings = {
       userStore,
       redirect_uri: buildUrl(options.router, '/oidc-callback.html'),
-      silent_redirect_uri: buildUrl(options.router, '/oidc-silent-redirect.html'),
+      // Only set silent_redirect_uri for iframe mode. Without it, oidc-client-ts
+      // uses the refresh token for signinSilent() automatically.
+      ...(useRefreshTokenRenew ? {} : {
+        silent_redirect_uri: buildUrl(options.router, '/oidc-silent-redirect.html')
+      }),
 
       response_mode: 'query',
       response_type: 'code', // "code" triggers auth code grant flow
