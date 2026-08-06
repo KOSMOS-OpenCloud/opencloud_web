@@ -51,7 +51,7 @@ const ability = useAbility()
 const updatesStore = useUpdatesStore()
 const { setHasError } = updatesStore
 
-const checkForUpdates = capabilityStore.capabilities.core['check-for-updates']
+const checkForUpdates = capabilityStore.capabilities?.core?.['check-for-updates']
 const { updates, isLoading, hasError } = storeToRefs(updatesStore)
 
 const isEnabled = computed(() => {
@@ -61,8 +61,8 @@ const isEnabled = computed(() => {
 const updateAvailable = ref(false)
 const updateData = ref<UpdateChannel>()
 
-const serverEdition = capabilityStore.status.edition || 'rolling'
-const currentServerVersion = capabilityStore.status.productversion
+const serverEdition = capabilityStore.status?.edition || 'rolling'
+const currentServerVersion = capabilityStore.status?.productversion || '0.0.0'
 const currentServerVersionSanitized = currentServerVersion.split('+')[0]
 
 const showCritical = computed(() => {
@@ -79,9 +79,9 @@ watch(
       return
     }
     try {
-      updateData.value = unref(updates).channels[serverEdition]
-      const newestVersion = unref(updates).channels[serverEdition].current_version
-      if (compareVersions(newestVersion, currentServerVersionSanitized) > 0) {
+      updateData.value = unref(updates)?.channels?.[serverEdition]
+      const newestVersion = updateData.value?.current_version
+      if (newestVersion && compareVersions(newestVersion, currentServerVersionSanitized) > 0) {
         updateAvailable.value = true
       }
     } catch (e) {
