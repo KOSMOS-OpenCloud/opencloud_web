@@ -103,6 +103,7 @@ export function useAppNavigation({
 
   const closed = ref(false)
   const closeApp = () => {
+    console.log('[closeApp] called', new Error().stack)
     closed.value = true
     return navigateToContext(currentFileContext)
   }

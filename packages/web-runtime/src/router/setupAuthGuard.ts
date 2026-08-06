@@ -18,23 +18,24 @@ export const setupAuthGuard = (router: Router) => {
   router.beforeEach(async (to, from) => {
     const { isDelegatingAuthentication } = useEmbedMode()
 
+    console.log('[authGuard] to:', to.path, 'name:', String(to.name), 'from:', from?.path)
+
     if (from && to.path === from.path && !hasContextRouteNameChanged(to, from)) {
-      // note: except for the context route, query changes can never trigger re-init of the auth context
+      console.log('[authGuard] same path, skip')
       return true
     }
 
     const authStore = useAuthStore()
     await authService.initializeContext(to)
 
-    // vue-router currently (4.1.6) does not cancel navigations when a new one is triggered
-    // we need to guard this case to be able to show the access denied page
-    // and not be redirected to the login page
     if (authService.hasAuthErrorOccurred) {
+      console.log('[authGuard] AUTH ERROR -> accessDenied')
       return to.name === 'accessDenied' || { name: 'accessDenied' }
     }
 
     if (isPublicLinkContextRequired(router, to)) {
       if (!authStore.publicLinkContextReady) {
+        console.log('[authGuard] publicLink not ready -> resolvePublicLink')
         const publicLinkToken = extractPublicLinkToken(to)
         return {
           name: 'resolvePublicLink',
@@ -48,16 +49,19 @@ export const setupAuthGuard = (router: Router) => {
     if (isUserContextRequired(router, to)) {
       if (!authStore.userContextReady) {
         if (unref(isDelegatingAuthentication)) {
+          console.log('[authGuard] user not ready -> oidc-callback')
           return { path: '/web-oidc-callback' }
         }
-
+        console.log('[authGuard] user NOT ready -> /login, redirect:', to.fullPath)
         return { path: '/login', query: { redirectUrl: to.fullPath } }
       }
+      console.log('[authGuard] user ready, pass through')
       return true
     }
 
     if (isIdpContextRequired(router, to)) {
       if (!authStore.idpContextReady) {
+        console.log('[authGuard] idp not ready -> /login')
         if (unref(isDelegatingAuthentication)) {
           return { path: '/web-oidc-callback' }
         }
@@ -69,7 +73,8 @@ export const setupAuthGuard = (router: Router) => {
 
     return true
   })
-  router.afterEach((to) => {
+  router.afterEach((to, from) => {
+    console.log('[router.afterEach] navigated to:', to.path, 'name:', String(to.name), 'from:', from?.path)
     if (to.name !== 'accessDenied') {
       return
     }
