@@ -13,9 +13,9 @@
       v-bind="additionalAttrs"
     />
     <!-- eslint-disable vue/no-v-html -->
-    <span
+    <div
       v-if="resource.highlights"
-      class="block truncate text-xs text-role-on-surface-variant pl-10 -mt-1"
+      class="block text-xs text-role-on-surface-variant pl-10 -mt-1 [&_mark]:bg-yellow-200 [&_mark]:font-semibold [&_b]:text-role-on-surface"
       v-html="resource.highlights"
     />
     <!--eslint-enable-->
