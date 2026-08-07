@@ -104,7 +104,7 @@ export const useJobService = () => {
       jobParams.origin_url = buildWebdavUrl(link.webUrl, password)
       jobParams.origin_password = password
       if (useParent) {
-        jobParams.origin_filename = resource.name
+        jobParams.origin_filename = (resource as any)._originalName || resource.name
       }
     }
 
