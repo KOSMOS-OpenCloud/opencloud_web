@@ -109,9 +109,9 @@
         >
           <template #additionalResourceContent="{ resource }">
             <!-- eslint-disable vue/no-v-html -->
-            <span
+            <div
               v-if="resource.highlights"
-              class="truncate block text-sm [&_mark]:bg-yellow-200 [&_mark]:font-semibold"
+              class="block text-sm pl-8 text-role-on-surface-variant [&_mark]:bg-yellow-200 [&_mark]:font-semibold [&_b]:text-role-on-surface"
               v-html="resource.highlights"
             />
             <!--eslint-enable-->
