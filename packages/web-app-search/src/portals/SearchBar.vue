@@ -390,7 +390,7 @@ export default defineComponent({
           ...(unref(scope) && { scope: unref(scope) }),
           useScope: unref(useScope).toString(),
           provider: providerId,
-          ...(unref(folderOnlyActive) && { folderOnly: 'true' })
+          // folderOnly is topbar-only, not passed to fullpage search
         }
       })
     }
