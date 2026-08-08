@@ -33,13 +33,13 @@
     >
       <template #locationFilter>
         <span
-          v-oc-tooltip="contentSearchActive ? $gettext('Content search active') : $gettext('Content search off')"
+          v-oc-tooltip="folderOnlyActive ? $gettext('Nur Ordner') : $gettext('Alle Ergebnisse')"
           class="z-[var(--z-index-modal)] absolute top-[50%] transform-[translateY(-50%)] right-0 mr-[170px] inline-flex items-center cursor-pointer [&_.oc-switch>span:first-child]:sr-only"
         >
           <oc-switch
-            :checked="contentSearchActive"
-            :label="$gettext('Content search')"
-            @update:checked="contentSearchActive = $event"
+            :checked="folderOnlyActive"
+            :label="$gettext('Nur Ordner')"
+            @update:checked="folderOnlyActive = $event"
           />
         </span>
         <search-bar-filter
@@ -196,8 +196,8 @@ export default defineComponent({
     const extensionRegistry = useExtensionRegistry()
 
     const locationFilterId = ref(SearchLocationFilterConstants.currentSpace)
-    const contentSearchQueryValue = useRouteQuery('contentSearch')
-    const contentSearchActive = ref(queryItemAsString(unref(contentSearchQueryValue)) === 'true')
+    const folderOnlyQueryValue = useRouteQuery('folderOnly')
+    const folderOnlyActive = ref(queryItemAsString(unref(folderOnlyQueryValue)) === 'true')
     const optionsDropRef = useTemplateRef<ComponentPublicInstance<typeof OcDrop>>('optionsDropRef')
     const searchInputRef = useTemplateRef<ComponentPublicInstance>('searchInputRef')
     const searchBarRef = useTemplateRef<HTMLElement>('searchBar')
@@ -312,11 +312,11 @@ export default defineComponent({
       const terms: string[] = []
 
       let nameQuery = `name:"*${unref(term)}*"`
-      if (unref(contentSearchActive) && unref(fullTextSearchEnabled)) {
-        nameQuery = `(name:"*${unref(term)}*" OR content:"${unref(term)}")`
-      }
-
       terms.push(nameQuery)
+
+      if (unref(folderOnlyActive)) {
+        terms.push('mediatype:"folder"')
+      }
 
       if (unref(useScope)) {
         terms.push(`scope:${unref(scope)}`)
@@ -390,7 +390,7 @@ export default defineComponent({
           ...(unref(scope) && { scope: unref(scope) }),
           useScope: unref(useScope).toString(),
           provider: providerId,
-          ...(unref(contentSearchActive) && { contentSearch: 'true' })
+          ...(unref(folderOnlyActive) && { folderOnly: 'true' })
         }
       })
     }
@@ -501,7 +501,7 @@ export default defineComponent({
       isAppActive,
       getFocusableElements,
       onSearchShortcut,
-      contentSearchActive
+      folderOnlyActive
     }
   },
 

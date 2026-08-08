@@ -58,12 +58,7 @@
           </template>
         </item-filter>
 
-        <item-filter-toggle
-          v-if="fullTextSearchEnabled"
-          :filter-label="$gettext('Title only')"
-          filter-name="titleOnly"
-          class="files-search-filter-title-only mr-2"
-        />
+        <!-- Content search is always active in fullpage results -->
       </div>
       <app-loading-spinner v-if="loading" />
       <template v-else>
@@ -348,7 +343,7 @@ const hasFilter = computed(() => {
 })
 
 const doSearch = (manuallyUpdateFilterChip = false) => {
-  const isTitleOnlySearch = queryItemAsString(unref(titleOnlyParam)) == 'true'
+  const isTitleOnlySearch = false // fullpage always searches content
   const tags = queryItemAsString(unref(tagParam))
   const lastModified = queryItemAsString(unref(lastModifiedParam))
   const mediaType = queryItemAsString(unref(mediaTypeParam))
