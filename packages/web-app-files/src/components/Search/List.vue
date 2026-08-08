@@ -58,7 +58,12 @@
           </template>
         </item-filter>
 
-        <!-- Content search is always active in fullpage results -->
+        <item-filter-toggle
+          v-if="fullTextSearchEnabled"
+          :filter-label="$gettext('Volltext')"
+          filter-name="contentSearch"
+          class="files-search-filter-content mr-2"
+        />
       </div>
       <app-loading-spinner v-if="loading" />
       <template v-else>
@@ -267,6 +272,7 @@ const tagParam = useRouteQuery('q_tags')
 const lastModifiedParam = useRouteQuery('q_lastModified')
 const mediaTypeParam = useRouteQuery('q_mediaType')
 const titleOnlyParam = useRouteQuery('q_titleOnly')
+const contentSearchParam = useRouteQuery('q_contentSearch')
 
 const fullTextSearchEnabled = computed(() => capabilityStore.searchContent?.enabled)
 
@@ -343,7 +349,8 @@ const hasFilter = computed(() => {
 })
 
 const doSearch = (manuallyUpdateFilterChip = false) => {
-  const isTitleOnlySearch = false // fullpage always searches content
+  const contentActive = queryItemAsString(unref(contentSearchParam)) === 'true'
+  const isTitleOnlySearch = !contentActive
   const tags = queryItemAsString(unref(tagParam))
   const lastModified = queryItemAsString(unref(lastModifiedParam))
   const mediaType = queryItemAsString(unref(mediaTypeParam))
@@ -451,6 +458,7 @@ watch(
         'q_tags',
         'q_lastModified',
         'q_mediaType',
+        'q_contentSearch',
         'useScope'
       ].every((key) => newVal[key] === oldVal[key])
       if (isSameTerm && isSameFilter) {
