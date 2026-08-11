@@ -552,6 +552,11 @@ export default { components: { VueSelect } }
       margin-top: -1px;
     }
 
+    &__dropdown-menu {
+      max-height: 350px;
+      overflow-y: auto;
+    }
+
     &__selected-readonly {
       background-color: var(--oc-role-surface-container-low) !important;
     }
