@@ -20,6 +20,6 @@ export default class Preview implements SearchPreview {
   }
 
   public get available(): boolean {
-    return !this.configStore.options?.embed?.enabled
+    return true
   }
 }
