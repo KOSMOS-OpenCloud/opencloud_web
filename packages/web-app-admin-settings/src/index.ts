@@ -8,10 +8,12 @@ import {
   ApplicationInformation,
   AppMenuItemExtension,
   ClassicApplicationScript,
+  CreateNewActionExtension,
   defineWebApplication,
   Extension,
   FloatingActionButtonExtension,
   useAbility,
+  useExtensionRegistry,
   useRoute,
   useSpaceActionsCreate,
   useUserStore
@@ -205,52 +207,58 @@ export default defineWebApplication({
         items.push(menuItem)
       }
 
+      // Default create-new-actions for built-in admin views
+      const createNewActions: CreateNewActionExtension[] = [
+        {
+          id: 'com.github.opencloud-eu.web.admin-settings.create-new-action.space',
+          extensionPointIds: ['app.admin-settings.create-new-action'],
+          type: 'createNewAction',
+          isActive: () =>
+            unref(currentRoute).name === 'admin-settings-spaces' &&
+            unref(createSpaceAction).isVisible(),
+          handler: () => unref(createSpaceAction).handler(),
+          mode: 'handler',
+        },
+        {
+          id: 'com.github.opencloud-eu.web.admin-settings.create-new-action.user',
+          extensionPointIds: ['app.admin-settings.create-new-action'],
+          type: 'createNewAction',
+          isActive: () =>
+            unref(currentRoute).name === 'admin-settings-users' &&
+            unref(createUserAction).isVisible(),
+          handler: () => unref(createUserAction).handler(),
+          mode: 'handler',
+        },
+        {
+          id: 'com.github.opencloud-eu.web.admin-settings.create-new-action.group',
+          extensionPointIds: ['app.admin-settings.create-new-action'],
+          type: 'createNewAction',
+          isActive: () =>
+            unref(currentRoute).name === 'admin-settings-groups' &&
+            unref(createGroupAction).isVisible(),
+          handler: () => unref(createGroupAction).handler(),
+          mode: 'handler',
+        },
+      ]
+      items.push(...createNewActions)
+
+      // FloatingActionButton driven by create-new-action registry
+      const { requestExtensions } = useExtensionRegistry()
+      const activeAction = () =>
+        requestExtensions<CreateNewActionExtension>({
+          id: 'app.admin-settings.create-new-action',
+          extensionType: 'createNewAction'
+        }).find((ext) => ext.isActive())
+
       const floatingActionButton: FloatingActionButtonExtension = {
         id: `com.github.opencloud-eu.web.${appInfo.id}.floating-action-button`,
         extensionPointIds: ['app.admin-settings.floating-action-button'],
         type: 'floatingActionButton',
         icon: 'add',
-        label: () => $gettext('New'),
-        mode: () => 'handler',
-        handler: () => {
-          if (unref(currentRoute).name === 'admin-settings-spaces') {
-            return unref(createSpaceAction).handler()
-          }
-
-          if (unref(currentRoute).name === 'admin-settings-users') {
-            return unref(createUserAction).handler()
-          }
-
-          if (unref(currentRoute).name === 'admin-settings-groups') {
-            return unref(createGroupAction).handler()
-          }
-
-          return null
-        },
-        isDisabled: () => {
-          if (
-            unref(currentRoute).name === 'admin-settings-spaces' &&
-            unref(createSpaceAction).isVisible()
-          ) {
-            return false
-          }
-
-          if (
-            unref(currentRoute).name === 'admin-settings-users' &&
-            unref(createUserAction).isVisible()
-          ) {
-            return false
-          }
-
-          if (
-            unref(currentRoute).name === 'admin-settings-groups' &&
-            unref(createGroupAction).isVisible()
-          ) {
-            return false
-          }
-
-          return true
-        }
+        label: () => activeAction()?.label?.() || $gettext('New'),
+        mode: () => activeAction()?.mode || 'handler',
+        handler: () => activeAction()?.handler(),
+        isDisabled: () => !activeAction(),
       }
 
       items.push(floatingActionButton)

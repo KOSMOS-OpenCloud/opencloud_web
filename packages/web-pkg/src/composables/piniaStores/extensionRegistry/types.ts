@@ -90,6 +90,16 @@ export interface FloatingActionButtonExtension extends Extension {
   dropComponent?: Component
 }
 
+export interface CreateNewActionExtension extends Extension {
+  type: 'createNewAction'
+  isActive: () => boolean
+  handler: () => Promise<void> | void
+  mode: FloatingActionButtonExtensionMode
+  dropComponent?: Component
+  label?: () => string
+  icon?: string
+}
+
 export interface AppMenuItemExtension extends Extension {
   type: 'appMenuItem'
   label: () => string

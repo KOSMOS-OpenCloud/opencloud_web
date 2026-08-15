@@ -1,5 +1,6 @@
 import {
   ActionExtension,
+  CreateNewActionExtension,
   CustomComponentExtension,
   ExtensionPoint,
   FloatingActionButtonExtension,
@@ -52,6 +53,11 @@ export const fileSideBarActionsExtensionPoint: ExtensionPoint<ActionExtension> =
 export const floatingActionButtonExtension: ExtensionPoint<FloatingActionButtonExtension> = {
   id: 'app.files.floating-action-button',
   extensionType: 'floatingActionButton'
+}
+export const createNewActionExtensionPoint: ExtensionPoint<CreateNewActionExtension> = {
+  id: 'app.files.create-new-action',
+  extensionType: 'createNewAction',
+  multiple: true
 }
 
 export const folderViewsFolderExtensionPoint: ExtensionPoint<FolderViewExtension> = {
@@ -140,6 +146,7 @@ export const extensionPoints = () => {
       folderViewsSearchExtensionPoint,
       genericSpaceHeaderExtensionPoint,
       floatingActionButtonExtension,
+      createNewActionExtensionPoint,
       fileSideBarFileDetailsTableExtensionPoint,
       fileSideBarSharesPanelSharedWithTopExtensionPoint,
       fileSideBarSharesPanelSharedWithBottomExtensionPoint

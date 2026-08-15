@@ -1,5 +1,6 @@
 import {
   ActionExtension,
+  CreateNewActionExtension,
   ExtensionPoint,
   FloatingActionButtonExtension
 } from '@opencloud-eu/web-pkg'
@@ -8,6 +9,12 @@ import { computed } from 'vue'
 export const floatingActionButtonExtension: ExtensionPoint<FloatingActionButtonExtension> = {
   id: 'app.admin-settings.floating-action-button',
   extensionType: 'floatingActionButton'
+}
+
+export const createNewActionExtensionPoint: ExtensionPoint<CreateNewActionExtension> = {
+  id: 'app.admin-settings.create-new-action',
+  extensionType: 'createNewAction',
+  multiple: true
 }
 
 export const spacesContextActionsExtensionPoint: ExtensionPoint<ActionExtension> = {
@@ -32,6 +39,7 @@ export const extensionPoints = () => {
   return computed<ExtensionPoint<any>[]>(() => {
     return [
       floatingActionButtonExtension,
+      createNewActionExtensionPoint,
       spacesContextActionsExtensionPoint,
       spacesSidebarActionsExtensionPoint,
       spacesBatchActionsExtensionPoint

@@ -1,11 +1,13 @@
 import {
   ApplicationInformation,
+  CreateNewActionExtension,
   Extension,
   FloatingActionButtonExtension,
   isLocationPublicActive,
   isLocationSpacesActive,
   useCapabilityStore,
   useConfigStore,
+  useExtensionRegistry,
   useResourcesStore,
   useRouter,
   useSearch,
@@ -77,43 +79,48 @@ export const extensions = (appInfo: ApplicationInformation) => {
       type: 'search',
       searchProvider: new SDKSearch(capabilityStore, searchFunction, configStore)
     },
+    // Default create-new-actions (Spaces + Upload/Folder)
     {
-      id: `com.github.opencloud-eu.web.${APPID}.floating-action-button`,
-      extensionPointIds: ['app.files.floating-action-button'],
-      type: 'floatingActionButton',
-      icon: 'add',
-      label: () => $gettext('New'),
-      handler: () => {
-        if (isLocationSpacesActive(router, 'files-spaces-projects')) {
-          return unref(createSpaceAction).handler()
-        }
-      },
-      isDisabled: () => {
-        if (
-          isLocationSpacesActive(router, 'files-spaces-projects') &&
-          unref(createSpaceAction).isVisible()
-        ) {
-          return false
-        }
+      id: 'com.github.opencloud-eu.web.files.create-new-action.space',
+      extensionPointIds: ['app.files.create-new-action'],
+      type: 'createNewAction',
+      isActive: () =>
+        isLocationSpacesActive(router, 'files-spaces-projects') &&
+        unref(createSpaceAction).isVisible(),
+      handler: () => unref(createSpaceAction).handler(),
+      mode: 'handler',
+    } as CreateNewActionExtension,
+    {
+      id: 'com.github.opencloud-eu.web.files.create-new-action.upload',
+      extensionPointIds: ['app.files.create-new-action'],
+      type: 'createNewAction',
+      isActive: () => !!unref(currentFolder)?.canUpload({ user: userStore.user }),
+      handler: () => {},
+      mode: 'drop',
+      dropComponent: markRaw(CreateOrUploadMenu),
+    } as CreateNewActionExtension,
+    // FloatingActionButton driven by create-new-action registry
+    (() => {
+      const { requestExtensions } = useExtensionRegistry()
+      const activeAction = () =>
+        requestExtensions<CreateNewActionExtension>({
+          id: 'app.files.create-new-action',
+          extensionType: 'createNewAction'
+        }).find((ext) => ext.isActive())
 
-        return !unref(currentFolder)?.canUpload({ user: userStore.user })
-      },
-      mode: () => {
-        if (isLocationSpacesActive(router, 'files-spaces-projects')) {
-          return 'handler'
-        }
-
-        return 'drop'
-      },
-      isVisible: () => {
-        if (isLocationPublicActive(router, 'files-public-upload')) {
-          return false
-        }
-
-        return true
-      },
-      dropComponent: markRaw(CreateOrUploadMenu)
-    } as FloatingActionButtonExtension,
+      return {
+        id: `com.github.opencloud-eu.web.${APPID}.floating-action-button`,
+        extensionPointIds: ['app.files.floating-action-button'],
+        type: 'floatingActionButton',
+        icon: 'add',
+        label: () => activeAction()?.label?.() || $gettext('New'),
+        handler: () => activeAction()?.handler(),
+        isDisabled: () => !activeAction(),
+        mode: () => activeAction()?.mode || 'handler',
+        isVisible: () => !isLocationPublicActive(router, 'files-public-upload'),
+        get dropComponent() { return activeAction()?.dropComponent || markRaw(CreateOrUploadMenu) },
+      } as FloatingActionButtonExtension
+    })(),
     ...((userStore.user && [
       {
         id: `app.${appInfo.id}.menuItem`,
