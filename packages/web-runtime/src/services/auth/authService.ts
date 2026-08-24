@@ -235,8 +235,21 @@ export class AuthService implements AuthServiceInterface {
     return this.userManager.signinRedirect()
   }
 
-  public signinSilent() {
-    return this.userManager.signinSilent()
+  public async signinSilent() {
+    const callStack = new Error().stack?.split('\n').slice(2, 5).join(' <- ')
+    console.debug(`[auth] signinSilent() called, stack: ${callStack}`)
+    const start = performance.now()
+    try {
+      await this.userManager.signinSilent()
+      const durationMs = Math.round(performance.now() - start)
+      console.debug(`[auth] signinSilent() succeeded in ${durationMs}ms`)
+    } catch (error) {
+      const durationMs = Math.round(performance.now() - start)
+      const errorName = error instanceof Error ? error.name : typeof error
+      const errorMsg = error instanceof Error ? error.message : String(error)
+      console.warn(`[auth] signinSilent() failed after ${durationMs}ms: ${errorName}: ${errorMsg}`)
+      throw error
+    }
   }
 
   /**
@@ -279,6 +292,10 @@ export class AuthService implements AuthServiceInterface {
   }
 
   public async handleAuthError(route: RouteLocation) {
+    console.warn(
+      `[auth:handleAuthError] called at ${new Date().toISOString()} for route "${route.name}"` +
+        ` (${route.fullPath})`
+    )
     if (isPublicLinkContextRequired(this.router, route)) {
       const token = extractPublicLinkToken(route)
       this.publicLinkManager.clear(token)
@@ -296,20 +313,29 @@ export class AuthService implements AuthServiceInterface {
       const user = await this.userManager.getUser()
       if (user?.expired === true) {
         // token expired, attempt an immediate silent signin
+        console.warn('[auth:handleAuthError] user expired, attempting signinSilent (2s timeout)')
         try {
           await this.userManager.signinSilent({ silentRequestTimeoutInSeconds: 2 })
-        } catch {
+          console.debug('[auth:handleAuthError] signinSilent succeeded, keeping user')
+        } catch (silentError) {
+          console.warn(
+            `[auth:handleAuthError] signinSilent failed: ${String(silentError)}, removing user`
+          )
           await throwAuthError()
         }
         return
       }
 
+      console.warn(
+        `[auth:handleAuthError] user not expired (expired=${user?.expired}), removing user anyway`
+      )
       await throwAuthError()
       return
     }
     // authGuard is taking care of redirecting the user to the
     // accessDenied page if hasAuthErrorOccurred is set to true
     // we can't push the route ourselves, see authGuard for details.
+    console.warn('[auth:handleAuthError] setting hasAuthErrorOccurred (authGuard will redirect)')
     this.hasAuthErrorOccurred = true
   }
 

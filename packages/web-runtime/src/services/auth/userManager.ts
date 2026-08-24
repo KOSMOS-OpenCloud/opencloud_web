@@ -150,19 +150,27 @@ export class UserManager extends OidcUserManager {
     const userKnown = !!this.userStore.user
     const accessTokenChanged = this.authStore.accessToken !== accessToken
     if (!accessTokenChanged) {
+      console.debug('[auth:updateContext] token unchanged, skipping')
       return this.updateAccessTokenPromise
     }
 
+    console.debug(
+      `[auth:updateContext] token changed at ${new Date().toISOString()}, ` +
+        `fetchUserData=${fetchUserData}, userKnown=${userKnown}, ` +
+        `supportSSE=${this.capabilityStore.supportSSE}`
+    )
     this.authStore.setAccessToken(accessToken)
     this.authStore.setSessionId(sessionId)
 
     this.updateAccessTokenPromise = (async () => {
       if (!fetchUserData) {
+        console.debug('[auth:updateContext] skipping user data fetch (idp context only)')
         this.authStore.setIdpContextReady(true)
         return
       }
 
       if (this.capabilityStore.supportSSE && userKnown) {
+        console.debug('[auth:updateContext] updating SSE access token')
         ;(this.clientService.sseAuthenticated as SSEAdapter).updateAccessToken(accessToken)
       }
 

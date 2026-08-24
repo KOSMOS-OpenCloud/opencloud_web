@@ -21,17 +21,31 @@ export const useTokenTimerWorker = ({
   const startWorker = () => {
     worker.value = createWorker(TokenWorker as unknown as string)
 
-    unref(unref(worker).worker).onmessage = () => {
-      authService.signinSilent().catch((error) => {
+    unref(unref(worker).worker).onmessage = async () => {
+      const timerTriggeredAt = new Date().toISOString()
+      console.debug(`[token-timer] Worker fired at ${timerTriggeredAt}, calling signinSilent()`)
+      const silentStart = performance.now()
+      try {
+        await authService.signinSilent()
+        const silentDurationMs = Math.round(performance.now() - silentStart)
+        console.debug(`[token-timer] signinSilent() succeeded in ${silentDurationMs}ms`)
+      } catch (error) {
+        const silentDurationMs = Math.round(performance.now() - silentStart)
+        const errorName = error instanceof Error ? error.name : typeof error
+        const errorMsg = error instanceof Error ? error.message : String(error)
+        console.warn(
+          `[token-timer] signinSilent() failed after ${silentDurationMs}ms: ` +
+            `${errorName}: ${errorMsg}`
+        )
         if (error instanceof ErrorTimeout || error instanceof TypeError) {
-          console.warn('token renewal failed due to network error, retrying in 5 seconds...')
+          console.warn('[token-timer] Network error (ErrorTimeout/TypeError), retrying in 5 seconds...')
           unref(worker).post(JSON.stringify({ topic: 'set', expiry: 5, expiryThreshold: 0 }))
           return
         }
 
-        console.error('token renewal error:', error)
+        console.error('[token-timer] Auth error, calling handleAuthError:', error)
         authService.handleAuthError(unref(router.currentRoute))
-      })
+      }
     }
   }
 
