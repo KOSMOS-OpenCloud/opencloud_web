@@ -1,0 +1,80 @@
+publiccodeYmlVersion: "0.4"
+name: "OpenCloud Web KOSMOS Edition"
+applicationSuite: "KOSMOS"
+url: "https://gitlab.opencode.de/kosmos/opencloud-web"
+landingURL: "https://kosmos.technology/"
+softwareVersion: "7.2.0"
+releaseDate: "2026-08-25"
+logo: "kosmos2.png"
+platforms:
+  - "web"
+categories:
+  - "knowledge-management"
+  - "document-management"
+  - "collaboration"
+developmentStatus: "stable"
+softwareType: "standalone/web"
+description:
+  de:
+    genericName: "Web-Client"
+    shortDescription: "Web-Client für die OpenCloud KOSMOS Edition mit Dokumentenverwaltung, Volltext- und Semantiksuche, Metadatenpflege und KI-Features."
+    longDescription: >
+      OpenCloud Web ist der Browser-Client des OpenCore-Stacks
+      (OpenCloud + OpenCosmos). Er stellt das Dokumenten- und
+      Dateiverwaltungssystem der KOSMOS Edition bereit: Ordner- und
+      Dateibetrieb, Volltext- und
+      Semantiksuche, Favoriten und Tags, Metadatenpflege (u. a.
+      Aktenzeichen), Online-Office (Collabora) und KI-gestützte
+      Dokumentenverarbeitung.
+
+      Die Oberfläche ist als Vue.js-Monorepo gebaut und wird als
+      Web-Extension-Ökosystem erweiterbar: Funktionen können als
+      separate Extensions eingebunden werden, ohne den Kern zu
+      verändern.
+    features:
+      - "Dokumenten- und Dateiverwaltung im Browser"
+      - "Volltext- und Semantiksuche mit KI-Metadaten"
+      - "Metadatenpflege inklusive Aktenzeichen"
+      - "Online-Office-Integration (Collabora)"
+      - "Erweiterbares Extension-System"
+      - "Responsive Oberfläche für Desktop und Mobile"
+  en:
+    genericName: "Web Client"
+    shortDescription: "Web client for the OpenCloud KOSMOS Edition with document management, full-text and semantic search, metadata editing and AI features."
+    longDescription: >
+      OpenCloud Web is the browser client of the OpenCore stack
+      (OpenCloud + OpenCosmos). It provides the document and file
+      management system of the KOSMOS Edition: folder and file
+      operations, full-text and
+      semantic search, favorites and tags, metadata editing (including
+      file-plan numbers), online office (Collabora) and AI-powered
+      document processing.
+
+      The interface is built as a Vue.js monorepo and is extensible as a
+      web-extension ecosystem: features can be plugged in as separate
+      extensions without modifying the core.
+    features:
+      - "Document and file management in the browser"
+      - "Full-text and semantic search with AI metadata"
+      - "Metadata editing including file-plan numbers"
+      - "Online office integration (Collabora)"
+      - "Extensible extension system"
+      - "Responsive interface for desktop and mobile"
+intendedAudience:
+  countries:
+    - "de"
+  scope:
+    - "local-authorities"
+    - "government"
+legal:
+  license: "AGPL-3.0-or-later"
+maintenance:
+  type: "community"
+  contacts:
+    - name: "KOSMOS"
+      email: "info@kosmos.technology"
+localisation:
+  localisationReady: true
+  availableLanguages:
+    - "de"
+    - "en"
