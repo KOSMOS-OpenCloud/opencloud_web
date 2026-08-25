@@ -23,11 +23,11 @@ GITHUB_TOKEN="${PACKAGES_TOKEN:-${PUSH_TOKEN:-${CODEBERG_TOKEN:-}}}"
 GITHUB_REPO="${PUSH_ORG:-${GIT_BASE##*/}}/${REPO:-opencloud_web}"
 GITHUB_API="https://api.github.com/repos/${GITHUB_REPO}"
 
-echo "[github] Creating release ${TAG}..."
+echo "[github] Creating release pkg-${TAG}..."
 RELEASE_ID=$(curl -sf -X POST "${GITHUB_API}/releases" \
     -H "Authorization: token ${GITHUB_TOKEN}" \
     -H "Content-Type: application/json" \
-    -d "{\"tag_name\":\"${TAG}\",\"name\":\"${PACKAGE} ${TAG}\",\"draft\":false}" \
+    -d "{\"tag_name\":\"pkg-${TAG}\",\"name\":\"${PACKAGE} ${TAG}\",\"draft\":false}" \
     | python3 -c "import sys,json; print(json.load(sys.stdin)['id'])" 2>/dev/null)
 
 if [ -n "$RELEASE_ID" ]; then
