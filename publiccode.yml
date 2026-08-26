@@ -1,9 +1,9 @@
 publiccodeYmlVersion: "0.4"
-name: "OpenCloud Web KOSMOS Edition"
+name: "OpenCore Web KOSMOS Edition"
 applicationSuite: "KOSMOS"
 url: "https://gitlab.opencode.de/kosmos/opencloud-web"
 landingURL: "https://kosmos.technology/"
-softwareVersion: "7.2.1"
+softwareVersion: "7.2.2"
 releaseDate: "2026-08-26"
 logo: "feature.png"
 platforms:
@@ -17,7 +17,7 @@ softwareType: "standalone/web"
 description:
   de:
     genericName: "Web-Client"
-    shortDescription: "Web-Client für die OpenCloud KOSMOS Edition mit Dokumentenverwaltung, Volltext- und Semantiksuche, Metadatenpflege und KI-Features."
+    shortDescription: "Web-Client für die OpenCore KOSMOS Edition mit Dokumentenverwaltung, Volltext- und Semantiksuche, Metadatenpflege und KI-Features."
     longDescription: >
       OpenCloud Web ist der Browser-Client des OpenCore-Stacks
       (OpenCloud + OpenCosmos). Er stellt das Dokumenten- und
@@ -40,7 +40,7 @@ description:
       - "Responsive Oberfläche für Desktop und Mobile"
   en:
     genericName: "Web Client"
-    shortDescription: "Web client for the OpenCloud KOSMOS Edition with document management, full-text and semantic search, metadata editing and AI features."
+    shortDescription: "Web client for the OpenCore KOSMOS Edition with document management, full-text and semantic search, metadata editing and AI features."
     longDescription: >
       OpenCloud Web is the browser client of the OpenCore stack
       (OpenCloud + OpenCosmos). It provides the document and file
