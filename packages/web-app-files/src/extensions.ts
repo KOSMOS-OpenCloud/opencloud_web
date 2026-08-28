@@ -11,6 +11,7 @@ import {
   useResourcesStore,
   useRouter,
   useSearch,
+  useSideBar,
   useSpaceActionsCreate,
   useFileActionsJobPipeline,
   useUserStore
@@ -107,6 +108,9 @@ export const extensions = (appInfo: ApplicationInformation) => {
           id: 'app.files.create-new-action',
           extensionType: 'createNewAction'
         }).find((ext) => ext.isActive())
+      // Chat-Panel offen → FAB ("Neu") deckt den Chat-Submit-Button auf
+      // kleinen Bildschirmen ab → ausblenden, wenn genau dieses Panel aktiv ist.
+      const sideBarStore = useSideBar()
 
       return {
         id: `com.github.opencloud-eu.web.${APPID}.floating-action-button`,
@@ -117,7 +121,9 @@ export const extensions = (appInfo: ApplicationInformation) => {
         handler: () => activeAction()?.handler(),
         isDisabled: () => !activeAction(),
         mode: () => activeAction()?.mode || 'handler',
-        isVisible: () => !isLocationPublicActive(router, 'files-public-upload'),
+        isVisible: () =>
+          !isLocationPublicActive(router, 'files-public-upload') &&
+          !(unref(sideBarStore.isSideBarOpen) && sideBarStore.sideBarActivePanel === 'chat-with-file'),
         get dropComponent() { return activeAction()?.dropComponent || markRaw(CreateOrUploadMenu) },
       } as FloatingActionButtonExtension
     })(),
