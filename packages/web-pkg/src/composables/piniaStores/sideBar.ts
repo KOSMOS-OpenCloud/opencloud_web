@@ -49,17 +49,27 @@ export const useSideBar = defineStore('sideBar', () => {
     appSideBar.focus()
   }
 
+  // Reset the double-width so the sidebar can be reopened at the normal width.
+  const resetExpanded = () => {
+    if (unref(sideBarIsExpandedRef)) {
+      sideBarIsExpandedRef.value = false
+      writeToStorage('oc_sideBarIsExpanded', false)
+    }
+  }
   const toggleSideBar = () => {
     isSideBarOpenRef.value = !unref(isSideBarOpenRef)
     writeToStorage('oc_sideBarOpen', unref(isSideBarOpenRef))
     if (unref(isSideBarOpenRef)) {
       focusSidebar()
+    } else {
+      resetExpanded()
     }
   }
   const closeSideBar = () => {
     isSideBarOpenRef.value = false
     writeToStorage('oc_sideBarOpen', false)
     sideBarActivePanel.value = null
+    resetExpanded()
   }
   const openSideBar = () => {
     isSideBarOpenRef.value = true
