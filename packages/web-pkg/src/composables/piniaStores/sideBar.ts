@@ -16,20 +16,33 @@ export const useSideBar = defineStore('sideBar', () => {
   const sideBarIsExpandedLocalStorage = useLocalStorage(`oc_sideBarIsExpanded`, false)
   const sideBarIsExpandedIsolated = ref(false)
 
+  // in-app ref (reactive for all consumers); mirrored to localStorage/embed-isolated ref
+  const sideBarIsExpandedRef = ref(false)
+  let sideBarExpandedInitialized = false
+
+  const writeSideBarIsExpanded = (value: boolean) => {
+    if (unref(isEmbedModeEnabled)) {
+      sideBarIsExpandedIsolated.value = value
+      return
+    }
+    sideBarIsExpandedLocalStorage.value = value
+  }
+
   const sideBarIsExpanded = computed({
     get() {
-      if (unref(isEmbedModeEnabled)) {
-        return unref(sideBarIsExpandedIsolated)
+      // sync from persistent storage exactly once
+      if (!sideBarExpandedInitialized) {
+        sideBarExpandedInitialized = true
+        sideBarIsExpandedRef.value = unref(isEmbedModeEnabled)
+          ? unref(sideBarIsExpandedIsolated)
+          : unref(sideBarIsExpandedLocalStorage)
       }
-      return unref(sideBarIsExpandedLocalStorage)
+      return unref(sideBarIsExpandedRef)
     },
 
     set(value) {
-      if (unref(isEmbedModeEnabled)) {
-        sideBarIsExpandedIsolated.value = value
-        return
-      }
-      sideBarIsExpandedLocalStorage.value = value
+      sideBarIsExpandedRef.value = value
+      writeSideBarIsExpanded(value)
     }
   })
 
