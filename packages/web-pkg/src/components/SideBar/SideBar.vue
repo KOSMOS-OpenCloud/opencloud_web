@@ -60,7 +60,7 @@ const attrs = useAttrs()
 const { isMobile } = useIsMobile()
 const sidebarStore = useSideBar()
 const { focusSidebar } = sidebarStore
-const { sideBarActivePanel: activePanel } = storeToRefs(sidebarStore)
+const { sideBarActivePanel: activePanel, sideBarIsExpanded } = storeToRefs(sidebarStore)
 
 const sidebarProps = computed(() => {
   if (unref(isMobile)) {
@@ -75,12 +75,13 @@ const sidebarProps = computed(() => {
     }
   }
 
+  const sidebarWidth = unref(sideBarIsExpanded) ? '720px' : '360px'
   const classes = [
     'border-l',
     'focus:outline-0',
     'focus-visible:outline-0',
-    'w-[360px]',
-    'min-w-[360px]',
+    `w-[${sidebarWidth}]`,
+    `min-w-[${sidebarWidth}]`,
     'overflow-hidden',
     'relative',
     'focus:shadow-none',

@@ -11,7 +11,7 @@
     <div v-else class="flex size-full">
       <slot
         class="app-wrapper-content size-full"
-        :class="{ 'w-[calc(100%-360px)]': isSideBarOpen && !isMobile }"
+        :class="contentWidthClass"
         v-bind="slotAttrs"
       />
       <file-side-bar :space="space" />
@@ -133,13 +133,20 @@ const sharesStore = useSharesStore()
 const eventBus = useEventBus()
 const { isMobile } = useIsMobile()
 const sidebarStore = useSideBar()
-const { isSideBarOpen } = storeToRefs(sidebarStore)
+const { isSideBarOpen, sideBarIsExpanded } = storeToRefs(sidebarStore)
 
 const { actions: openWithAppActions } = useFileActionsOpenWithApp({
   appId: applicationId
 })
 const { actions: downloadFileActions } = useFileActionsDownloadFile()
 const { actions: deleteFileActions } = useFileActionsDelete()
+
+const contentWidthClass = computed(() => {
+  if (!unref(isSideBarOpen) || unref(isMobile)) {
+    return undefined
+  }
+  return `w-[calc(100%-${unref(sideBarIsExpanded) ? 720 : 360}px)]`
+})
 
 const noResourceLoading = computed(() => {
   // component has its own way to load the resource(s)

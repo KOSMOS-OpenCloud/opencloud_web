@@ -13,6 +13,29 @@ export const useSideBar = defineStore('sideBar', () => {
 
   const isSideBarOpenIsolated = ref(false)
   const sideBarActivePanel = ref<string | null>(null)
+  const sideBarIsExpandedLocalStorage = useLocalStorage(`oc_sideBarIsExpanded`, false)
+  const sideBarIsExpandedIsolated = ref(false)
+
+  const sideBarIsExpanded = computed({
+    get() {
+      if (unref(isEmbedModeEnabled)) {
+        return unref(sideBarIsExpandedIsolated)
+      }
+      return unref(sideBarIsExpandedLocalStorage)
+    },
+
+    set(value) {
+      if (unref(isEmbedModeEnabled)) {
+        sideBarIsExpandedIsolated.value = value
+        return
+      }
+      sideBarIsExpandedLocalStorage.value = value
+    }
+  })
+
+  const toggleSideBarExpanded = () => {
+    sideBarIsExpanded.value = !unref(sideBarIsExpanded)
+  }
 
   const isSideBarOpen = computed({
     get() {
@@ -77,6 +100,8 @@ export const useSideBar = defineStore('sideBar', () => {
   return {
     isSideBarOpen,
     sideBarActivePanel,
+    sideBarIsExpanded,
+    toggleSideBarExpanded,
     focusSidebar,
     onInitialLoad,
     toggleSideBar,

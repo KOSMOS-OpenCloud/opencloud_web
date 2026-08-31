@@ -1,7 +1,9 @@
 <template>
   <div id="oc-file-details-sidebar" class="p-2">
     <div v-if="hasContent">
-      <div class="flex items-center justify-center bg-role-surface-container rounded-xl p-4 mb-4">
+      <div
+        class="relative flex items-center justify-center bg-role-surface-container rounded-xl p-4 mb-4"
+      >
         <div v-if="preview || isPreviewLoading" data-testid="preview">
           <oc-spinner v-if="isPreviewLoading" :aria-label="$gettext('Loading preview')" />
           <img
@@ -13,6 +15,18 @@
           />
         </div>
         <resource-icon v-else class="details-icon" :resource="resource" size="xxxlarge" />
+        <oc-button
+          v-if="!isMobile"
+          :class="sideBarIsExpanded ? 'text-role-text-interactive' : 'text-role-text-muted'"
+          appearance="raw"
+          class="absolute top-2 right-2 text-xs font-semibold"
+          data-testid="toggle-sidebar-width"
+          :aria-label="$gettext('Toggle sidebar width')"
+          :title="$gettext('Toggle sidebar width')"
+          @click="toggleSideBarExpanded"
+        >
+          x2
+        </oc-button>
       </div>
       <div
         v-if="!publicLinkContextReady && shareIndicators.length"
@@ -151,6 +165,7 @@ import { ContextualHelper } from '@opencloud-eu/design-system/helpers'
 import TagsSelect from './TagsSelect.vue'
 import { WebDavDetails, CustomComponentTarget } from '@opencloud-eu/web-pkg'
 import { fileSideBarFileDetailsTableExtensionPoint } from '../../../extensionPoints'
+import { useIsMobile } from '@opencloud-eu/design-system/composables'
 
 const { previewEnabled = true, tagsEnabled = true } = defineProps<{
   previewEnabled?: boolean
@@ -163,7 +178,9 @@ const capabilityStore = useCapabilityStore()
 const { getMatchingSpace } = useGetMatchingSpace()
 const { resourceContentsText } = useResourceContents({ showSizeInformation: false })
 const { loadPreview, previewsLoading } = useLoadPreview()
-const { openSideBarPanel } = useSideBar()
+const sidebarStore = useSideBar()
+const { openSideBarPanel, toggleSideBarExpanded, sideBarIsExpanded } = sidebarStore
+const { isMobile } = useIsMobile()
 const { getIndicators } = useResourceIndicators()
 const { tagsHelper } = useContextualHelpers()
 
