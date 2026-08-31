@@ -75,13 +75,18 @@ const sidebarProps = computed(() => {
     }
   }
 
-  const sidebarWidth = unref(sideBarIsExpanded) ? '720px' : '360px'
+  // Tailwind scans sources for literal class names. Build the arbitrary-width
+  // classes from two fully-written strings (not a template literal) so both
+  // w-[360px] and w-[720px] are detected and generated in the CSS bundle.
+  const expanded = unref(sideBarIsExpanded)
+  const widthClass = expanded ? 'w-[720px]' : 'w-[360px]'
+  const minWidthClass = expanded ? 'min-w-[720px]' : 'min-w-[360px]'
   const classes = [
     'border-l',
     'focus:outline-0',
     'focus-visible:outline-0',
-    `w-[${sidebarWidth}]`,
-    `min-w-[${sidebarWidth}]`,
+    widthClass,
+    minWidthClass,
     'overflow-hidden',
     'relative',
     'focus:shadow-none',

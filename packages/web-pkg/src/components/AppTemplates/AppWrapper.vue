@@ -145,7 +145,8 @@ const contentWidthClass = computed(() => {
   if (!unref(isSideBarOpen) || unref(isMobile)) {
     return undefined
   }
-  return `w-[calc(100%-${unref(sideBarIsExpanded) ? 720 : 360}px)]`
+  // Literal class strings so Tailwind generates both calc variants.
+  return unref(sideBarIsExpanded) ? 'w-[calc(100%-720px)]' : 'w-[calc(100%-360px)]'
 })
 
 const noResourceLoading = computed(() => {
