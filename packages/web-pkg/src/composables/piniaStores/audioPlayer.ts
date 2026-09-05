@@ -5,6 +5,8 @@ export interface AudioTrack {
   id: string
   name: string
   url: string
+  /** Seek position in seconds (applied on loadedmetadata) */
+  startTime?: number
 }
 
 export const useAudioPlayerStore = defineStore('audioPlayer', () => {

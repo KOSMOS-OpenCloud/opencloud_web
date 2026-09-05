@@ -27,6 +27,7 @@
       preload="auto"
       class="h-10 w-64"
       @ended="onEnded"
+      @loadedmetadata="onLoadedMetadata"
     >
       <source :src="currentTrack.url" />
     </audio>
@@ -70,8 +71,18 @@ const onEnded = () => {
   }
 }
 
+let pendingSeek = false
+
+const onLoadedMetadata = () => {
+  if (pendingSeek && audioEl.value && currentTrack.value?.startTime !== undefined) {
+    audioEl.value.currentTime = currentTrack.value.startTime
+    pendingSeek = false
+  }
+}
+
 watch(currentTrack, async () => {
   if (currentTrack.value && audioEl.value) {
+    pendingSeek = currentTrack.value.startTime !== undefined
     await nextTick()
     audioEl.value.load()
     audioEl.value.play()

@@ -209,6 +209,13 @@ const sortDir = computed<SortDir>(() => {
 const fileIdQuery = useRouteQuery('fileId')
 const fileId = computed(() => queryItemAsString(unref(fileIdQuery)))
 
+const startQuery = useRouteQuery('start')
+const startTime = computed(() => {
+  const raw = queryItemAsString(unref(startQuery))
+  const val = Number(raw)
+  return Number.isFinite(val) && val >= 0 ? val : undefined
+})
+
 const buildMediaFiles = () => {
   if (!activeFiles) {
     return
@@ -460,7 +467,8 @@ watch(activeMediaFile, async (newValue, oldValue) => {
       audioPlayerStore.play({
         id: file.id,
         name: file.name,
-        url
+        url,
+        startTime: startTime.value
       })
     }
     router.back()
