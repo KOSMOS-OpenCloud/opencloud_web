@@ -27,7 +27,7 @@ echo "=== Deploy ${PACKAGE}:${TAG} to ${TARGET} (${HOST_IP}) ==="
 
 # Update nu.packages tag and pull
 ssh "root@${HOST_IP}" "
-    sed -i 's|${PACKAGE}:[0-9]*-[0-9]*|${PACKAGE}:${TAG}|' \
+    sed -i -E 's|(${PACKAGE}):([^@[:space:]]+)(@.*)?|\1:'"${TAG}"'\3|' \
         /nu/container/${TARGET}/compose/nu.packages \
         /nu/container/${TARGET}/nu.packages 2>/dev/null
     nu packages pull ${TARGET}
