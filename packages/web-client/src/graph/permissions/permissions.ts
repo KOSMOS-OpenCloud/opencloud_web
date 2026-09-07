@@ -183,6 +183,30 @@ export const PermissionsFactory = ({
       })
     },
 
+    async createSubspaceInvite(driveId, itemId, data, graphRoles, requestOptions) {
+      const { data: perm } = await axiosClient.post(
+        `${config.basePath}/v1beta1/drives/${encodeURIComponent(driveId)}/items/${encodeURIComponent(itemId)}/subspace/permissions`,
+        data,
+        requestOptions
+      )
+      const permission: Permission | undefined = perm?.value?.[0]
+      if (!permission) {
+        throw new Error('no permission returned')
+      }
+      return buildCollaboratorShare({
+        graphPermission: permission,
+        resourceId: itemId,
+        graphRoles: graphRoles || {}
+      })
+    },
+
+    async deleteSubspacePermission(driveId, itemId, permId, requestOptions) {
+      await axiosClient.delete(
+        `${config.basePath}/v1beta1/drives/${encodeURIComponent(driveId)}/items/${encodeURIComponent(itemId)}/subspace/permissions/${encodeURIComponent(permId)}`,
+        requestOptions
+      )
+    },
+
     async createLink(driveId, itemId, data, requestOptions) {
       let permission: Permission
 

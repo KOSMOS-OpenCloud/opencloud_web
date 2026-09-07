@@ -59,6 +59,19 @@ export interface GraphPermissions {
     graphRoles?: Record<string, ShareRole>,
     requestOptions?: GraphRequestOptions
   ): Promise<CollaboratorShare>
+  createSubspaceInvite(
+    driveId: string,
+    itemId: string,
+    data: DriveItemInvite,
+    graphRoles?: Record<string, ShareRole>,
+    requestOptions?: GraphRequestOptions
+  ): Promise<CollaboratorShare>
+  deleteSubspacePermission(
+    driveId: string,
+    itemId: string,
+    permId: string,
+    requestOptions?: GraphRequestOptions
+  ): Promise<void>
   createLink(
     driveId: string,
     itemId: string,

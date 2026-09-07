@@ -155,6 +155,15 @@ export const useSharesStore = defineStore('shares', () => {
     return share
   }
 
+  const addSubspaceShare = async ({ clientService, space, resource, options }: AddShareOptions) => {
+    const client = clientService.graphAuthenticated.permissions
+    const share = await client.createSubspaceInvite(space.id, resource.id, options, unref(graphRoles))
+
+    addCollaboratorShares([share])
+    updateFileShareTypes(resource.id)
+    return share
+  }
+
   const updateShare = async ({
     clientService,
     space,
@@ -190,6 +199,20 @@ export const useSharesStore = defineStore('shares', () => {
     const client = clientService.graphAuthenticated.permissions
 
     await client.deletePermission(space.id, resource.id, collaboratorShare.id)
+
+    removeCollaboratorShare(collaboratorShare)
+    updateFileShareTypes(resource.id)
+  }
+
+  const deleteSubspaceShare = async ({
+    clientService,
+    space,
+    resource,
+    collaboratorShare
+  }: DeleteShareOptions) => {
+    const client = clientService.graphAuthenticated.permissions
+
+    await client.deleteSubspacePermission(space.id, resource.id, collaboratorShare.id)
 
     removeCollaboratorShare(collaboratorShare)
     updateFileShareTypes(resource.id)
@@ -283,8 +306,10 @@ export const useSharesStore = defineStore('shares', () => {
 
     pruneShares,
     addShare,
+    addSubspaceShare,
     updateShare,
     deleteShare,
+    deleteSubspaceShare,
 
     addLink,
     updateLink,

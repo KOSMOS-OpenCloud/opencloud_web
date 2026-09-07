@@ -11,6 +11,7 @@
       :show-share-options="false"
       :success-message="$gettext('Member was added successfully')"
       :error-message="$gettext('Failed to add member')"
+      :subspace="true"
       class="mt-2"
     />
     <template v-if="hasMembers">
@@ -63,7 +64,7 @@ const { showMessage, showErrorMessage } = useMessages()
 const { dispatchModal } = useModals()
 const clientService = useClientService()
 const sharesStore = useSharesStore()
-const { deleteShare } = sharesStore
+const { deleteSubspaceShare } = sharesStore
 
 const resource = inject<Ref<Resource>>('resource')
 const space = inject<Ref<SpaceResource>>('space')
@@ -82,7 +83,7 @@ const deleteMemberConfirm = (share: CollaboratorShare) => {
     hasInput: false,
     onConfirm: async () => {
       try {
-        await deleteShare({
+        await deleteSubspaceShare({
           clientService,
           space: unref(space),
           resource: unref(resource),

@@ -267,6 +267,11 @@ export default defineComponent({
       type: String,
       required: false,
       default: ''
+    },
+    subspace: {
+      type: Boolean,
+      required: false,
+      default: false
     }
   },
 
@@ -282,8 +287,10 @@ export default defineComponent({
     const userStore = useUserStore()
 
     const sharesStore = useSharesStore()
-    const { addShare } = sharesStore
+    const { addShare, addSubspaceShare } = sharesStore
     const { collaboratorShares } = storeToRefs(sharesStore)
+
+    const addShareFn = props.subspace ? addSubspaceShare : addShare
 
     const { searchContacts: searchOpenXchangeContacts } = useOpenXchangeContacts()
     const { inviteContact } = useInviteContactViaEmail()
@@ -464,7 +471,7 @@ export default defineComponent({
         savePromises.push(
           saveQueue.add(async () => {
             try {
-              const share = await addShare({
+              const share = await addShareFn({
                 clientService,
                 space: unref(space),
                 resource: unref(resource),
