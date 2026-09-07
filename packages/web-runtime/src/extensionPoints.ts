@@ -43,6 +43,12 @@ export const topBarLeftExtensionPoint: ExtensionPoint<CustomComponentExtension> 
   multiple: true
 }
 
+export const topBarAppActionsExtensionPoint: ExtensionPoint<CustomComponentExtension> = {
+  id: 'app.runtime.header.app-actions',
+  extensionType: 'customComponent',
+  multiple: true
+}
+
 export const topBarRightExtensionPoint: ExtensionPoint<CustomComponentExtension> = {
   id: 'app.runtime.header.right',
   extensionType: 'customComponent',
@@ -69,6 +75,7 @@ export const extensionPoints = () => {
       progressBarExtensionPoint,
       topBarCenterExtensionPoint,
       topBarLeftExtensionPoint,
+      topBarAppActionsExtensionPoint,
       topBarRightExtensionPoint,
       appModeNavExtensionPoint,
       appModeSecondaryNavExtensionPoint

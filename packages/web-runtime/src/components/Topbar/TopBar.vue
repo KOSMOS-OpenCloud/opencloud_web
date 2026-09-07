@@ -43,6 +43,10 @@
         <user-menu />
       </template>
     </div>
+    <custom-component-target
+      :extension-point="topBarAppActionsExtensionPoint"
+      class="flex items-center gap-1 self-center row-2 sm:row-1 sm:col-2 sm:justify-self-start"
+    />
     <custom-component-target :extension-point="topBarLeftExtensionPoint" />
     <custom-component-target v-if="appModeStore.isEnabled" :extension-point="appModeSecondaryNavExtensionPoint" class="col-span-3" />
   </header>
@@ -72,6 +76,7 @@ import {
   appMenuExtensionPoint,
   appModeNavExtensionPoint,
   appModeSecondaryNavExtensionPoint,
+  topBarAppActionsExtensionPoint,
   topBarCenterExtensionPoint,
   topBarLeftExtensionPoint,
   topBarRightExtensionPoint
@@ -151,11 +156,11 @@ const feedbackLinkOptions = computed(() => {
 @reference '@opencloud-eu/design-system/tailwind';
 
 @layer utilities {
-  #oc-topbar:has(> :last-child:nth-child(4)) .topbar-center {
+  #oc-topbar:has(> .oc-app-top-bar) .topbar-center {
     @apply hidden;
   }
 
-  #oc-topbar:has(> :last-child:nth-child(4)) {
+  #oc-topbar:has(> .oc-app-top-bar) {
     @apply grid-cols-[auto_9fr_1fr];
   }
 
