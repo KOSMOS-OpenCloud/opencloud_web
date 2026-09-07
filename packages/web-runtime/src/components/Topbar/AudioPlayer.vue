@@ -81,9 +81,10 @@ const onLoadedMetadata = () => {
 }
 
 watch(currentTrack, async () => {
-  if (currentTrack.value && audioEl.value) {
+  if (!currentTrack.value) return
+  await nextTick()
+  if (audioEl.value) {
     pendingSeek = currentTrack.value.startTime !== undefined
-    await nextTick()
     audioEl.value.load()
     audioEl.value.play()
   }
