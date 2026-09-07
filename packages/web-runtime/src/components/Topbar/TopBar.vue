@@ -43,10 +43,12 @@
         <user-menu />
       </template>
     </div>
-    <custom-component-target
-      :extension-point="topBarAppActionsExtensionPoint"
-    />
-    <custom-component-target :extension-point="topBarLeftExtensionPoint" />
+    <div class="flex items-center gap-2 sm:col-2 sm:row-1">
+      <custom-component-target
+        :extension-point="topBarAppActionsExtensionPoint"
+      />
+      <custom-component-target :extension-point="topBarLeftExtensionPoint" />
+    </div>
     <custom-component-target v-if="appModeStore.isEnabled" :extension-point="appModeSecondaryNavExtensionPoint" class="col-span-3" />
   </header>
 </template>
