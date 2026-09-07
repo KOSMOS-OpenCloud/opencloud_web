@@ -43,7 +43,7 @@ export const useExtensionRegistry = defineStore('extensionRegistry', () => {
   }
   const unregisterExtensionPoints = (ids: string[]) => {
     extensionPoints.value = unref(extensionPoints)
-      .map((e) => ref(unref(e).filter(({ id }) => !ids.includes(id))))
+      .map((e) => ref((Array.isArray(unref(e)) ? unref(e) : []).filter(({ id }) => !ids.includes(id))))
       .filter((e) => unref(e).length)
   }
   const getExtensionPoints = <T extends ExtensionPoint<Extension>>(
@@ -53,7 +53,7 @@ export const useExtensionRegistry = defineStore('extensionRegistry', () => {
   ) => {
     return unref(extensionPoints).flatMap(
       (e) =>
-        unref(e).filter((e) => {
+        (Array.isArray(unref(e)) ? unref(e) : []).filter((e) => {
           if (
             Object.hasOwn(options, 'extensionType') &&
             e.extensionType !== options.extensionType
