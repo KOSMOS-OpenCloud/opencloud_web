@@ -45,7 +45,7 @@
     </div>
     <custom-component-target
       :extension-point="topBarAppActionsExtensionPoint"
-      class="flex items-center gap-1 self-center sm:col-2 sm:justify-self-start"
+      class="flex items-center gap-1 self-center sm:row-1 sm:col-2 sm:justify-self-start"
     />
     <custom-component-target :extension-point="topBarLeftExtensionPoint" />
     <custom-component-target v-if="appModeStore.isEnabled" :extension-point="appModeSecondaryNavExtensionPoint" class="col-span-3" />
