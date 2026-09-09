@@ -26,6 +26,8 @@ fi
 echo "=== Deploy ${PACKAGE}:${TAG} to ${TARGET} (${HOST_IP}) ==="
 
 # Update nu.packages tag and pull
+# Ensure TAG has pkg- prefix (GitHub Releases use pkg-<tag>)
+[[ "$TAG" == pkg-* ]] || TAG="pkg-${TAG}"
 ssh "root@${HOST_IP}" "
     sed -i -E 's|(${PACKAGE}):([^@[:space:]]+)(@.*)?|\1:'"${TAG}"'\3|' \
         /nu/container/${TARGET}/compose/nu.packages \
