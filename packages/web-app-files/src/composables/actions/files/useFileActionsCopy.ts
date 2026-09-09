@@ -5,7 +5,6 @@ import {
   isShareSpaceResource
 } from '@opencloud-eu/web-client'
 import { computed, markRaw, ref, unref } from 'vue'
-import { dirname } from 'path'
 import { useGettext } from 'vue3-gettext'
 import { storeToRefs } from 'pinia'
 import {
@@ -108,7 +107,7 @@ export const useFileActionsCopy = () => {
     })
   }
 
-  const onLocationPicked = async (sourceResources: Resource[], targetResources: Resource[]) => {
+  const onLocationPicked = async (targetResources: Resource[]) => {
     const targetFolder = targetResources[0]
 
     if (!targetFolder) {
@@ -119,16 +118,7 @@ export const useFileActionsCopy = () => {
       ? targetFolder
       : getMatchingSpace(targetFolder)
 
-    // Sanity check: target folder must not be the same as any source's parent
-    // (would be a no-op or 409 if copying into itself)
-    const sourceParentPaths = new Set(
-      sourceResources.map((r) => dirname(r.path))
-    )
-    if (sourceParentPaths.has(targetFolder.path)) {
-      return
-    }
-
-    const resourcesToCopy = sourceResources
+    const resourcesToCopy = unref(resourcesStore.selectedResources)
 
     const resourceSpaceMapping = resourcesToCopy.reduce<
       Record<string, { space: SpaceResource; resources: Resource[] }>
@@ -176,8 +166,7 @@ export const useFileActionsCopy = () => {
       customComponentAttrs: () => ({
         submitButtonTitle: $gettext('Copy here'),
         parentFolderLink,
-        callbackFn: (targetResources: Resource[]) =>
-          onLocationPicked(resources, targetResources)
+        callbackFn: onLocationPicked
       }),
       focusTrapInitial: false
     })

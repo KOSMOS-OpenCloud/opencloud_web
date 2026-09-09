@@ -91,39 +91,9 @@ const resourcesStore = useResourcesStore()
 const { currentFolder, selectedResources } = storeToRefs(resourcesStore)
 const fileName = ref(unref(chooseFileNameSuggestion))
 
-const getRoutePathFromDriveAliasAndItem = (): string | undefined => {
-  const driveAliasAndItem = unref(router.currentRoute).params
-    .driveAliasAndItem as string | undefined
-  if (!driveAliasAndItem || !unref(space)) {
-    return undefined
-  }
-  const driveAlias = unref(space).driveAlias
-  if (!driveAlias) {
-    return undefined
-  }
-  // driveAliasAndItem = driveAlias + '/' + path (without leading slash on path)
-  if (driveAliasAndItem === driveAlias) {
-    return '/'
-  }
-  if (driveAliasAndItem.startsWith(driveAlias + '/')) {
-    return '/' + driveAliasAndItem.slice(driveAlias.length + 1)
-  }
-  return undefined
-}
-
 const selectedFiles = computed<Resource[]>(() => {
   if (isLocationPicker.value) {
-    const folder = unref(currentFolder)
-    if (!folder) {
-      return []
-    }
-    // Cross-check: if the route-derived path differs from the store's currentFolder.path,
-    // trust the route (the store may be stale after navigation in the embedded iframe)
-    const routePath = getRoutePathFromDriveAliasAndItem()
-    if (routePath !== undefined && folder.path !== routePath) {
-      return [{ ...folder, path: routePath }]
-    }
-    return [folder]
+    return [unref(currentFolder)]
   }
 
   return unref(selectedResources)
