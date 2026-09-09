@@ -54,14 +54,25 @@ const onLoad = () => {
   unref(iframeRef).contentWindow.focus()
 }
 
-const onLocationPick = ({ data }: MessageEvent) => {
-  if (data.name !== 'opencloud-embed:select') {
+const isFromOwnIframe = (event: MessageEvent): boolean => {
+  const iframeWindow = unref(iframeRef)?.contentWindow
+  if (!iframeWindow) {
+    return false
+  }
+  return event.source === iframeWindow && event.origin === window.location.origin
+}
+
+const onLocationPick = (event: MessageEvent) => {
+  if (!isFromOwnIframe(event)) {
+    return
+  }
+  if (event.data.name !== 'opencloud-embed:select') {
     return
   }
 
-  let resources = (data.data as embedModeLocationPickMessageData)?.resources
-  if (Array.isArray(data.data)) {
-    resources = data.data
+  let resources = (event.data.data as embedModeLocationPickMessageData)?.resources
+  if (Array.isArray(event.data.data)) {
+    resources = event.data.data
   }
 
   if (!resources?.length) {
@@ -72,8 +83,11 @@ const onLocationPick = ({ data }: MessageEvent) => {
   removeModal(modal.id)
 }
 
-const onCancel = ({ data }: MessageEvent) => {
-  if (data.name !== 'opencloud-embed:cancel') {
+const onCancel = (event: MessageEvent) => {
+  if (!isFromOwnIframe(event)) {
+    return
+  }
+  if (event.data.name !== 'opencloud-embed:cancel') {
     return
   }
 
