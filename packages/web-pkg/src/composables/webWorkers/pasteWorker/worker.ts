@@ -65,6 +65,8 @@ self.onmessage = async (e: MessageEvent) => {
     return queue.add(async () => {
       const resource = data.resource
 
+      console.log(`[paste] ${data.transferType} "${resource.name}" from: ${resource.path} to: ${data.path}`)
+
       try {
         if (data.transferType === TransferType.COPY) {
           await doCopy(data)
