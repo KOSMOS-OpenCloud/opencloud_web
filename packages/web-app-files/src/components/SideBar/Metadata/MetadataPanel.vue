@@ -41,14 +41,37 @@ export default defineComponent({
     const isEmpty = computed(() => Object.keys(unref(metadata)).length === 0)
 
     const formatKey = (key: string): string => {
-      // Strip common prefixes for display
-      // "oy.subject" → "Subject", "oy.creatorName" → "Creator Name"
       let display = key
-      if (display.startsWith('oy.')) {
-        display = display.substring(3)
+
+      // Strip known prefixes for display
+      for (const prefix of ['oy.', 'info.', 'doc.', 'saskia.', 'amounts.', 'sender.', 'recipient.']) {
+        if (display.startsWith(prefix)) {
+          display = display.substring(prefix.length)
+          break
+        }
       }
-      // camelCase to Title Case
-      display = display.replace(/([A-Z])/g, ' $1')
+
+      // snake_case (lowercase or UPPERCASE): beleg_nr → Beleg Nr, BELEG_NR → Beleg Nr
+      if (display.includes('_')) {
+        return display.split('_').map((w) =>
+          w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()
+        ).join(' ')
+      }
+
+      // ALL-CAPS without underscore: ANREDE → Anrede, MAND → Mand
+      if (display.length > 1 && display === display.toUpperCase()) {
+        return display.charAt(0).toUpperCase() + display.slice(1).toLowerCase()
+      }
+
+      // dot-separated (Taki fields): meta_source → Meta Source
+      if (display.includes('.')) {
+        return display.split('.').map((w) =>
+          w.charAt(0).toUpperCase() + w.slice(1)
+        ).join(' ')
+      }
+
+      // camelCase: creatorName → Creator Name
+      display = display.replace(/([a-z])([A-Z])/g, '$1 $2')
       return display.charAt(0).toUpperCase() + display.slice(1)
     }
 
