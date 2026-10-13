@@ -4,7 +4,7 @@
       <div
         class="flex items-center justify-center bg-role-chrome w-[80px] h-[80px] rounded-full overflow-hidden mr-8"
       >
-        <img :src="currentTheme.logo" class="px-2" alt="OpenCloud logo" />
+        <img :src="currentTheme.logo" class="px-2" alt="OpenCore logo" />
       </div>
       <dl class="details-list">
         <template v-if="backendEdition">
@@ -41,7 +41,7 @@ export default defineComponent({
     const backendStatus = capabilityStore.status
 
     if (backendStatus && backendStatus.versionstring) {
-      backendProductName = backendStatus.product || 'OpenCloud'
+      backendProductName = backendStatus.product || 'OpenCore'
       backendVersion = backendStatus.productversion || backendStatus.versionstring
       backendEdition = backendStatus.edition
     }

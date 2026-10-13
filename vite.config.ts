@@ -280,7 +280,7 @@ export default defineConfig(({ mode, command }) => {
               }
 
               return html
-                .replace(/__TITLE__/g, process.env.TITLE || 'OpenCloud')
+                .replace(/__TITLE__/g, process.env.TITLE || 'OpenCore')
                 .replace(/__SUPPORTED_BROWSERS__/g, supportedBrowsersRegex.toString())
             }
           }

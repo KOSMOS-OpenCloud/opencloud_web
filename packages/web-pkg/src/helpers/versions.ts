@@ -1,7 +1,7 @@
 import { CapabilityStore } from '../composables/piniaStores'
 
 export const getWebVersion = (): string => {
-  return `OpenCloud Web UI ${process.env.PACKAGE_VERSION}`
+  return `OpenCore Web UI ${process.env.PACKAGE_VERSION}`
 }
 
 export const getBackendVersion = ({
@@ -13,7 +13,7 @@ export const getBackendVersion = ({
   if (!backendStatus || !backendStatus.versionstring) {
     return undefined
   }
-  const product = backendStatus.product || 'OpenCloud'
+  const product = backendStatus.product || 'OpenCore'
   const version = backendStatus.productversion || backendStatus.versionstring
   const edition = backendStatus.edition || ''
   return `${product} ${version} ${edition}`.trim()

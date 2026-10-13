@@ -9,7 +9,7 @@ describe('collect version information', () => {
       process.env.PACKAGE_VERSION = '1.0.0'
     })
     it('provides the web version with a static string without exceptions', () => {
-      expect(getWebVersion()).toBe('OpenCloud Web UI 1.0.0')
+      expect(getWebVersion()).toBe('OpenCore Web UI 1.0.0')
     })
   })
   describe('backend version', () => {
@@ -24,12 +24,12 @@ describe('collect version information', () => {
       })
       expect(getBackendVersion({ capabilityStore })).toBeUndefined()
     })
-    it('falls back to "OpenCloud" as a product when none is defined', () => {
+    it('falls back to "OpenCore" as a product when none is defined', () => {
       const capabilityStore = versionStore({
         versionstring: '1.0.0',
         edition: 'Community'
       })
-      expect(getBackendVersion({ capabilityStore })).toBe('OpenCloud 1.0.0 Community')
+      expect(getBackendVersion({ capabilityStore })).toBe('OpenCore 1.0.0 Community')
     })
     it('does not provide edition, when not set', () => {
       const capabilityStore = versionStore({

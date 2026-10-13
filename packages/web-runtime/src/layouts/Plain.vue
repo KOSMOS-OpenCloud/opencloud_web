@@ -8,7 +8,7 @@
       <router-view class="relative z-1" />
       <img
         v-if="!backgroundImg && !pathIsRoot"
-        alt="OpenCloud emblem"
+        alt="OpenCore emblem"
         src="/packages/design-system/src/assets/images/icon-lilac.svg"
         class="hidden sm:block fixed w-3xs xs:w-xs md:w-md lg:w-lg bottom-[-40px] right-[-40px]"
       />

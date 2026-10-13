@@ -1,10 +1,7 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="2.83 2.84 21.45 27.82">
-    <polygon
-            points="13.55 23.12 14.72 22.45 14.72 17.57 18.92 15.14 18.92 13.8 17.75 13.12 13.53 15.56 9.36 13.16 8.19 13.83 8.19 15.18 12.39 17.6 12.39 22.45 13.55 23.12"
-            fill="#e2baff"/>
-    <polygon points="24.28 9.02 13.56 2.84 13.56 2.84 13.56 2.84 2.83 9.02 2.83 11.72 13.56 5.53 24.28 11.72 24.28 9.02"
-             fill="#e2baff"/>
-    <polygon
-            points="24.28 21.78 13.56 27.97 2.83 21.78 2.83 24.48 13.56 30.66 13.56 30.66 13.56 30.66 24.28 24.48 24.28 21.78"
-            fill="#e2baff"/>
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="27" height="35" viewBox="0 0 27 35">
+  <title>logo-mobile.svg</title>
+  <g id="Layer_1" data-name="Layer 1">
+    <path d="M2.158 17.602 C2.158 11.294 7.272 6.18 13.58 6.18 C19.888 6.18 25.001 11.294 25.001 17.602 C25.001 23.91 19.888 29.023 13.58 29.023 C7.272 29.023 2.158 23.91 2.158 17.602 Z" fill="none" stroke="#1b1464" stroke-width="3" stroke-miterlimit="10"/>
+  </g>
 </svg>
