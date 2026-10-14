@@ -1,5 +1,6 @@
 import {
   ResolveConflict,
+  ResolveStrategy,
   ResourceTransfer,
   TransferType,
   resolveFileNameDuplicate
@@ -125,12 +126,12 @@ describe('resourcesTransfer', () => {
       vi.fn(),
       vi.fn()
     )
-    resourcesTransfer.resolveFileExists = vi
+    resourcesTransfer.resolveTransferConflict = vi
       .fn()
       .mockImplementation(() => Promise.resolve({ strategy: 0 } as ResolveConflict))
     await resourcesTransfer.resolveAllConflicts(resourcesToMove, targetFolder, targetFolderItems)
 
-    expect(resourcesTransfer.resolveFileExists).toHaveBeenCalled()
+    expect(resourcesTransfer.resolveTransferConflict).toHaveBeenCalled()
   })
   it('should show error message if trying to overwrite parent', () => {
     const targetFolderItems = [
@@ -164,5 +165,112 @@ describe('resourcesTransfer', () => {
 
     expect(namingClash).toBeTruthy()
     expect(noNamingClash).toBeFalsy()
+  })
+
+  describe('folder merge', () => {
+    const rootFolder = { id: 'root', path: '/', webDavPath: '/' } as Resource
+    const sourceFolder = {
+      id: 'src-x',
+      name: 'x',
+      path: '/src/x',
+      isFolder: true,
+      type: 'folder'
+    } as Resource
+
+    // source /src/x: new.txt, same.txt, sub/deep.txt
+    // target /x:     same.txt, sub/
+    const listings: Record<string, ListFilesResult> = {
+      '/': {
+        resource: rootFolder,
+        children: [{ id: 'tgt-x', name: 'x', path: '/x', isFolder: true } as Resource]
+      },
+      '/src/x': {
+        resource: sourceFolder,
+        children: [
+          { id: 'n', name: 'new.txt', path: '/src/x/new.txt', isFolder: false },
+          { id: 's', name: 'same.txt', path: '/src/x/same.txt', isFolder: false },
+          { id: 'sub', name: 'sub', path: '/src/x/sub', isFolder: true }
+        ] as Resource[]
+      },
+      '/x': {
+        resource: { id: 'tgt-x', path: '/x', webDavPath: '/x' } as Resource,
+        children: [
+          { id: 's2', name: 'same.txt', path: '/x/same.txt', isFolder: false },
+          { id: 'sub2', name: 'sub', path: '/x/sub', isFolder: true }
+        ] as Resource[]
+      },
+      '/src/x/sub': {
+        resource: { id: 'sub', path: '/src/x/sub' } as Resource,
+        children: [
+          { id: 'd', name: 'deep.txt', path: '/src/x/sub/deep.txt', isFolder: false }
+        ] as Resource[]
+      },
+      '/x/sub': {
+        resource: { id: 'sub2', path: '/x/sub', webDavPath: '/x/sub' } as Resource,
+        children: []
+      }
+    }
+
+    const getTransfer = (strategy: ResolveStrategy, resources = [sourceFolder]) => {
+      clientServiceMock.webdav.listFiles.mockImplementation((_space, { path }) =>
+        Promise.resolve(listings[path])
+      )
+      const transfer = new ResourceTransfer(
+        sourceSpace,
+        resources,
+        targetSpace,
+        rootFolder,
+        computed(() => mock<Resource>({ path: '/src' })),
+        clientServiceMock,
+        vi.fn(),
+        vi.fn()
+      )
+      transfer.resolveTransferConflict = vi
+        .fn()
+        .mockResolvedValue({ strategy, doForAllConflicts: false } as ResolveConflict)
+      return transfer
+    }
+
+    it('merges and replaces existing files', async () => {
+      const result = await getTransfer(ResolveStrategy.MERGE).getTransferData(TransferType.MOVE)
+
+      const parts = result.filter((d) => d.mergePart)
+      expect(parts.map((d) => [d.path, d.overwrite])).toEqual([
+        ['/x/new.txt', false],
+        ['/x/same.txt', true],
+        ['/x/sub/deep.txt', false]
+      ])
+      const finalizers = result.filter((d) => d.mergeFinalize)
+      expect(finalizers.map((d) => [d.resource.path, d.mergeFinalize.report])).toEqual([
+        ['/src/x/sub', false],
+        ['/src/x', true]
+      ])
+    })
+
+    it('merges but keeps existing files', async () => {
+      const result = await getTransfer(ResolveStrategy.MERGE_KEEP_EXISTING).getTransferData(
+        TransferType.MOVE
+      )
+
+      const parts = result.filter((d) => d.mergePart)
+      expect(parts.map((d) => d.path)).toEqual(['/x/new.txt', '/x/sub/deep.txt'])
+      expect(parts.every((d) => !d.overwrite)).toBe(true)
+    })
+
+    it('never replaces a folder as a whole', async () => {
+      const result = await getTransfer(ResolveStrategy.REPLACE).getTransferData(TransferType.MOVE)
+
+      expect(result.some((d) => d.resource.id === 'src-x' && d.overwrite)).toBe(false)
+      expect(result.filter((d) => d.mergePart).length).toBe(3)
+    })
+
+    it('does not merge a folder into itself', async () => {
+      const itself = { ...sourceFolder, id: 'tgt-x', path: '/x' } as Resource
+      const result = await getTransfer(ResolveStrategy.MERGE, [itself]).getTransferData(
+        TransferType.MOVE
+      )
+
+      expect(result.length).toBe(0)
+    })
   })
 })

@@ -14,12 +14,30 @@
       <oc-button class="oc-modal-body-actions-cancel ml-2" @click="onCancel">
         {{ $gettext('Skip') }}
       </oc-button>
-      <oc-button class="oc-modal-body-actions-secondary ml-2" @click="onConfirmSecondary">
-        {{ confirmSecondaryText }}
-      </oc-button>
-      <oc-button class="oc-modal-body-actions-confirm ml-2" appearance="filled" @click="onConfirm">
-        {{ $gettext('Keep both') }}
-      </oc-button>
+      <template v-if="showFolderMergeOptions">
+        <oc-button class="oc-modal-body-actions-secondary ml-2" @click="onMergeKeepExisting">
+          {{ $gettext('Merge, keep existing') }}
+        </oc-button>
+        <oc-button
+          class="oc-modal-body-actions-confirm ml-2"
+          appearance="filled"
+          @click="onMergeReplaceExisting"
+        >
+          {{ $gettext('Merge, replace existing') }}
+        </oc-button>
+      </template>
+      <template v-else>
+        <oc-button class="oc-modal-body-actions-secondary ml-2" @click="onConfirmSecondary">
+          {{ confirmSecondaryText }}
+        </oc-button>
+        <oc-button
+          class="oc-modal-body-actions-confirm ml-2"
+          appearance="filled"
+          @click="onConfirm"
+        >
+          {{ $gettext('Keep both') }}
+        </oc-button>
+      </template>
     </div>
   </div>
 </template>
@@ -43,7 +61,8 @@ export default defineComponent({
     },
     suggestMerge: { type: Boolean, default: true },
     separateSkipHandling: { type: Boolean, default: false },
-    confirmSecondaryTextOverwrite: { type: String, default: null }
+    confirmSecondaryTextOverwrite: { type: String, default: null },
+    folderMergeOptions: { type: Boolean, default: false }
   },
   setup(props) {
     const { removeModal } = useModals()
@@ -100,14 +119,37 @@ export default defineComponent({
       })
     }
 
+    const showFolderMergeOptions = computed(
+      () => props.folderMergeOptions && props.resource.isFolder
+    )
+
+    const onMergeKeepExisting = () => {
+      removeModal(props.modal.id)
+      props.callbackFn({
+        strategy: ResolveStrategy.MERGE_KEEP_EXISTING,
+        doForAllConflicts: unref(checkboxValue)
+      })
+    }
+
+    const onMergeReplaceExisting = () => {
+      removeModal(props.modal.id)
+      props.callbackFn({
+        strategy: ResolveStrategy.MERGE,
+        doForAllConflicts: unref(checkboxValue)
+      })
+    }
+
     return {
       message,
       checkboxValue,
       checkboxLabel,
       confirmSecondaryText,
+      showFolderMergeOptions,
       onConfirm,
       onConfirmSecondary,
-      onCancel
+      onCancel,
+      onMergeKeepExisting,
+      onMergeReplaceExisting
     }
   }
 })

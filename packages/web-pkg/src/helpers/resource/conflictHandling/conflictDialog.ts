@@ -46,7 +46,10 @@ export class ConflictDialog {
 
       // Resolve next conflict
       const conflictsLeft = allConflicts.length - count
-      const result: ResolveConflict = await this.resolveFileExists(conflict.resource, conflictsLeft)
+      const result: ResolveConflict = await this.resolveTransferConflict(
+        conflict.resource,
+        conflictsLeft
+      )
       conflict.strategy = result.strategy
       resolvedConflicts.push(conflict)
       count += 1
@@ -82,6 +85,35 @@ export class ConflictDialog {
           conflictCount,
           suggestMerge,
           separateSkipHandling,
+          callbackFn: (conflict: ResolveConflict) => {
+            resolve(conflict)
+          }
+        })
+      })
+    })
+  }
+
+  /**
+   * Conflict dialog for moving/copying. For folders it offers merging into the
+   * existing folder (keeping or replacing existing files) instead of replacing
+   * the whole folder.
+   */
+  resolveTransferConflict(resource: Resource, conflictCount: number): Promise<ResolveConflict> {
+    const { dispatchModal } = useModals()
+
+    return new Promise<ResolveConflict>((resolve) => {
+      dispatchModal({
+        title: resource.isFolder
+          ? this.$gettext('Folder already exists')
+          : this.$gettext('File already exists'),
+        hideActions: true,
+        hideCancelButton: true,
+        customComponent: markRaw(ResourceConflictModal),
+        customComponentAttrs: () => ({
+          resource,
+          conflictCount,
+          suggestMerge: false,
+          folderMergeOptions: true,
           callbackFn: (conflict: ResolveConflict) => {
             resolve(conflict)
           }

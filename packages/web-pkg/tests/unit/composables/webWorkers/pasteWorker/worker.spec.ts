@@ -108,6 +108,66 @@ describe('paste worker', () => {
     await workerPromise
   })
 
+  describe('folder merge', () => {
+    const part = {
+      ...transferDataMock,
+      resource: { id: 'part', name: 'new.txt', path: '/src/x/new.txt' },
+      transferType: TransferType.MOVE,
+      mergePart: true
+    }
+    const finalize = {
+      ...transferDataMock,
+      resource: { id: 'src-x', name: 'x', path: '/src/x' },
+      transferType: TransferType.MOVE,
+      mergeFinalize: { report: true }
+    }
+
+    it('deletes the emptied source folder and reports only the merged folder', async () => {
+      webDavMock.moveFiles.mockResolvedValue(undefined)
+      webDavMock.listFiles.mockResolvedValue({ resource: undefined, children: [] })
+      webDavMock.deleteFile.mockResolvedValue(undefined)
+
+      unref(worker.worker).onmessage = (e: MessageEvent) => {
+        const { successful, failed } = JSON.parse(e.data)
+        expect(failed.length).toBe(0)
+        expect(successful.map((r: { id: string }) => r.id)).toEqual(['src-x'])
+        expect(webDavMock.moveFiles).toHaveBeenCalledTimes(1)
+        expect(webDavMock.deleteFile).toHaveBeenCalledTimes(1)
+
+        resolveTest(true)
+      }
+
+      worker.post(
+        JSON.stringify({ topic: 'startProcess', data: { transferData: [part, finalize] } })
+      )
+
+      await workerPromise
+    })
+
+    it('keeps the source folder without error when entries were kept', async () => {
+      webDavMock.moveFiles.mockResolvedValue(undefined)
+      webDavMock.listFiles.mockResolvedValue({
+        resource: undefined,
+        children: [{ id: 'kept', name: 'same.txt', path: '/src/x/same.txt' }]
+      })
+
+      unref(worker.worker).onmessage = (e: MessageEvent) => {
+        const { successful, failed } = JSON.parse(e.data)
+        expect(failed.length).toBe(0)
+        expect(successful.length).toBe(0)
+        expect(webDavMock.deleteFile).not.toHaveBeenCalled()
+
+        resolveTest(true)
+      }
+
+      worker.post(
+        JSON.stringify({ topic: 'startProcess', data: { transferData: [part, finalize] } })
+      )
+
+      await workerPromise
+    })
+  })
+
   it('returns failed files', async () => {
     vi.spyOn(console, 'error').mockImplementation(() => undefined)
     webDavMock.copyFiles.mockRejectedValue({ response: {} })

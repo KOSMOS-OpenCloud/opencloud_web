@@ -14,7 +14,7 @@ describe('conflict dialog', () => {
     it('should return the resolved conflicts including the resource(s) and the strategy', async () => {
       const conflictDialog = getConflictDialogInstance()
       const strategy = mockDeep<ResolveConflict>()
-      conflictDialog.resolveFileExists = vi.fn().mockImplementation(() => ({
+      conflictDialog.resolveTransferConflict = vi.fn().mockImplementation(() => ({
         strategy,
         doForAllConflicts: false
       }))
