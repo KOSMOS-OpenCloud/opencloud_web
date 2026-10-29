@@ -29,6 +29,7 @@ import { urlJoin } from '@opencloud-eu/web-client'
 import { useGettext } from 'vue3-gettext'
 import { storeToRefs } from 'pinia'
 import CreateOrUploadMenu from './components/CreateOrUploadMenu.vue'
+import { useIsMobile } from '@opencloud-eu/design-system/composables'
 import { APPID } from './appid'
 
 export const extensions = (appInfo: ApplicationInformation) => {
@@ -110,7 +111,10 @@ export const extensions = (appInfo: ApplicationInformation) => {
         }).find((ext) => ext.isActive())
       // Chat-Panel offen → FAB ("Neu") deckt den Chat-Submit-Button auf
       // kleinen Bildschirmen ab → ausblenden, wenn genau dieses Panel aktiv ist.
+      // Nur auf kleinen Bildschirmen: auf dem Desktop rendert dieselbe Extension den
+      // "Neu"-Knopf in der linken Navigation, der verdeckt nichts.
       const sideBarStore = useSideBar()
+      const { isTablet } = useIsMobile()
 
       return {
         id: `com.github.opencloud-eu.web.${APPID}.floating-action-button`,
@@ -123,7 +127,11 @@ export const extensions = (appInfo: ApplicationInformation) => {
         mode: () => activeAction()?.mode || 'handler',
         isVisible: () =>
           !isLocationPublicActive(router, 'files-public-upload') &&
-          !(unref(sideBarStore.isSideBarOpen) && sideBarStore.sideBarActivePanel === 'chat-with-file'),
+          !(
+            unref(isTablet) &&
+            unref(sideBarStore.isSideBarOpen) &&
+            sideBarStore.sideBarActivePanel === 'chat-with-file'
+          ),
         get dropComponent() { return activeAction()?.dropComponent || markRaw(CreateOrUploadMenu) },
       } as FloatingActionButtonExtension
     })(),
