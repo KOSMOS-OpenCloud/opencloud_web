@@ -5,6 +5,7 @@ import NotFoundPage from '../pages/notFound.vue'
 import OidcCallbackPage from '../pages/oidcCallback.vue'
 import ResolvePublicLinkPage from '../pages/resolvePublicLink.vue'
 import ResolvePrivateLinkPage from '../pages/resolvePrivateLink.vue'
+import ShareUploadedPage from '../pages/shareUploaded.vue'
 import { setupRouterHooks } from './setupRouter'
 import { setupAuthGuard } from './setupAuthGuard'
 import { patchRouter } from './patchCleanPath'
@@ -83,6 +84,12 @@ const routes: readonly RouteRecordRaw[] = [
     name: routeNames.resolvePrivateLink,
     component: ResolvePrivateLinkPage,
     meta: { title: $gettext('Private link'), authContext: 'user' }
+  },
+  {
+    path: '/share_uploaded',
+    name: routeNames.shareUploaded,
+    component: ShareUploadedPage,
+    meta: { title: $gettext('Upload shared files'), authContext: 'user' }
   },
   {
     path: '/s/:token/:driveAliasAndItem(.*)?',

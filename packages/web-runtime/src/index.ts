@@ -36,6 +36,7 @@ import {
 import { applicationStore } from './container/store'
 import { PublicSpaceResource } from '@opencloud-eu/web-client'
 import { loadCustomTranslations } from './helpers/customTranslations'
+import { registerShareServiceWorker } from './helpers/shareUploaded'
 import { createApp, watch } from 'vue'
 import { createPinia } from 'pinia'
 import { extensionPoints } from './extensionPoints'
@@ -150,6 +151,8 @@ export const bootstrapApp = async (configurationPath: string, appsReadyCallback:
 
   app.use(router)
   app.mount('#opencloud')
+
+  registerShareServiceWorker()
 
   setViewOptions({ resourcesStore })
 

@@ -3,6 +3,7 @@ export const routeNames = {
   logout: 'logout',
   oidcCallback: 'oidcCallback',
   resolvePrivateLink: 'resolvePrivateLink',
+  shareUploaded: 'shareUploaded',
   resolvePublicLink: 'resolvePublicLink',
   resolvePublicOcmLink: 'resolvePublicOcmLink',
   accessDenied: 'accessDenied',
