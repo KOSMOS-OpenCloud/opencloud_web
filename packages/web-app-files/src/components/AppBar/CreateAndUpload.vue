@@ -36,7 +36,12 @@ import {
   useSpacesStore,
   useUserStore,
   useActiveLocation,
-  useClientService
+  useClientService,
+  useRouter,
+  convertToMinimalUppyFile,
+  readSharedFiles,
+  deleteSharedFile,
+  SHARE_UPLOADED_QUERY
 } from '@opencloud-eu/web-pkg'
 
 import { computed, onMounted, onBeforeUnmount, unref, watch } from 'vue'
@@ -60,6 +65,7 @@ const userStore = useUserStore()
 const spacesStore = useSpacesStore()
 const messageStore = useMessages()
 const route = useRoute()
+const router = useRouter()
 const language = useGettext()
 const { $gettext } = language
 
@@ -118,6 +124,43 @@ useEventListener(document, 'paste', (event: ClipboardEvent) => {
   uppyService.addFiles([file])
   event.preventDefault()
 })
+
+// files shared to the installed web app (see `share_target` in manifest.json) are
+// parked in IndexedDB by the service worker and handed to the regular upload here
+let isTakingSharedFiles = false
+
+const addSharedFilesToUpload = async () => {
+  isTakingSharedFiles = true
+  try {
+    const sharedFiles = await readSharedFiles()
+
+    const remainingQuery = { ...unref(route).query }
+    delete remainingQuery[SHARE_UPLOADED_QUERY]
+    await router.replace({
+      name: unref(route).name,
+      params: unref(route).params,
+      query: remainingQuery
+    })
+
+    if (!sharedFiles.length) {
+      return
+    }
+    uppyService.addFiles(
+      convertToMinimalUppyFile(
+        'ShareTarget',
+        sharedFiles.map(({ file }) => file)
+      )
+    )
+    // blobs read from IndexedDB stay readable after their records are deleted
+    for (const { key } of sharedFiles) {
+      await deleteSharedFile(key)
+    }
+  } catch (e) {
+    console.error('share_uploaded: taking shared files failed', e)
+  } finally {
+    isTakingSharedFiles = false
+  }
+}
 
 const onUploadComplete = async (result: UploadResult) => {
   const file = result.successful?.[0]
@@ -212,6 +255,17 @@ watch(
     } else {
       uppyService.removeDropTarget()
     }
+  },
+  { immediate: true }
+)
+
+watch(
+  [canUpload, () => unref(route).query[SHARE_UPLOADED_QUERY]],
+  ([uploadAllowed, shareUploaded]) => {
+    if (!uploadAllowed || !shareUploaded || isTakingSharedFiles) {
+      return
+    }
+    addSharedFilesToUpload()
   },
   { immediate: true }
 )

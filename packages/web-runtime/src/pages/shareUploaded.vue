@@ -6,32 +6,28 @@
       header-class="text-center"
       class="w-auto md:w-lg rounded-lg"
     >
-      <template v-if="uploadTask.isRunning">
-        <oc-spinner :aria-hidden="true" />
-        <p v-if="totalCount" class="mt-2" v-text="progressMessage" />
-      </template>
-      <p v-else-if="errorMessage" data-testid="error-message" class="text-xl">
-        {{ errorMessage }}
-      </p>
+      <oc-spinner v-if="!errorMessage" :aria-hidden="true" />
+      <p v-else data-testid="error-message" class="text-xl">{{ errorMessage }}</p>
     </oc-card>
   </div>
 </template>
 
 <script setup lang="ts">
 import { computed, onMounted, ref, unref, watch } from 'vue'
-import { useTask } from 'vue-concurrency'
 import { useGettext } from 'vue3-gettext'
 import {
   createFileRouteOptions,
   createLocationSpaces,
-  resolveFileNameDuplicate,
+  SHARE_UPLOADED_QUERY,
   useClientService,
   useRouter,
   useSpacesStore
 } from '@opencloud-eu/web-pkg'
 import { HttpError, Resource, SpaceResource } from '@opencloud-eu/web-client'
-import { deleteSharedFile, readSharedFiles } from '../helpers/shareUploaded'
 
+// Files shared to the installed web app land here (see `share_target` in
+// manifest.json). This page only prepares the target folder and opens it, the
+// files app then hands the parked files to the regular upload.
 const UPLOAD_FOLDER = '/Uploaded'
 
 const router = useRouter()
@@ -39,8 +35,6 @@ const { $gettext } = useGettext()
 const clientService = useClientService()
 const spacesStore = useSpacesStore()
 
-const totalCount = ref(0)
-const uploadedCount = ref(0)
 const errorMessage = ref('')
 
 function waitForSpaces(): Promise<void> {
@@ -58,83 +52,43 @@ function waitForSpaces(): Promise<void> {
   })
 }
 
-async function ensureUploadFolder(personalSpace: SpaceResource): Promise<Resource[]> {
+async function ensureUploadFolder(personalSpace: SpaceResource): Promise<Resource> {
   const { webdav } = clientService
   try {
-    const { children } = await webdav.listFiles(personalSpace, { path: UPLOAD_FOLDER })
-    return children
+    return await webdav.getFileInfo(personalSpace, { path: UPLOAD_FOLDER })
   } catch (e) {
     if (!(e instanceof HttpError) || e.statusCode !== 404) {
       throw e
     }
   }
-  await webdav.createFolder(personalSpace, { path: UPLOAD_FOLDER, fetchFolder: false })
-  return []
+  return webdav.createFolder(personalSpace, { path: UPLOAD_FOLDER })
 }
 
-function fileExtension(fileName: string): string {
-  const dotIndex = fileName.lastIndexOf('.')
-  return dotIndex > 0 ? fileName.slice(dotIndex + 1) : ''
-}
-
-const uploadTask = useTask(function* () {
-  yield waitForSpaces()
+async function openUploadFolder() {
+  await waitForSpaces()
   const personalSpace = spacesStore.personalSpace
   if (!personalSpace) {
-    throw new Error($gettext('Personal space not found'))
+    throw new Error('personal space not found')
   }
 
-  const sharedFiles: Awaited<ReturnType<typeof readSharedFiles>> = yield readSharedFiles()
-  totalCount.value = sharedFiles.length
-
-  const existingResources: Resource[] = yield ensureUploadFolder(personalSpace)
-  const { webdav } = clientService
-
-  for (const { key, file } of sharedFiles) {
-    let targetName = file.name || 'shared'
-    if (existingResources.some((resource) => resource.name === targetName)) {
-      targetName = resolveFileNameDuplicate(
-        targetName,
-        fileExtension(targetName),
-        existingResources
-      )
-    }
-    const content: ArrayBuffer = yield file.arrayBuffer()
-    const uploadedResource: Resource = yield webdav.putFileContents(personalSpace, {
-      path: `${UPLOAD_FOLDER}/${targetName}`,
-      content,
-      overwrite: false
-    })
-    existingResources.push(uploadedResource)
-    yield deleteSharedFile(key)
-    uploadedCount.value++
-  }
-
-  const uploadFolder: Resource = yield webdav.getFileInfo(personalSpace, { path: UPLOAD_FOLDER })
+  const uploadFolder = await ensureUploadFolder(personalSpace)
   const targetLocation = createLocationSpaces('files-spaces-generic')
   const { params, query } = createFileRouteOptions(personalSpace, {
     fileId: uploadFolder.fileId,
     path: UPLOAD_FOLDER
   })
   targetLocation.params = params
-  targetLocation.query = query
-  router.replace(targetLocation)
-})
+  targetLocation.query = { ...query, [SHARE_UPLOADED_QUERY]: '1' }
+  await router.replace(targetLocation)
+}
 
 onMounted(async () => {
   try {
-    await uploadTask.perform()
+    await openUploadFolder()
   } catch (e) {
     console.error(e)
     errorMessage.value = $gettext('Uploading the shared files failed.')
   }
-})
-
-const progressMessage = computed(() => {
-  return $gettext('%{uploaded} of %{total} files uploaded', {
-    uploaded: unref(uploadedCount).toString(),
-    total: unref(totalCount).toString()
-  })
 })
 
 const headerTitle = computed(() => {

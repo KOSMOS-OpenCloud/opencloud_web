@@ -36,7 +36,7 @@ import {
 import { applicationStore } from './container/store'
 import { PublicSpaceResource } from '@opencloud-eu/web-client'
 import { loadCustomTranslations } from './helpers/customTranslations'
-import { registerShareServiceWorker } from './helpers/shareUploaded'
+import { registerShareServiceWorker } from '@opencloud-eu/web-pkg'
 import { createApp, watch } from 'vue'
 import { createPinia } from 'pinia'
 import { extensionPoints } from './extensionPoints'

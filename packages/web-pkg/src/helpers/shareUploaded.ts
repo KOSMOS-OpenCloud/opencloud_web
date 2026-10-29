@@ -1,6 +1,8 @@
 // Counterpart of `packages/web-container/sw.js`: the service worker parks files
-// shared to the installed web app in IndexedDB, the `share_uploaded` route picks
-// them up here. Database and store names must match the service worker.
+// shared to the installed web app in IndexedDB. The `share_uploaded` route opens
+// the target folder with the query below, the files app then hands the parked
+// files to the regular upload. Database and store names must match the service worker.
+export const SHARE_UPLOADED_QUERY = 'share_uploaded'
 const SHARE_DB_NAME = 'share_uploaded'
 const SHARE_DB_STORE = 'files'
 
