@@ -1,11 +1,25 @@
 <template>
   <div
     id="web-nav-sidebar"
-    class="bg-role-surface-container z-40 flex flex-col rounded-l-xl overflow-x-hidden overflow-y-auto transition-all duration-350 ease-[cubic-bezier(0.34,0.11,0,1.12)] max-w-[230px] min-w-[230px]"
+    class="relative bg-role-surface-container z-40 flex flex-col rounded-l-xl overflow-x-hidden overflow-y-auto transition-all duration-350 ease-[cubic-bezier(0.34,0.11,0,1.12)]"
+    :class="closed ? 'max-w-[62px] min-w-[62px]' : 'max-w-[230px] min-w-[230px]'"
   >
+    <!-- kosmos: Navigation einklappbar (upstream entfernt in 4ac069163a), Zustand je Browser im localStorage.
+         Der Knopf liegt rechts über der ersten Menüzeile und kostet keine eigene Zeile. -->
+    <oc-button
+      appearance="raw"
+      class="toggle-sidebar-button absolute top-3 right-0 z-10 h-12 px-1"
+      justify-content="center"
+      :aria-label="closed ? $gettext('Expand navigation') : $gettext('Collapse navigation')"
+      :aria-expanded="!closed"
+      no-hover
+      @click="closed = !closed"
+    >
+      <oc-icon fill-type="line" class="raw-hover-surface rounded-sm" :name="closed ? 'arrow-drop-right' : 'arrow-drop-left'" />
+    </oc-button>
     <div class="flex flex-col grow">
       <nav class="oc-sidebar-nav mt-3 px-1" :aria-label="$gettext('Sidebar navigation menu')">
-        <div v-if="floatingActionButton && !isTablet" class="pb-3 px-2">
+        <div v-if="floatingActionButton && !isTablet && !closed" class="pb-3 px-2">
           <oc-button
             :id="getButtonId(floatingActionButton.id)"
             :disabled="isFloatingActionButtonDisabled"
@@ -34,13 +48,14 @@
             :icon="link.icon"
             :fill-type="link.active ? 'fill' : 'line'"
             :name="link.name"
+            :collapsed="closed"
             :handler="link.handler"
           />
         </oc-list>
       </nav>
-      <custom-component-target :extension-point="dynamicExtensionPointMain" />
+      <custom-component-target v-if="!closed" :extension-point="dynamicExtensionPointMain" />
     </div>
-    <div class="flex flex-col gap-2">
+    <div v-if="!closed" class="flex flex-col gap-2">
       <custom-component-target :extension-point="dynamicExtensionPointBottom" />
       <div class="flex flex-col pb-4 px-4 text-xs text-role-on-surface-variant">
         <span v-text="backendVersion" />
@@ -63,11 +78,15 @@ import {
   CustomComponentExtension,
   useActiveApp,
   useExtensionRegistry,
-  FloatingActionButtonExtension
+  FloatingActionButtonExtension,
+  useLocalStorage
 } from '@opencloud-eu/web-pkg'
 import { useIsMobile } from '@opencloud-eu/design-system/composables'
 
 const { navItems } = defineProps<{ navItems: NavItem[] }>()
+
+// kosmos: eingeklappt nur Symbole (SidebarNavItem collapsed), Tooltip/aria-label mit dem Seitennamen
+const closed = useLocalStorage<boolean>('oc_navBarClosed', false)
 
 const capabilityStore = useCapabilityStore()
 const backendVersion = computed(() => getBackendVersion({ capabilityStore }))
