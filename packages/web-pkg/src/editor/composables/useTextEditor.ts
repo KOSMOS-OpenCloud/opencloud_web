@@ -4,7 +4,8 @@ import { Placeholder } from '@tiptap/extension-placeholder'
 import type { ShallowRef } from 'vue'
 import type { Editor } from '@tiptap/vue-3'
 import type { TextEditorOptions, TextEditorInstance, TextEditorState } from '../types'
-import { SlashCommands } from '../extensions'
+import { useGettext } from 'vue3-gettext'
+import { RenderedCodeBlocks, SlashCommands } from '../extensions'
 import { useContentStrategy } from './useContentStrategy'
 
 export function useTextEditor(options: TextEditorOptions): TextEditorInstance {
@@ -32,6 +33,26 @@ export function useTextEditor(options: TextEditorOptions): TextEditorInstance {
         SlashCommands.configure({ getGroups: () => resolvedGroups }) as (typeof extensions)[number]
       )
     }
+  }
+
+  if (options.codeBlockRenderers && Object.keys(options.codeBlockRenderers).length > 0) {
+    const { $gettext } = useGettext()
+    const renderers = Object.fromEntries(
+      Object.entries(options.codeBlockRenderers).map(([language, renderer]) => [
+        language.toLowerCase(),
+        renderer
+      ])
+    )
+    extensions.push(
+      RenderedCodeBlocks.configure({
+        renderers,
+        labels: {
+          showCode: $gettext('Show code'),
+          showGraphic: $gettext('Show graphic'),
+          renderError: $gettext('The graphic could not be rendered.')
+        }
+      }) as (typeof extensions)[number]
+    )
   }
 
   if (options.placeholder) {

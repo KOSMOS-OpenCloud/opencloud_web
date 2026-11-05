@@ -4,6 +4,9 @@ import { EditorActionGroup } from './composables'
 
 export type ContentType = 'plain-text' | 'markdown' | 'html' | 'tiptap-json'
 
+/** Renders the code of a code block (e.g. mermaid) to SVG markup */
+export type CodeBlockRenderer = (code: string) => Promise<string>
+
 export interface TextEditorOptions {
   contentType: ContentType
   modelValue?: Ref<string>
@@ -13,6 +16,11 @@ export interface TextEditorOptions {
   onUpdate?: (content: string) => void
   onRequestLinkUrl?: (currentUrl?: string) => Promise<string | null>
   onRequestImageUrl?: () => Promise<string | null>
+  /**
+   * Code blocks of these languages are shown as graphic with a toggle to
+   * their code, e.g. { mermaid: renderMermaid, svg: async (code) => code }
+   */
+  codeBlockRenderers?: Record<string, CodeBlockRenderer>
 }
 
 export interface TextEditorState {
