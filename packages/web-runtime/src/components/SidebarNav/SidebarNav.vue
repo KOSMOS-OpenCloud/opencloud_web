@@ -24,16 +24,19 @@
     </oc-button>
     <div class="flex flex-col grow">
       <nav class="oc-sidebar-nav mt-3 px-1" :aria-label="$gettext('Sidebar navigation menu')">
-        <div v-if="floatingActionButton && !isTablet && !closed" class="pb-3 px-2">
+        <!-- kosmos: eingeklappt bleibt der Neu-Knopf als reines Symbol (Beschriftung als Tooltip/aria-label) -->
+        <div v-if="floatingActionButton && !isTablet" class="pb-3 px-2">
           <oc-button
             :id="getButtonId(floatingActionButton.id)"
+            v-oc-tooltip="closed ? floatingActionButton.label() : undefined"
             :disabled="isFloatingActionButtonDisabled"
             appearance="filled"
             class="oc-app-floating-action-button w-full"
+            :aria-label="closed ? floatingActionButton.label() : undefined"
             @click="floatingActionButton.handler?.()"
           >
             <oc-icon :name="floatingActionButton.icon" />
-            <span v-text="floatingActionButton.label()" />
+            <span v-if="!closed" v-text="floatingActionButton.label()" />
           </oc-button>
           <template
             v-if="floatingActionButton.dropComponent && floatingActionButton.mode() === 'drop'"

@@ -18,6 +18,7 @@ exports[`OcSidebarNav > renders navItems into a list 1`] = `
   </button>
   <div class="flex flex-col grow">
     <nav class="oc-sidebar-nav mt-3 px-1" aria-label="Sidebar navigation menu">
+      <!-- kosmos: eingeklappt bleibt der Neu-Knopf als reines Symbol (Beschriftung als Tooltip/aria-label) -->
       <!--v-if-->
       <ul class="oc-list relative">
         <sidebar-nav-item-stub icon="folder" name="Personal" active="true" target="[object Object]" filltype="fill" collapsed="false"></sidebar-nav-item-stub>
