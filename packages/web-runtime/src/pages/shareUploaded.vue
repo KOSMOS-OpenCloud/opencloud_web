@@ -38,16 +38,20 @@ const spacesStore = useSpacesStore()
 const errorMessage = ref('')
 
 function waitForSpaces(): Promise<void> {
+  // Check before watching: with `immediate: true` the callback would run before
+  // `stop` is assigned (temporal dead zone) and the promise would never resolve.
+  if (spacesStore.spacesInitialized) {
+    return Promise.resolve()
+  }
   return new Promise((resolve) => {
     const stop = watch(
       () => spacesStore.spacesInitialized,
       (initialized) => {
         if (initialized) {
-          stop?.()
+          stop()
           resolve()
         }
-      },
-      { immediate: true }
+      }
     )
   })
 }
