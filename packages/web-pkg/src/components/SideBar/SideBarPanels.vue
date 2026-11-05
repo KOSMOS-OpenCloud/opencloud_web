@@ -38,6 +38,19 @@
           </oc-button>
 
           <oc-button
+            v-if="!isMobile"
+            v-oc-tooltip="$gettext('Toggle sidebar width')"
+            :class="sideBarIsExpanded ? 'text-role-text-interactive' : 'text-role-text-muted'"
+            appearance="raw"
+            class="header__width p-1 text-xs font-semibold"
+            data-testid="toggle-sidebar-width"
+            :aria-label="$gettext('Toggle sidebar width')"
+            @click="toggleSideBarExpanded"
+          >
+            x2
+          </oc-button>
+
+          <oc-button
             appearance="raw"
             class="header__close p-1"
             :aria-label="$gettext('Close file sidebar')"
@@ -101,6 +114,9 @@
 import { computed, ref, unref } from 'vue'
 import { SideBarPanel, SideBarPanelContext } from './types'
 import { useGettext } from 'vue3-gettext'
+import { storeToRefs } from 'pinia'
+import { useIsMobile } from '@opencloud-eu/design-system/composables'
+import { useSideBar } from '../../composables'
 
 const {
   loading,
@@ -127,6 +143,10 @@ defineSlots<{
 }>()
 
 const { $gettext } = useGettext()
+const { isMobile } = useIsMobile()
+const sidebarStore = useSideBar()
+const { toggleSideBarExpanded } = sidebarStore
+const { sideBarIsExpanded } = storeToRefs(sidebarStore)
 
 const rootPanels = computed(() => {
   return availablePanels.filter((p) => p.isVisible(panelContext) && p.isRoot?.(panelContext))
