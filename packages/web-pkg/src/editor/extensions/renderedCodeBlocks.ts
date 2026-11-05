@@ -74,7 +74,9 @@ function createWidget(
 
   if (!codeShown) {
     const image = document.createElement('img')
-    image.className = 'max-w-full self-center'
+    // natural size, never wider than the editor or taller than 480px
+    image.className = 'max-w-full h-auto self-center'
+    image.style.maxHeight = '480px'
     image.alt = language
     wrapper.appendChild(image)
     renderer(code)
