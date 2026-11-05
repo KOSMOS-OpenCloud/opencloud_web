@@ -3,6 +3,7 @@
     :title="$gettext('New')"
     :toggle="toggle"
     drop-id="create-or-upload-drop"
+    teleport="#app-runtime-drop"
     class="w-auto min-w-3xs"
     mode="click"
     close-on-click
