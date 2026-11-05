@@ -5,11 +5,11 @@
     :class="closed ? 'max-w-[62px] min-w-[62px]' : 'max-w-[230px] min-w-[230px]'"
   >
     <!-- kosmos: Navigation einklappbar (upstream entfernt in 4ac069163a), Zustand je Browser im localStorage.
-         Der Knopf ist ein schmaler, hoher Griff am rechten Rand unterhalb des Neu-Knopfs, in einer eigenen
-         Randspalte (pr-[18px] an der nav), damit er nicht wie ein Menüpunkt wirkt. -->
+         Der Knopf ist ein schmaler, hoher Griff am rechten Rand unterhalb des Neu-Knopfs. Er liegt über den
+         Menüpunkten (z-20, Ring in Sidebar-Farbe), damit deren Markierung die volle Breite behält. -->
     <oc-button
       appearance="raw"
-      class="toggle-sidebar-button absolute top-[104px] right-[3px] z-10 h-16 w-3.5 p-0 rounded-md bg-role-surface-container-highest hover:bg-role-secondary-container"
+      class="toggle-sidebar-button absolute top-[104px] right-[3px] z-20 h-16 w-3.5 p-0 rounded-md bg-role-surface-container-highest hover:bg-role-secondary-container ring-2 ring-role-surface-container"
       justify-content="center"
       :aria-label="closed ? $gettext('Expand navigation') : $gettext('Collapse navigation')"
       :aria-expanded="!closed"
@@ -23,10 +23,7 @@
       />
     </oc-button>
     <div class="flex flex-col grow">
-      <nav
-        class="oc-sidebar-nav mt-3 pl-1 pr-[18px]"
-        :aria-label="$gettext('Sidebar navigation menu')"
-      >
+      <nav class="oc-sidebar-nav mt-3 px-1" :aria-label="$gettext('Sidebar navigation menu')">
         <div v-if="floatingActionButton && !isTablet && !closed" class="pb-3 px-2">
           <oc-button
             :id="getButtonId(floatingActionButton.id)"
