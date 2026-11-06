@@ -111,7 +111,11 @@ export const useSearch = () => {
     const humanSearchTerm = term
     const useFullTextSearch = unref(fullTextSearchEnabled) && !isTitleOnlySearch
 
-    if (!!humanSearchTerm) {
+    if (!!humanSearchTerm && isMetadataQuery(humanSearchTerm)) {
+      // metadata.<key>:<value> expressions go to the index unchanged (KQL),
+      // e.g. "metadata.doc.type:rechnung AND NOT metadata.booking.status:E"
+      query.push(`(${humanSearchTerm.trim()})`)
+    } else if (!!humanSearchTerm) {
       let nameQuery = `name:"*${humanSearchTerm}*"`
 
       if (useFullTextSearch) {
@@ -147,6 +151,11 @@ export const useSearch = () => {
     search,
     buildSearchTerm
   }
+}
+
+/** Whether a search term contains a metadata field expression (metadata.<key>:…). */
+export function isMetadataQuery(term: string): boolean {
+  return /(^|[\s(])metadata\.[A-Za-z][\w.]*:\S/.test(term)
 }
 
 export type SearchFunction = ReturnType<typeof useSearch>['search']

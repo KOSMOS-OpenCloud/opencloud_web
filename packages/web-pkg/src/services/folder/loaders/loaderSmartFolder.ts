@@ -1,7 +1,7 @@
 import { FolderLoader, FolderLoaderTask, TaskContext } from '../folderService'
 import { Router } from 'vue-router'
 import { useTask } from 'vue-concurrency'
-import { isLocationCommonActive } from '../../../router'
+import { locationSmartFolder } from '../../../router/common'
 import { unref } from 'vue'
 import { Resource } from '@opencloud-eu/web-client'
 import { getVaultClaim, markVaultStatus } from '../../../helpers/folderVault'
@@ -18,8 +18,8 @@ export class FolderLoaderSmartFolder implements FolderLoader {
   public isActive(router: Router): boolean {
     const currentRoute = unref(router.currentRoute)
     return (
-      isLocationCommonActive(router, 'files-common-smart-folder') ||
-      currentRoute?.query?.contextRouteName === 'files-common-smart-folder'
+      currentRoute?.name === locationSmartFolder.name ||
+      currentRoute?.query?.contextRouteName === locationSmartFolder.name
     )
   }
 

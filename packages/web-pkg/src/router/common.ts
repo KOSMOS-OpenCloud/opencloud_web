@@ -17,11 +17,12 @@ export const locationSearch = createLocationCommon('files-common-search')
 export const locationSmartFolders = createLocationCommon('files-common-smart-folders')
 export const locationSmartFolder = createLocationCommon('files-common-smart-folder')
 
+// locationSmartFolder is not listed: it has a required param, router.resolve
+// throws without it. Check it by route name (FolderLoaderSmartFolder).
 export const isLocationCommonActive = isLocationActiveDirector<commonTypes>(
   locationFavorites,
   locationSearch,
-  locationSmartFolders,
-  locationSmartFolder
+  locationSmartFolders
 )
 
 export const buildRoutes = (components: RouteComponents): RouteRecordRaw[] => [

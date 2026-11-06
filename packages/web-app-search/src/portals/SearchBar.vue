@@ -151,6 +151,7 @@ import {
   useSpacesStore
 } from '@opencloud-eu/web-pkg'
 import { resourceTransformerExtensionPoint } from '@opencloud-eu/web-pkg'
+import { isMetadataQuery } from '@opencloud-eu/web-pkg'
 import Mark from 'mark.js'
 import { storeToRefs } from 'pinia'
 import { debounce } from 'lodash-es'
@@ -311,7 +312,10 @@ export default defineComponent({
 
       const terms: string[] = []
 
-      let nameQuery = `name:"*${unref(term)}*"`
+      // metadata.<key>:<value> expressions go to the index unchanged (KQL)
+      const nameQuery = isMetadataQuery(unref(term))
+        ? `(${unref(term).trim()})`
+        : `name:"*${unref(term)}*"`
       terms.push(nameQuery)
 
       if (unref(folderOnlyActive)) {

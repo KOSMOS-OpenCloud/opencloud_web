@@ -1,5 +1,5 @@
 import { defaultComponentMocks, getComposableWrapper } from '@opencloud-eu/web-test-helpers'
-import { CapabilityStore, useSearch } from '../../../../src/composables'
+import { CapabilityStore, isMetadataQuery, useSearch } from '../../../../src/composables'
 import { SearchResource, SpaceResource } from '@opencloud-eu/web-client'
 
 describe('useSearch', () => {
@@ -26,6 +26,33 @@ describe('useSearch', () => {
 
       const withTerm = await wrapper.vm.search('foo')
       expect(withTerm.values.map((r) => r.data)[0].id).toEqual('2')
+    })
+  })
+  describe('metadata queries', () => {
+    it.each([
+      'metadata.doc.type:rechnung',
+      'metadata.doc.type:rechnung AND NOT metadata.booking.status:E',
+      '(metadata.sender.vat_id:DE123)'
+    ])('detects "%s"', (term) => {
+      expect(isMetadataQuery(term)).toBe(true)
+    })
+    it.each(['rechnung', 'Rechnung: Müller', 'mymetadata.doc:x', 'metadata.doc.type:'])(
+      'ignores "%s"',
+      (term) => {
+        expect(isMetadataQuery(term)).toBe(false)
+      }
+    )
+    it('passes a metadata query through and keeps the filters', () => {
+      const wrapper = createWrapper()
+      expect(
+        wrapper.vm.buildSearchTerm({ term: 'metadata.doc.type:rechnung', mediaType: 'pdf' })
+      ).toEqual('(metadata.doc.type:rechnung) AND mediatype:("pdf")')
+    })
+    it('keeps the name search for plain terms', () => {
+      const wrapper = createWrapper()
+      expect(wrapper.vm.buildSearchTerm({ term: 'rechnung', isTitleOnlySearch: true })).toEqual(
+        'name:"*rechnung*"'
+      )
     })
   })
 })
@@ -58,10 +85,11 @@ const createWrapper = ({ resources = [] }: { resources?: SearchResource[] } = {}
 
   return getComposableWrapper(
     () => {
-      const { search } = useSearch()
+      const { search, buildSearchTerm } = useSearch()
 
       return {
-        search
+        search,
+        buildSearchTerm
       }
     },
     {
