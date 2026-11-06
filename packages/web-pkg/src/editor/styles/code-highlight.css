@@ -1,0 +1,66 @@
+/* Source code files (contentType 'code'): one full-width code block */
+.text-editor-content.code-mode .ProseMirror {
+  max-width: none;
+  display: flex;
+  flex-direction: column;
+}
+
+.text-editor-content.code-mode .ProseMirror pre {
+  flex: 1;
+  margin: 0;
+  white-space: pre;
+  tab-size: 4;
+}
+
+/* Syntax highlighting (lowlight / highlight.js classes), colors from role tokens */
+.text-editor-content .ProseMirror pre .hljs-comment,
+.text-editor-content .ProseMirror pre .hljs-quote {
+  color: var(--oc-role-on-surface-variant);
+  font-style: italic;
+}
+
+.text-editor-content .ProseMirror pre .hljs-keyword,
+.text-editor-content .ProseMirror pre .hljs-selector-tag,
+.text-editor-content .ProseMirror pre .hljs-built_in,
+.text-editor-content .ProseMirror pre .hljs-name,
+.text-editor-content .ProseMirror pre .hljs-tag {
+  color: var(--oc-role-primary);
+}
+
+.text-editor-content .ProseMirror pre .hljs-string,
+.text-editor-content .ProseMirror pre .hljs-regexp,
+.text-editor-content .ProseMirror pre .hljs-addition,
+.text-editor-content .ProseMirror pre .hljs-symbol {
+  color: var(--oc-role-tertiary);
+}
+
+.text-editor-content .ProseMirror pre .hljs-number,
+.text-editor-content .ProseMirror pre .hljs-literal,
+.text-editor-content .ProseMirror pre .hljs-attr,
+.text-editor-content .ProseMirror pre .hljs-attribute,
+.text-editor-content .ProseMirror pre .hljs-variable,
+.text-editor-content .ProseMirror pre .hljs-template-variable {
+  color: var(--oc-role-secondary);
+}
+
+.text-editor-content .ProseMirror pre .hljs-title,
+.text-editor-content .ProseMirror pre .hljs-section,
+.text-editor-content .ProseMirror pre .hljs-type,
+.text-editor-content .ProseMirror pre .hljs-selector-id,
+.text-editor-content .ProseMirror pre .hljs-selector-class {
+  color: var(--oc-role-primary);
+  font-weight: 600;
+}
+
+.text-editor-content .ProseMirror pre .hljs-meta,
+.text-editor-content .ProseMirror pre .hljs-deletion {
+  color: var(--oc-role-error);
+}
+
+.text-editor-content .ProseMirror pre .hljs-emphasis {
+  font-style: italic;
+}
+
+.text-editor-content .ProseMirror pre .hljs-strong {
+  font-weight: 600;
+}

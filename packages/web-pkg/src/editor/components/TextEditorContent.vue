@@ -2,7 +2,10 @@
   <EditorContent
     v-if="textEditor.editor.value"
     class="text-editor-content"
-    :class="{ 'markdown-source-mode': isMarkdownSourceMode }"
+    :class="{
+      'markdown-source-mode': isMarkdownSourceMode,
+      'code-mode': isCodeMode
+    }"
     :editor="textEditor.editor.value"
   />
 </template>
@@ -20,6 +23,7 @@ const textEditor = editor || inject<TextEditorInstance>('textEditor')!
 const isMarkdownSourceMode = computed(
   () => unref(textEditor.contentType) === 'markdown' && unref(textEditor.state.sourceMode)
 )
+const isCodeMode = computed(() => unref(textEditor.contentType) === 'code')
 </script>
 
 <style>

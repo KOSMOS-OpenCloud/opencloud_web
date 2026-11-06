@@ -44,6 +44,13 @@ describe('useContentStrategy', () => {
       expect(strategy.serialize).toBeTypeOf('function')
     })
 
+    it('returns a strategy for code', () => {
+      const strategy = resolveStrategy('code', createState(), 'python')
+      expect(strategy.deserialize('x = 1')).toMatchObject({
+        content: [{ type: 'codeBlock', attrs: { language: 'python' } }]
+      })
+    })
+
     it('throws for unknown content type', () => {
       expect(() => resolveStrategy('unknown' as any, createState())).toThrow(
         'Unknown content type: unknown'

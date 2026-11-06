@@ -1,6 +1,7 @@
 import type { ContentType, TextEditorState } from '../types'
 import {
   ContentTypeStrategy,
+  useStrategyCode,
   useStrategyHtml,
   useStrategyMarkdown,
   useStrategyPlainText,
@@ -10,7 +11,8 @@ import {
 export const useContentStrategy = () => {
   const resolveStrategy = (
     contentType: ContentType,
-    editorState: TextEditorState
+    editorState: TextEditorState,
+    language?: string
   ): ContentTypeStrategy => {
     switch (contentType) {
       case 'plain-text':
@@ -19,6 +21,8 @@ export const useContentStrategy = () => {
         return useStrategyMarkdown(editorState)
       case 'html':
         return useStrategyHtml(editorState)
+      case 'code':
+        return useStrategyCode(editorState, language)
       case 'tiptap-json':
         return useStrategyTiptapJson(editorState)
       default:

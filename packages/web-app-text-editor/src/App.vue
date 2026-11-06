@@ -12,6 +12,7 @@ import { computed, toRef, unref } from 'vue'
 import { useGettext } from 'vue3-gettext'
 import {
   ContentType,
+  codeLanguageForExtension,
   useTextEditor,
   TextEditorProvider,
   TextEditorContent,
@@ -37,6 +38,8 @@ const emit = defineEmits<{
 
 const { $gettext } = useGettext()
 
+const codeLanguage = computed(() => codeLanguageForExtension(resource?.extension))
+
 const parsedContentType = computed<ContentType>(() => {
   if (contentType !== undefined) {
     return contentType
@@ -48,6 +51,9 @@ const parsedContentType = computed<ContentType>(() => {
   }
   if (ext === 'html' || ext === 'htm' || mimeType === 'text/html') {
     return 'html'
+  }
+  if (unref(codeLanguage)) {
+    return 'code'
   }
   return 'plain-text'
 })
@@ -61,6 +67,7 @@ const placeholder = computed(() => {
 
 const textEditor = useTextEditor({
   contentType: unref(parsedContentType),
+  language: unref(codeLanguage),
   modelValue: toRef(() => currentContent),
   readonly: isReadOnly,
   placeholder: unref(placeholder),

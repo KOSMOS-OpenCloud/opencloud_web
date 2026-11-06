@@ -16,7 +16,7 @@ export function useTextEditor(options: TextEditorOptions): TextEditorInstance {
 
   const contentType = ref(options.contentType)
   const readonly = ref(options.readonly ?? false)
-  const strategy = resolveStrategy(options.contentType, state)
+  const strategy = resolveStrategy(options.contentType, state, options.language)
 
   // Debounce onUpdate to avoid firing on every keystroke while typing.
   let debounceTimer: ReturnType<typeof setTimeout> | null = null

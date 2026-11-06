@@ -2,13 +2,15 @@ import type { ShallowRef, Ref, ComputedRef } from 'vue'
 import { Editor } from '@tiptap/vue-3'
 import { EditorActionGroup } from './composables'
 
-export type ContentType = 'plain-text' | 'markdown' | 'html' | 'tiptap-json'
+export type ContentType = 'plain-text' | 'markdown' | 'html' | 'tiptap-json' | 'code'
 
 /** Renders the code of a code block (e.g. mermaid) to SVG markup */
 export type CodeBlockRenderer = (code: string) => Promise<string>
 
 export interface TextEditorOptions {
   contentType: ContentType
+  /** highlight.js language for contentType 'code', e.g. from codeLanguageForExtension() */
+  language?: string
   modelValue?: Ref<string>
   readonly?: boolean
   slashCommands?: boolean
