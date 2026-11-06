@@ -104,6 +104,15 @@ const OptionsConfigSchema = z.object({
     })
     .optional(),
   userListRequiresFilter: z.boolean().optional(),
+  smartFolders: z
+    .array(
+      z.object({
+        id: z.string(),
+        name: z.string(),
+        query: z.string()
+      })
+    )
+    .optional(),
   hideLogo: z.boolean().optional(),
   oxAppSuite: z
     .object({

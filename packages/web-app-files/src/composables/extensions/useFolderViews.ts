@@ -2,6 +2,7 @@ import { FolderViewExtension, ResourceTable, ResourceTiles } from '@opencloud-eu
 import { useGettext } from 'vue3-gettext'
 import {
   folderViewsFavoritesExtensionPoint,
+  folderViewsSmartFolderExtensionPoint,
   folderViewsFolderExtensionPoint,
   folderViewsProjectSpacesExtensionPoint,
   folderViewsSharedViaLinkExtensionPoint,
@@ -23,6 +24,7 @@ export const useFolderViews = (): FolderViewExtension[] => {
       extensionPointIds: [
         folderViewsFolderExtensionPoint.id,
         folderViewsFavoritesExtensionPoint.id,
+        folderViewsSmartFolderExtensionPoint.id,
         folderViewsTrashExtensionPoint.id,
         folderViewsTrashOverviewExtensionPoint.id,
         folderViewsProjectSpacesExtensionPoint.id,
@@ -48,6 +50,7 @@ export const useFolderViews = (): FolderViewExtension[] => {
         folderViewsFolderExtensionPoint.id,
         folderViewsProjectSpacesExtensionPoint.id,
         folderViewsFavoritesExtensionPoint.id,
+        folderViewsSmartFolderExtensionPoint.id,
         folderViewsTrashExtensionPoint.id,
         folderViewsTrashOverviewExtensionPoint.id,
         folderViewsSharedWithMeExtensionPoint.id,
@@ -72,6 +75,7 @@ export const useFolderViews = (): FolderViewExtension[] => {
         folderViewsFolderExtensionPoint.id,
         folderViewsProjectSpacesExtensionPoint.id,
         folderViewsFavoritesExtensionPoint.id,
+        folderViewsSmartFolderExtensionPoint.id,
         folderViewsTrashExtensionPoint.id,
         folderViewsTrashOverviewExtensionPoint.id,
         folderViewsSharedWithMeExtensionPoint.id,

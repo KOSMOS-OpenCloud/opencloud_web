@@ -64,6 +64,7 @@
           filter-name="contentSearch"
           class="files-search-filter-content mr-2"
         />
+        <save-smart-folder-button :build-query="doSearch" :suggested-name="searchTerm" />
       </div>
       <app-loading-spinner v-if="loading" />
       <template v-else>
@@ -164,6 +165,7 @@ import {
   watch
 } from 'vue'
 import ListInfo from '../FilesList/ListInfo.vue'
+import SaveSmartFolderButton from './SaveSmartFolderButton.vue'
 import { Pagination } from '@opencloud-eu/web-pkg'
 import { useFileActions } from '@opencloud-eu/web-pkg'
 import { searchLimit } from '../../search/sdk/list'

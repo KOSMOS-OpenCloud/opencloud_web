@@ -26,6 +26,7 @@ import { ClientService } from '../../services'
 import {
   FolderLoaderSpace,
   FolderLoaderFavorites,
+  FolderLoaderSmartFolder,
   FolderLoaderSharedViaLink,
   FolderLoaderSharedWithMe,
   FolderLoaderSharedWithOthers,
@@ -60,6 +61,7 @@ export class FolderService {
     this.loaders = [
       new FolderLoaderSpace(),
       new FolderLoaderFavorites(),
+      new FolderLoaderSmartFolder(),
       new FolderLoaderSharedViaLink(),
       new FolderLoaderSharedWithMe(),
       new FolderLoaderSharedWithOthers(),

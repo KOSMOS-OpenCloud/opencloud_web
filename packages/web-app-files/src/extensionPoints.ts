@@ -68,6 +68,10 @@ export const folderViewsFavoritesExtensionPoint: ExtensionPoint<FolderViewExtens
   id: 'app.files.folder-views.favorites',
   extensionType: 'folderView'
 }
+export const folderViewsSmartFolderExtensionPoint: ExtensionPoint<FolderViewExtension> = {
+  id: 'app.files.folder-views.smart-folder',
+  extensionType: 'folderView'
+}
 export const folderViewsProjectSpacesExtensionPoint: ExtensionPoint<FolderViewExtension> = {
   id: 'app.files.folder-views.project-spaces',
   extensionType: 'folderView'
@@ -138,6 +142,7 @@ export const extensionPoints = () => {
       fileSideBarActionsExtensionPoint,
       folderViewsFolderExtensionPoint,
       folderViewsFavoritesExtensionPoint,
+      folderViewsSmartFolderExtensionPoint,
       folderViewsProjectSpacesExtensionPoint,
       folderViewsTrashExtensionPoint,
       folderViewsTrashOverviewExtensionPoint,

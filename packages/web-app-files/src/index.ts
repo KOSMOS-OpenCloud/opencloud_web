@@ -1,5 +1,7 @@
 import App from './App.vue'
 import Favorites from './views/Favorites.vue'
+import SmartFolder from './views/SmartFolder.vue'
+import SmartFolders from './views/SmartFolders.vue'
 import FilesDrop from './views/FilesDrop.vue'
 import SharedWithMe from './views/shares/SharedWithMe.vue'
 import SharedWithOthers from './views/shares/SharedWithOthers.vue'
@@ -76,6 +78,15 @@ export const navItems: ClassicApplicationScript['navItems'] = ({ $ability, $gett
       priority: 20
     },
     {
+      name: $gettext('Smart folders'),
+      icon: 'filter-3',
+      route: {
+        path: `/${appInfo.id}/smart-folders`
+      },
+      activeFor: [{ path: `/${appInfo.id}/smart-folders` }],
+      priority: 25
+    },
+    {
       name: $gettext('Shares'),
       icon: 'share-forward',
       route: {
@@ -138,6 +149,8 @@ export default defineWebApplication({
         Favorites,
         FilesDrop,
         SearchResults,
+        SmartFolders,
+        SmartFolder,
         Shares: {
           SharedViaLink,
           SharedWithMe,

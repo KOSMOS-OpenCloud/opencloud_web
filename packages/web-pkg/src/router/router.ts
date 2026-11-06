@@ -14,6 +14,8 @@ export interface RouteComponents {
   Favorites: Component
   FilesDrop: Component
   SearchResults: Component
+  SmartFolders: Component
+  SmartFolder: Component
   Shares: {
     SharedWithMe: Component
     SharedWithOthers: Component
