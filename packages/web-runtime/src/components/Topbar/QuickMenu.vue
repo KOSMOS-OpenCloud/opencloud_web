@@ -121,14 +121,14 @@ export default defineComponent({
 })
 </script>
 
-<style scoped>
-/* half transparent menu surface with a slight blur; tiles keep their own opaque surface */
-/* the drop root carries bg-role-surface, its inner oc-card another surface: both half transparent */
-.quick-menu-drop.oc-drop,
-.quick-menu-drop :deep(.oc-card) {
+<style>
+/* unscoped on purpose: oc-drop renders its root without the parent's scope attribute, so a scoped rule
+   never matched (2026-11-08). The drop id is unique; the id selector also beats the bg-role-* utility. */
+#quick-menu-dropdown.oc-drop,
+#quick-menu-dropdown .oc-card {
   background-color: color-mix(in srgb, var(--oc-role-surface) 50%, transparent);
 }
-.quick-menu-drop.oc-drop {
+#quick-menu-dropdown.oc-drop {
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
 }
