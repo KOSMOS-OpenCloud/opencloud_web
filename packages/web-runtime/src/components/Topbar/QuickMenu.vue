@@ -123,8 +123,12 @@ export default defineComponent({
 
 <style scoped>
 /* half transparent menu surface with a slight blur; tiles keep their own opaque surface */
-.quick-menu-drop :deep(.oc-drop) {
+/* the drop root carries bg-role-surface, its inner oc-card another surface: both half transparent */
+.quick-menu-drop.oc-drop,
+.quick-menu-drop :deep(.oc-card) {
   background-color: color-mix(in srgb, var(--oc-role-surface) 50%, transparent);
+}
+.quick-menu-drop.oc-drop {
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
 }
