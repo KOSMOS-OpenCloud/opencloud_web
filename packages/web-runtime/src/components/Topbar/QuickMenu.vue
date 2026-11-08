@@ -71,6 +71,18 @@ export default defineComponent({
 
     const builtInTiles = computed<QuickMenuItemExtension[]>(() => {
       const tiles: QuickMenuItemExtension[] = []
+      // Files first: the one place everyone returns to (user 2026-11-08)
+      if (authStore.userContextReady) {
+        tiles.push({
+          id: 'com.github.opencloud-eu.web.runtime.quick-menu.files',
+          type: 'quickMenuItem',
+          extensionPointIds: [quickMenuExtensionPoint.id],
+          label: () => $gettext('Files'),
+          icon: 'folder',
+          priority: 1,
+          path: '/files'
+        })
+      }
       if (unref(hasDarkVariant)) {
         tiles.push({
           id: 'com.github.opencloud-eu.web.runtime.quick-menu.theme',
