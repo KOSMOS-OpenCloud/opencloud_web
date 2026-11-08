@@ -89,7 +89,8 @@ export default defineComponent({
           label: () => $gettext('Preferences'),
           icon: 'settings-4',
           priority: 1000,
-          path: `/${routeNames.account}`
+          // direkt zu Einstellungen → Präferenzen (Nutzer 2026-11-08), nicht zur Kontoübersicht
+          path: `/${routeNames.account}/preferences`
         })
       }
       return tiles
