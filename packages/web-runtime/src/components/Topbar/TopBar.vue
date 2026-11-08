@@ -29,6 +29,7 @@
       <template v-if="!isEmbedModeEnabled">
         <audio-player />
         <custom-component-target :extension-point="topBarRightExtensionPoint" />
+        <quick-menu />
         <feedback-link v-if="isFeedbackLinkEnabled" v-bind="feedbackLinkOptions" />
         <job-status />
         <notifications v-if="isNotificationBellEnabled" />
@@ -83,6 +84,7 @@ import { useGettext } from 'vue3-gettext'
 import ApplicationsMenu from './ApplicationsMenu.vue'
 import AudioPlayer from './AudioPlayer.vue'
 import JobStatus from './JobStatus.vue'
+import QuickMenu from './QuickMenu.vue'
 
 const { $gettext } = useGettext()
 const capabilityStore = useCapabilityStore()

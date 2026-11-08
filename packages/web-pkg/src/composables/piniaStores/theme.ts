@@ -125,6 +125,35 @@ export const useThemeStore = defineStore('theme', () => {
     setThemeFromStorageOrSystem()
   }
 
+  // Counterpart of the current theme in the other color scheme: every theme set ships a light and a
+  // dark variant; prefer the one whose label matches apart from the light/dark words, else the first.
+  const darkVariantOf = (theme: WebThemeType, wantDark: boolean): WebThemeType | undefined => {
+    const candidates = unref(availableThemes).filter((t) => !!t.isDark === wantDark)
+    if (!candidates.length) {
+      return undefined
+    }
+    const base = (label: string) =>
+      label
+        .toLowerCase()
+        .replace(/\b(light|dark|hell|dunkel|theme)\b/g, '')
+        .replace(/\s+/g, ' ')
+        .trim()
+    return candidates.find((t) => base(t.label) === base(theme.label)) || candidates[0]
+  }
+
+  const hasDarkVariant = computed(() => {
+    const theme = unref(currentTheme)
+    return !!theme && !!darkVariantOf(theme, !theme.isDark)
+  })
+
+  const toggleDarkVariant = () => {
+    const theme = unref(currentTheme)
+    const counterpart = theme && darkVariantOf(theme, !theme.isDark)
+    if (counterpart) {
+      setAndApplyTheme(counterpart)
+    }
+  }
+
   const isCurrentThemeAutoSystem = computed(() => {
     return currentLocalStorageThemeName.value === null
   })
@@ -191,6 +220,8 @@ export const useThemeStore = defineStore('theme', () => {
     setAndApplyTheme,
     setAutoSystemTheme,
     isCurrentThemeAutoSystem,
+    hasDarkVariant,
+    toggleDarkVariant,
     getRoleIcon
   }
 })

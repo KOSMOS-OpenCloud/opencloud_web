@@ -2,6 +2,7 @@ import {
   AccountExtension,
   AppMenuItemExtension,
   CustomComponentExtension,
+  QuickMenuItemExtension,
   Extension,
   ExtensionPoint,
   $gettext
@@ -55,6 +56,13 @@ export const topBarRightExtensionPoint: ExtensionPoint<CustomComponentExtension>
   multiple: true
 }
 
+// Quick menu: lightning button in the top bar, tiles from apps (see QuickMenu.vue)
+export const quickMenuExtensionPoint: ExtensionPoint<QuickMenuItemExtension> = {
+  id: 'app.runtime.header.quick-menu',
+  extensionType: 'quickMenuItem',
+  multiple: true
+}
+
 export const appModeNavExtensionPoint: ExtensionPoint<CustomComponentExtension> = {
   id: 'app.runtime.appMode.primaryNav',
   extensionType: 'customComponent',
@@ -77,6 +85,7 @@ export const extensionPoints = () => {
       topBarLeftExtensionPoint,
       topBarAppActionsExtensionPoint,
       topBarRightExtensionPoint,
+      quickMenuExtensionPoint,
       appModeNavExtensionPoint,
       appModeSecondaryNavExtensionPoint
     ]

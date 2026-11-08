@@ -12,6 +12,7 @@ import type { ResourceIndicator } from '../../resources/useResourceIndicators'
 export type ExtensionType = StringUnionOrAnyString<
   | 'action'
   | 'appMenuItem'
+  | 'quickMenuItem'
   | 'customComponent'
   | 'folderView'
   | 'search'
@@ -109,6 +110,24 @@ export interface AppMenuItemExtension extends Extension {
   path?: string
   priority?: number
   url?: string
+}
+
+/**
+ * Quick menu (lightning button in the top bar): a grid of at most 12 tiles, each an icon with a label.
+ * Apps register what they want reachable from everywhere (dictation, camera, meet, todos, chat …);
+ * the runtime adds theme toggle and preferences. `handler` runs in place, `path` navigates.
+ */
+export interface QuickMenuItemExtension extends Extension {
+  type: 'quickMenuItem'
+  label: () => string
+  icon: string
+  iconFillType?: 'fill' | 'line' | 'none'
+  handler?: () => Promise<void> | void
+  path?: string
+  priority?: number
+  isVisible?: () => boolean
+  /** highlighted tile, e.g. while a recording runs */
+  isActive?: () => boolean
 }
 
 /**
