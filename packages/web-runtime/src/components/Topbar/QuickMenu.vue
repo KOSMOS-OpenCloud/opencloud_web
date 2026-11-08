@@ -22,8 +22,10 @@
       <!-- grid like a phone's quick settings: 3 columns, at most 4 rows -->
       <ul class="quick-menu-grid grid grid-cols-3 gap-1 m-0 p-0 list-none">
         <li v-for="tile in tiles" :key="tile.id" class="flex">
+          <!-- raw-inverse + surface = Schrift/Icon in on-surface, passt zu hellem und dunklem Theme
+               (raw + surface wäre die Flächenfarbe selbst: unsichtbar, Nutzer 2026-11-08); wie ApplicationsMenu -->
           <oc-button
-            :appearance="tile.isActive?.() ? 'filled' : 'raw'"
+            :appearance="tile.isActive?.() ? 'filled' : 'raw-inverse'"
             :color-role="tile.isActive?.() ? 'secondaryContainer' : 'surface'"
             class="quick-menu-tile flex-1 flex-col gap-1 py-3 px-1 rounded-md"
             :data-test-id="tile.id"
