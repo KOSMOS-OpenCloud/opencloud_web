@@ -17,17 +17,18 @@
       mode="click"
       padding-size="small"
       close-on-click
-      class="w-xs"
+      class="w-xs quick-menu-drop"
     >
-      <!-- grid like a phone's quick settings: 3 columns, at most 4 rows -->
-      <ul class="quick-menu-grid grid grid-cols-3 gap-1 m-0 p-0 list-none">
+      <!-- grid like a phone's quick settings: 3 columns, at most 4 rows; each tile on its own rounded
+           surface with spacing, the drop itself half transparent (user 2026-11-08) -->
+      <ul class="quick-menu-grid grid grid-cols-3 gap-2 m-0 p-1 list-none">
         <li v-for="tile in tiles" :key="tile.id" class="flex">
           <!-- raw-inverse + surface = Schrift/Icon in on-surface, passt zu hellem und dunklem Theme
                (raw + surface wäre die Flächenfarbe selbst: unsichtbar, Nutzer 2026-11-08); wie ApplicationsMenu -->
           <oc-button
             :appearance="tile.isActive?.() ? 'filled' : 'raw-inverse'"
             :color-role="tile.isActive?.() ? 'secondaryContainer' : 'surface'"
-            class="quick-menu-tile flex-1 flex-col gap-1 py-3 px-1 rounded-md"
+            class="quick-menu-tile flex-1 flex-col gap-1 py-3 px-1 rounded-xl bg-role-surface-container-high"
             :data-test-id="tile.id"
             v-bind="attributesFor(tile)"
             v-on="eventsFor(tile)"
@@ -119,3 +120,12 @@ export default defineComponent({
   }
 })
 </script>
+
+<style scoped>
+/* half transparent menu surface with a slight blur; tiles keep their own opaque surface */
+.quick-menu-drop :deep(.oc-drop) {
+  background-color: color-mix(in srgb, var(--oc-role-surface) 50%, transparent);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+</style>
