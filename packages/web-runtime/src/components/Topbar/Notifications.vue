@@ -179,6 +179,10 @@ export default {
           }
         }
       }
+      // OpenDock dApps (chat, tudu): Web-Route aus der Benachrichtigung
+      if (object_type === 'dock' && messageRichParameters.dock?.route?.startsWith('/')) {
+        return { path: messageRichParameters.dock.route }
+      }
       if (object_type === 'mention' || messageRichParameters.resource?.id) {
         return {
           name: 'resolvePrivateLink',
