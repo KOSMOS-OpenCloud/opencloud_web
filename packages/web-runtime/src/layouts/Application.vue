@@ -26,6 +26,7 @@
             v-for="name in ['default', 'app', 'fullscreen']"
             :key="`router-view-${name}`"
             class="app-content border w-full bg-role-surface rounded-l-xl transition-all duration-350 ease-[cubic-bezier(0.34,0.11,0,1.12)]"
+            :class="{ '[&_#app-sidebar]:hidden': globalSideBarVisible }"
             :name="name"
           />
           <!-- Globale rechte Seitenleiste (kosmos): nur auf Anforderung (oc:global-sidebar) und nur, wenn die App keine eigene zeigt -->
@@ -129,7 +130,8 @@ const isSidebarVisible = computed(() => {
 })
 
 // Globale rechte Seitenleiste: Panels aus app.runtime.sidebar, geöffnet per Fenster-Ereignis (z. B. Quick-Menü „Chat“).
-// Hat die aktive App eine eigene SideBar (#app-sidebar), wird nur deren Panel geöffnet, sonst rendert die Hülle selbst.
+// Im Dateibereich (eigene FileSideBar mit global.files.sidebar) öffnet nur das Panel; in allen anderen Apps rendert
+// die Hülle ihre Seitenleiste und blendet eine App-eigene (#app-sidebar im router-view) so lange aus.
 const sideBarStore = useSideBar()
 const router = useRouter()
 const globalSideBarRequested = ref(false)
@@ -141,7 +143,7 @@ const globalSideBarVisible = computed(
 const onGlobalSideBar = async (event: Event) => {
   const panel = (event as CustomEvent<{ panel?: string }>).detail?.panel
   if (!panel) return
-  if (!document.getElementById('app-sidebar')) globalSideBarRequested.value = true
+  if (unref(activeApp) !== 'files') globalSideBarRequested.value = true
   await nextTick()
   sideBarStore.openSideBarPanel(panel)
 }
