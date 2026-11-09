@@ -2,6 +2,7 @@
   <div id="oc-notifications" class="flex">
     <notification-bell :notification-count="notifications.length" />
     <oc-drop
+      ref="dropRef"
       :title="$gettext('Notifications')"
       drop-id="oc-notifications-drop"
       toggle="#oc-notifications-bell"
@@ -42,9 +43,12 @@
             class="oc-notifications-item [&>a]:text-role-on-surface z-1000 relative"
           >
             <component
-              :is="el.computedLink ? 'router-link' : 'div'"
+              :is="el.computedLink ? 'router-link' : isDock(el) ? 'button' : 'div'"
               class="flex items-center gap-2"
+              :class="{ 'w-full text-left cursor-pointer': isDock(el) }"
               :to="el.computedLink"
+              :type="isDock(el) ? 'button' : undefined"
+              @click="openDock(el)"
             >
               <user-avatar
                 :user-id="el.messageRichParameters?.user?.id || el.user"
@@ -84,6 +88,9 @@ import { computed, onMounted, onUnmounted, Ref, ref, unref } from 'vue'
 import isEmpty from 'lodash-es/isEmpty'
 import escape from 'lodash-es/escape'
 import {
+  useExtensionRegistry,
+  useRouter,
+  NotificationHandlerExtension,
   useCapabilityStore,
   useSpacesStore,
   createFileRouteOptions,
@@ -99,6 +106,7 @@ import { useTask } from 'vue-concurrency'
 import { MESSAGE_TYPE } from '@opencloud-eu/web-client/sse'
 import { call } from '@opencloud-eu/web-client'
 import { AxiosHeaders } from 'axios'
+import { notificationHandlerExtensionPoint } from '../../extensionPoints'
 
 const POLLING_INTERVAL = 30000
 
@@ -112,6 +120,9 @@ export default {
     const capabilityStore = useCapabilityStore()
     const clientService = useClientService()
     const language = useGettext()
+    const extensionRegistry = useExtensionRegistry()
+    const router = useRouter()
+    const dropRef = ref<{ hide: () => void }>()
 
     const notifications: Ref<Notification[]> = ref([])
     const notificationsInterval = ref<ReturnType<typeof setInterval>>()
@@ -179,9 +190,9 @@ export default {
           }
         }
       }
-      // OpenDock dApps (chat, tudu): Web-Route aus der Benachrichtigung
-      if (object_type === 'dock' && messageRichParameters.dock?.route?.startsWith('/')) {
-        return { path: messageRichParameters.dock.route }
+      // OpenDock dApps: Klick über openDock (Handler der App, sonst Route), kein router-link
+      if (object_type === 'dock') {
+        return null
       }
       if (object_type === 'mention' || messageRichParameters.resource?.id) {
         return {
@@ -228,6 +239,49 @@ export default {
         notifications.value = unref(notifications).filter((n) => !ids.includes(n.notification_id))
       }
     }).restartable()
+
+    function isDock({ messageRichParameters, object_type }: Notification) {
+      return (
+        object_type === 'dock' &&
+        !!messageRichParameters?.dock?.plugin &&
+        !!messageRichParameters?.dock?.id
+      )
+    }
+
+    // Handler der App, die sich für das Plugin der Benachrichtigung angemeldet hat (kosmos 2026-11-09). Erst beim
+    // Klick gesucht: Apps registrieren ihre Erweiterungen u. U. nach dem Laden der Benachrichtigungen.
+    function getDockHandler(notification: Notification) {
+      if (!isDock(notification)) {
+        return null
+      }
+      const dock = notification.messageRichParameters.dock
+      const handlers = extensionRegistry.requestExtensions(notificationHandlerExtensionPoint)
+      return (
+        handlers.find(
+          (handler: NotificationHandlerExtension) =>
+            handler.plugin === dock.plugin &&
+            (!handler.kinds?.length || handler.kinds.includes(dock.kind))
+        ) || null
+      )
+    }
+
+    async function openDock(notification: Notification) {
+      if (!isDock(notification)) {
+        return
+      }
+      const dock = notification.messageRichParameters.dock
+      const handler = getDockHandler(notification)
+      unref(dropRef)?.hide()
+      try {
+        if (handler) {
+          await handler.open({ plugin: dock.plugin, kind: dock.kind || '', id: dock.id })
+        } else if (dock.route?.startsWith('/')) {
+          await router.push({ path: dock.route })
+        }
+      } catch (e) {
+        console.error(e)
+      }
+    }
 
     const setAdditionalNotificationData = (notification: Notification) => {
       notification.computedMessage = getMessage(notification)
@@ -280,7 +334,10 @@ export default {
       formatDate,
       formatDateRelative,
       getMessage,
-      getLink
+      getLink,
+      dropRef,
+      isDock,
+      openDock
     }
   }
 }

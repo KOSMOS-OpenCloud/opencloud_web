@@ -13,6 +13,7 @@ export type ExtensionType = StringUnionOrAnyString<
   | 'action'
   | 'appMenuItem'
   | 'quickMenuItem'
+  | 'notificationHandler'
   | 'customComponent'
   | 'folderView'
   | 'search'
@@ -128,6 +129,20 @@ export interface QuickMenuItemExtension extends Extension {
   isVisible?: () => boolean
   /** highlighted tile, e.g. while a recording runs */
   isActive?: () => boolean
+}
+
+/**
+ * Notification handler (bell): opens what an OpenDock notification (object_type `dock`) refers to.
+ * The notification names plugin, kind and object id (e.g. chat / message / <room id>); the app that registered
+ * for that plugin decides how to open it (e.g. the chat in the right sidebar). No web routes in notifications.
+ */
+export interface NotificationHandlerExtension extends Extension {
+  type: 'notificationHandler'
+  /** dApp plugin the handler is responsible for, e.g. "chat" */
+  plugin: string
+  /** kinds within the plugin; empty = all */
+  kinds?: string[]
+  open: (target: { plugin: string; kind: string; id: string }) => Promise<void> | void
 }
 
 /**

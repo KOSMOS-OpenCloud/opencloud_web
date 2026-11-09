@@ -3,6 +3,7 @@ import {
   AppMenuItemExtension,
   CustomComponentExtension,
   QuickMenuItemExtension,
+  NotificationHandlerExtension,
   SidebarPanelExtension,
   Extension,
   ExtensionPoint,
@@ -73,6 +74,13 @@ export const globalSideBarExtensionPoint: ExtensionPoint<SidebarPanelExtension<a
   multiple: true
 }
 
+// Glocke (kosmos 2026-11-09): Apps öffnen Benachrichtigungen ihrer dApp (object_type dock, plugin/kind/id)
+export const notificationHandlerExtensionPoint: ExtensionPoint<NotificationHandlerExtension> = {
+  id: 'app.runtime.notifications.open',
+  extensionType: 'notificationHandler',
+  multiple: true
+}
+
 export const appModeNavExtensionPoint: ExtensionPoint<CustomComponentExtension> = {
   id: 'app.runtime.appMode.primaryNav',
   extensionType: 'customComponent',
@@ -96,6 +104,7 @@ export const extensionPoints = () => {
       topBarAppActionsExtensionPoint,
       topBarRightExtensionPoint,
       quickMenuExtensionPoint,
+      notificationHandlerExtensionPoint,
       appModeNavExtensionPoint,
       appModeSecondaryNavExtensionPoint
     ]
