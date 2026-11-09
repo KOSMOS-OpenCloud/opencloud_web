@@ -28,6 +28,13 @@
             class="app-content border w-full bg-role-surface rounded-l-xl transition-all duration-350 ease-[cubic-bezier(0.34,0.11,0,1.12)]"
             :name="name"
           />
+          <!-- Globale rechte Seitenleiste (kosmos): nur auf Anforderung (oc:global-sidebar) und nur, wenn die App keine eigene zeigt -->
+          <side-bar
+            v-if="globalSideBarVisible"
+            :available-panels="globalSideBarPanels"
+            :panel-context="globalSideBarContext"
+            :loading="false"
+          />
         </template>
       </div>
 
@@ -50,8 +57,10 @@ import {
   CustomComponentExtension,
   CustomComponentTarget,
   FloatingActionButtonExtension,
+  SideBar,
   useActiveApp,
-  useExtensionRegistry
+  useExtensionRegistry,
+  useSideBar
 } from '@opencloud-eu/web-pkg'
 import { useIsMobile } from '@opencloud-eu/design-system/composables'
 import TopBar from '../components/Topbar/TopBar.vue'
@@ -59,9 +68,10 @@ import MessageBar from '../components/MessageBar.vue'
 import SidebarNav from '../components/SidebarNav/SidebarNav.vue'
 import UploadInfo from '../components/UploadInfo.vue'
 import { useRouteMeta, useSpacesLoading, useNavItems, useAppModeStore, useAppCompactStore } from '@opencloud-eu/web-pkg'
-import { computed, nextTick, onMounted, unref } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, unref, watch } from 'vue'
+import { useRouter } from 'vue-router'
 import { useGettext } from 'vue3-gettext'
-import { progressBarExtensionPoint } from '../extensionPoints'
+import { globalSideBarExtensionPoint, progressBarExtensionPoint } from '../extensionPoints'
 import AppFloatingActionButton from '../components/AppFloatingActionButton.vue'
 
 const { $gettext } = useGettext()
@@ -117,6 +127,28 @@ const isSidebarVisible = computed(() => {
     (unref(navItems).length || unref(hasFloatingActionButton) || unref(hasSidebarNavExtension))
   )
 })
+
+// Globale rechte Seitenleiste: Panels aus app.runtime.sidebar, geöffnet per Fenster-Ereignis (z. B. Quick-Menü „Chat“).
+// Hat die aktive App eine eigene SideBar (#app-sidebar), wird nur deren Panel geöffnet, sonst rendert die Hülle selbst.
+const sideBarStore = useSideBar()
+const router = useRouter()
+const globalSideBarRequested = ref(false)
+const globalSideBarPanels = computed(() => requestExtensions(globalSideBarExtensionPoint).map((e) => e.panel))
+const globalSideBarContext = { parent: null, items: [] } as any
+const globalSideBarVisible = computed(
+  () => unref(globalSideBarRequested) && unref(globalSideBarPanels).length > 0 && sideBarStore.isSideBarOpen
+)
+const onGlobalSideBar = async (event: Event) => {
+  const panel = (event as CustomEvent<{ panel?: string }>).detail?.panel
+  if (!panel) return
+  if (!document.getElementById('app-sidebar')) globalSideBarRequested.value = true
+  await nextTick()
+  sideBarStore.openSideBarPanel(panel)
+}
+onMounted(() => window.addEventListener('oc:global-sidebar', onGlobalSideBar))
+onBeforeUnmount(() => window.removeEventListener('oc:global-sidebar', onGlobalSideBar))
+watch(() => router.currentRoute.value.path, () => { globalSideBarRequested.value = false })
+watch(() => sideBarStore.isSideBarOpen, (open) => { if (!open) globalSideBarRequested.value = false })
 
 const isIE11 = !!(window as any).MSInputMethodContext && !!(document as any).documentMode
 

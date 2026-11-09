@@ -3,6 +3,7 @@ import {
   AppMenuItemExtension,
   CustomComponentExtension,
   QuickMenuItemExtension,
+  SidebarPanelExtension,
   Extension,
   ExtensionPoint,
   $gettext
@@ -60,6 +61,15 @@ export const topBarRightExtensionPoint: ExtensionPoint<CustomComponentExtension>
 export const quickMenuExtensionPoint: ExtensionPoint<QuickMenuItemExtension> = {
   id: 'app.runtime.header.quick-menu',
   extensionType: 'quickMenuItem',
+  multiple: true
+}
+
+// Globale rechte Seitenleiste (kosmos 2026-11-10): Panels, die von überall angefordert werden können (Chat der
+// Station). Anforderung per Fenster-Ereignis `oc:global-sidebar` {panel}, weil der eventBus zwischen MF-Modulen isoliert
+// ist; Application.vue rendert die SideBar nur, solange keine App-eigene Seitenleiste (#app-sidebar) im DOM steht.
+export const globalSideBarExtensionPoint: ExtensionPoint<SidebarPanelExtension<any, any, any>> = {
+  id: 'app.runtime.sidebar',
+  extensionType: 'sidebarPanel',
   multiple: true
 }
 
