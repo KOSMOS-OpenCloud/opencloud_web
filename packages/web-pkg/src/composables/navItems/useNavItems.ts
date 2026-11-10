@@ -9,6 +9,7 @@ import {
   useExtensionRegistry
 } from '../piniaStores'
 import { useActiveApp } from '../router'
+import { useEmbedMode } from '../embedMode'
 import { AppNavigationItem } from '../../apps'
 
 export interface NavItem extends Omit<AppNavigationItem, 'name'> {
@@ -18,16 +19,21 @@ export interface NavItem extends Omit<AppNavigationItem, 'name'> {
 
 export const getExtensionNavItems = ({
   extensionRegistry,
-  appId
+  appId,
+  ownItemsOnly = false
 }: {
   extensionRegistry: ExtensionRegistry
   appId: string
+  ownItemsOnly?: boolean
 }) =>
   extensionRegistry
     .requestExtensions<SidebarNavExtension>({
       id: `app.${appId}.navItems`,
       extensionType: 'sidebarNav'
     })
+    // items announced by the app itself have the id app.<appId>.<name>, items of other apps
+    // (e.g. dApps like Todos or Rooms in the files navigation) have their own ids
+    .filter(({ id }) => !ownItemsOnly || id.startsWith(`app.${appId}.`))
     .map(({ navItem }) => navItem)
     .filter((n) => !Object.hasOwn(n, 'isVisible') || n.isVisible())
 
@@ -39,8 +45,15 @@ export const useNavItems = () => {
   const activeApp = useActiveApp()
   const extensionRegistry = useExtensionRegistry()
 
+  const { isEnabled: isEmbedModeEnabled } = useEmbedMode()
+
   const extensionNavItems = computed(() => {
-    return getExtensionNavItems({ extensionRegistry, appId: unref(activeApp) })
+    // pickers (embed mode) only navigate files, so items of other apps are hidden there
+    return getExtensionNavItems({
+      extensionRegistry,
+      appId: unref(activeApp),
+      ownItemsOnly: unref(isEmbedModeEnabled)
+    })
   })
 
   const navItems = computed<NavItem[]>(() => {

@@ -137,6 +137,10 @@ const iframeSrc = iframeUrl.href
     @apply overflow-hidden;
     max-width: 90vw;
   }
+  /* about half the screen (e.g. Save as), but wide enough for the file list on small screens */
+  .location-picker-modal.location-picker-modal-narrow {
+    max-width: max(50vw, min(90vw, 56rem));
+  }
 
   .location-picker-modal .oc-modal-body {
     @apply p-0;

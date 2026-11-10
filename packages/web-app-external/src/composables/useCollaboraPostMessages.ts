@@ -93,7 +93,7 @@ export function useCollaboraPostMessages({
     const format = message.Values?.format as string | undefined
 
     dispatchModal({
-      elementClass: 'location-picker-modal',
+      elementClass: 'location-picker-modal location-picker-modal-narrow',
       title: format
         ? $gettext('Export »%{name}« as %{format}', { name: currentResource.name, format })
         : $gettext('Save »%{name}« as', { name: currentResource.name }),
