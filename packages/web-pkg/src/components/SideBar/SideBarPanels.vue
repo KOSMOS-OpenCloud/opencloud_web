@@ -21,7 +21,11 @@
         class="sidebar-panel__header header grid grid-cols-[1fr_auto] items-center pt-2 px-2 pb-2"
       >
         <div class="sidebar-panel__header-info min-w-0">
-          <slot v-if="panel.isRoot?.(panelContext)" name="rootHeader" />
+          <span v-if="panel.ownHeader" class="flex items-center gap-2 min-w-0 px-1">
+            <oc-icon :name="panel.icon" :fill-type="panel.iconFillType" />
+            <span class="truncate font-semibold" v-text="panel.title(panelContext)" />
+          </span>
+          <slot v-else-if="panel.isRoot?.(panelContext)" name="rootHeader" />
           <slot v-else name="subHeader" />
         </div>
 

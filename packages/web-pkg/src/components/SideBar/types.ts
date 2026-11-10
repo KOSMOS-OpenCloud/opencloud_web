@@ -21,4 +21,9 @@ export interface SideBarPanel<R extends Item, P extends Item, T extends Item> {
    * In the long run this should be configured by admins or even users, as it's ideally not to be decided by extension developer.
    */
   isRoot?(context: SideBarPanelContext<R, P, T>): boolean
+  /**
+   * kosmos: Panel ohne Bezug zur gewählten Ressource (z. B. Chat der Station). Der Kopf zeigt dann Icon und Titel des
+   * Panels statt der Datei-/Space-Info des aktuellen Ordners (vorher stand dort z. B. „Persönlich“).
+   */
+  ownHeader?: boolean
 }
