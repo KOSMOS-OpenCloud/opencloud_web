@@ -246,7 +246,7 @@ describe('useCollaboraPostMessages', () => {
   })
 
   describe('UI_SaveAs message', () => {
-    it('dispatches FileNameModal with format name in title when format is provided', async () => {
+    it('dispatches the location picker with export button when format is provided', async () => {
       const { instance } = getWrapper()
 
       await instance.handlePostMessagesCollabora(
@@ -255,20 +255,14 @@ describe('useCollaboraPostMessages', () => {
 
       const { dispatchModal } = useModals()
       expect(dispatchModal).toHaveBeenCalledOnce()
+      const { customComponentAttrs } = vi.mocked(dispatchModal).mock.calls[0][0]
+      expect(customComponentAttrs()).toMatchObject({
+        chooseFileName: true,
+        submitButtonTitle: 'Export'
+      })
     })
 
-    it('passes the format as fileExtension to the modal component attrs when format is provided', async () => {
-      const { instance } = getWrapper()
-
-      await instance.handlePostMessagesCollabora(
-        createMessageEvent({ MessageId: 'UI_SaveAs', Values: { format: 'docx' } })
-      )
-
-      const { dispatchModal } = useModals()
-      expect(dispatchModal).toHaveBeenCalled()
-    })
-
-    it('dispatches FileNameModal with save-as title when no format is provided', async () => {
+    it('dispatches the location picker with the current file name when no format is provided', async () => {
       const { instance } = getWrapper()
 
       await instance.handlePostMessagesCollabora(
@@ -276,7 +270,13 @@ describe('useCollaboraPostMessages', () => {
       )
 
       const { dispatchModal } = useModals()
-      expect(dispatchModal).toHaveBeenCalled()
+      expect(dispatchModal).toHaveBeenCalledOnce()
+      const { customComponentAttrs } = vi.mocked(dispatchModal).mock.calls[0][0]
+      expect(customComponentAttrs()).toMatchObject({
+        chooseFileName: true,
+        chooseFileNameSuggestion: 'test.odt',
+        submitButtonTitle: 'Save'
+      })
     })
   })
 
