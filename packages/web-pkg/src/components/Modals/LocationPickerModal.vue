@@ -140,7 +140,7 @@ const iframeSrc = iframeUrl.href
   /* about half the screen (e.g. Save as), but wider than the tablet breakpoint (960px) of the
      embedded file list, so its navigation stays on the left instead of a menu button */
   .location-picker-modal.location-picker-modal-narrow {
-    max-width: max(50vw, min(90vw, 62rem));
+    max-width: max(50vw, min(90vw, 1000px));
   }
 
   .location-picker-modal .oc-modal-body {
