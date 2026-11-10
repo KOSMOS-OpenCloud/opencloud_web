@@ -130,7 +130,8 @@ export const extensions = (appInfo: ApplicationInformation) => {
           !(
             unref(isTablet) &&
             unref(sideBarStore.isSideBarOpen) &&
-            sideBarStore.sideBarActivePanel === 'chat-with-file'
+            // Chat-Panels verdecken sonst den Senden-Knopf: chat-with-file, Raum-Chat global (rooms-chat) und in der Raumliste
+            ['chat-with-file', 'rooms-chat', 'RoomChatPanel'].includes(sideBarStore.sideBarActivePanel || '')
           ),
         get dropComponent() { return activeAction()?.dropComponent || markRaw(CreateOrUploadMenu) },
       } as FloatingActionButtonExtension
