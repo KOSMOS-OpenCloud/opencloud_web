@@ -28,6 +28,11 @@ export class HttpClient {
     }
   }
 
+  /** axios-Instanz für Interceptors (kosmos: Token-Wiederholung bei 401) */
+  public get axiosInstance(): AxiosInstance {
+    return this.instance
+  }
+
   public cancel(msg?: string): void {
     this.cancelToken.cancel(msg)
   }

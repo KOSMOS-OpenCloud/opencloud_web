@@ -1,4 +1,5 @@
 export * from './ability'
+export * from './accessToken'
 export * from './actions'
 export * from './appDefaults'
 export * from './appMode'

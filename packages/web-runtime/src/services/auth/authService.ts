@@ -7,7 +7,9 @@ import {
   CapabilityStore,
   ConfigStore,
   useTokenTimerWorker,
-  AuthServiceInterface
+  AuthServiceInterface,
+  refreshAccessToken,
+  setTokenRefresher
 } from '@opencloud-eu/web-pkg'
 import { RouteLocation, Router } from 'vue-router'
 import {
@@ -110,6 +112,10 @@ export class AuthService implements AuthServiceInterface {
         accessTokenExpiryThreshold: this.accessTokenExpiryThreshold,
         router: this.router
       })
+
+      // kosmos (OPENCORE_SESSION.md §3.1): eine Erneuerungsstelle für 401-Wiederholung, useAccessToken und Aufwachen
+      setTokenRefresher(() => this.signinSilent())
+      this.registerWakeRenewal()
 
       if (!this.tokenTimerWorker) {
         const { options } = this.configStore
@@ -233,6 +239,36 @@ export class AuthService implements AuthServiceInterface {
   public loginUser(redirectUrl?: string) {
     this.userManager.setPostLoginRedirectUrl(redirectUrl)
     return this.userManager.signinRedirect()
+  }
+
+  private wakeRenewalRegistered = false
+
+  /**
+   * Handy und gesperrter Bildschirm drosseln den Erneuerungs-Timer im Web-Worker. Beim Aufwachen der Seite (sichtbar,
+   * aus dem bfcache, wieder online) sofort erneuern, wenn der Token abgelaufen ist oder in weniger als 30 s abläuft.
+   */
+  private registerWakeRenewal() {
+    if (this.wakeRenewalRegistered || typeof window === 'undefined') {
+      return
+    }
+    this.wakeRenewalRegistered = true
+    const renewIfDue = async () => {
+      if (document.visibilityState !== 'visible' || !this.userManager) {
+        return
+      }
+      const user = await this.userManager.getUser()
+      if (!user || (user.expires_in !== undefined && user.expires_in > 30)) {
+        return
+      }
+      try {
+        await refreshAccessToken()
+      } catch {
+        // Timer-Worker und handleAuthError übernehmen den Fehlerfall
+      }
+    }
+    document.addEventListener('visibilitychange', renewIfDue)
+    window.addEventListener('pageshow', renewIfDue)
+    window.addEventListener('online', renewIfDue)
   }
 
   public async signinSilent() {

@@ -12,6 +12,7 @@ import { FetchEventSourceInit } from '@microsoft/fetch-event-source'
 import { sse } from '@opencloud-eu/web-client/sse'
 import { AuthStore, ConfigStore } from '../../composables'
 import { createVaultWebDav } from './vaultWebDav'
+import { installTokenRetry } from './tokenRefresh'
 
 const createFetchOptions = (authParams: AuthParameters, language: string): FetchEventSourceInit => {
   return {
@@ -67,6 +68,7 @@ export class ClientService {
         return config
       }
     )
+    installTokenRetry(this.httpAuthenticatedClient.axiosInstance)
     this.httpUnAuthenticatedClient = new HttpClient(
       { baseURL: this.configStore.serverUrl, headers: this.staticHeaders },
       (config) => {
@@ -124,6 +126,7 @@ export class ClientService {
       Object.assign(config.headers, this.getDynamicHeaders())
       return config
     })
+    installTokenRetry(axiosClient)
     this.graphClient = graph(this.configStore.serverUrl, axiosClient)
   }
 
@@ -133,6 +136,7 @@ export class ClientService {
       Object.assign(config.headers, this.getDynamicHeaders())
       return config
     })
+    installTokenRetry(axiosClient)
     this.ocsClient = ocs(this.configStore.serverUrl, axiosClient)
   }
 
@@ -142,6 +146,7 @@ export class ClientService {
       Object.assign(config.headers, this.getDynamicHeaders())
       return config
     })
+    installTokenRetry(axiosClient)
     this.oxClient = ox(axiosClient, () => this.configStore.options.oxAppSuite?.apiUrl)
   }
 
