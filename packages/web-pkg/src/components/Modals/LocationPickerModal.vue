@@ -137,9 +137,10 @@ const iframeSrc = iframeUrl.href
     @apply overflow-hidden;
     max-width: 90vw;
   }
-  /* about half the screen (e.g. Save as), but wide enough for the file list on small screens */
+  /* about half the screen (e.g. Save as), but wider than the tablet breakpoint (960px) of the
+     embedded file list, so its navigation stays on the left instead of a menu button */
   .location-picker-modal.location-picker-modal-narrow {
-    max-width: max(50vw, min(90vw, 56rem));
+    max-width: max(50vw, min(90vw, 62rem));
   }
 
   .location-picker-modal .oc-modal-body {
