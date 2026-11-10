@@ -27,11 +27,24 @@ export const useSideBar = defineStore('sideBar', () => {
   // Normal refs, synced with storage via explicit read/write
   const isSideBarOpenRef = ref(readFromStorage('oc_sideBarOpen', false))
   const sideBarIsExpandedRef = ref(readFromStorage('oc_sideBarIsExpanded', false))
+  // pickers (embed mode) start with a closed sidebar and don't touch the stored state of the
+  // regular files view, which shares the local storage (same origin)
+  const embedSideBarOpenRef = ref(false)
 
   const isSideBarOpen = computed(() => {
     if (appModeStore.isEnabled) return false
+    if (unref(isEmbedModeEnabled)) return unref(embedSideBarOpenRef)
     return unref(isSideBarOpenRef)
   })
+
+  const setSideBarOpen = (isOpen: boolean) => {
+    if (unref(isEmbedModeEnabled)) {
+      embedSideBarOpenRef.value = isOpen
+      return
+    }
+    isSideBarOpenRef.value = isOpen
+    writeToStorage('oc_sideBarOpen', isOpen)
+  }
 
   const sideBarIsExpanded = computed(() => unref(sideBarIsExpandedRef))
 
@@ -57,29 +70,25 @@ export const useSideBar = defineStore('sideBar', () => {
     }
   }
   const toggleSideBar = () => {
-    isSideBarOpenRef.value = !unref(isSideBarOpenRef)
-    writeToStorage('oc_sideBarOpen', unref(isSideBarOpenRef))
-    if (unref(isSideBarOpenRef)) {
+    setSideBarOpen(!unref(isSideBarOpen))
+    if (unref(isSideBarOpen)) {
       focusSidebar()
     } else {
       resetExpanded()
     }
   }
   const closeSideBar = () => {
-    isSideBarOpenRef.value = false
-    writeToStorage('oc_sideBarOpen', false)
+    setSideBarOpen(false)
     sideBarActivePanel.value = null
     resetExpanded()
   }
   const openSideBar = () => {
-    isSideBarOpenRef.value = true
-    writeToStorage('oc_sideBarOpen', true)
+    setSideBarOpen(true)
     sideBarActivePanel.value = null
     focusSidebar()
   }
   const openSideBarPanel = (panelName: string) => {
-    isSideBarOpenRef.value = true
-    writeToStorage('oc_sideBarOpen', true)
+    setSideBarOpen(true)
     sideBarActivePanel.value = panelName
     focusSidebar()
   }
@@ -90,8 +99,7 @@ export const useSideBar = defineStore('sideBar', () => {
   const onInitialLoad = () => {
     if (unref(isMobile)) {
       // close sidebar on mobile devices on initial load because it's a bottom drawer
-      isSideBarOpenRef.value = false
-      writeToStorage('oc_sideBarOpen', false)
+      setSideBarOpen(false)
     }
   }
 

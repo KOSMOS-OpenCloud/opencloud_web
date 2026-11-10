@@ -115,12 +115,26 @@ describe('useSideBar', () => {
   describe('embedMode', () => {
     beforeEach(() => {
       localStorageSpy.mockImplementationOnce(() => ref(true))
+      window.localStorage.setItem('oc_sideBarOpen', 'true')
     })
 
     it('should use local ref when embed mode is enabled', () => {
       getWrapper({
         setup: (instance) => {
           expect(instance.isSideBarOpen).toBeFalsy()
+        },
+        embedEnabled: true
+      })
+    })
+
+    it('should not change the stored state when toggled in embed mode', () => {
+      getWrapper({
+        setup: (instance) => {
+          instance.toggleSideBar()
+          expect(instance.isSideBarOpen).toBeTruthy()
+          instance.closeSideBar()
+          expect(instance.isSideBarOpen).toBeFalsy()
+          expect(window.localStorage.getItem('oc_sideBarOpen')).toBe('true')
         },
         embedEnabled: true
       })
