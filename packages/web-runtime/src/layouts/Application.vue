@@ -8,6 +8,9 @@
         <p class="m-0" v-text="ieDeprecationWarning" />
       </div>
       <top-bar />
+      <!-- Dock (kosmos 2026-11-11): auf dem Mobile teleportieren sich Suche und Audio-Player hierher, untereinander.
+           Bewusst außerhalb von #oc-topbar: Themes (win11) setzen dessen Höhe fest, der Inhalt soll nachrutschen. -->
+      <div id="oc-topbar-dock" class="flex flex-col min-w-0 px-2 sm:hidden" />
     </div>
     <div
       id="web-content-main"

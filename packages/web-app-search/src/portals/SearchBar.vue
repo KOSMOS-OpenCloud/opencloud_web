@@ -6,61 +6,70 @@
     class="flex"
     data-custom-key-bindings-disabled="true"
   >
-    <oc-search-bar
-      id="files-global-search-bar"
-      ref="searchInputRef"
-      :model-value="term"
-      :label="searchLabel"
-      :type-ahead="true"
-      :placeholder="searchLabel"
-      :button-hidden="true"
-      :show-cancel-button="showCancelButton"
-      :show-advanced-search-button="listProviderAvailable"
-      cancel-button-appearance="raw-inverse"
-      cancel-button-color-role="chrome"
-      :cancel-handler="cancelSearch"
-      small
-      class="mx-auto sm:mx-0 bg-role-chrome sm:bg-transparent w-[95vw] sm:w-2xs md:w-lg h-12 absolute inset-0 sm:relative invisible sm:visible z-90 sm:z-auto"
-      @advanced-search="onKeyUpEnter"
-      @update:model-value="updateTerm"
-      @clear="onClear"
-      @click="showPreview"
-      @keyup.esc="onClear"
-      @keyup.up="onKeyUpUp"
-      @keyup.down="onKeyUpDown"
-      @keyup.enter="onKeyUpEnter"
-      @keydown.tab="hideOptionsDrop"
-    >
-      <template #locationFilter>
-        <span
-          v-oc-tooltip="folderOnlyActive ? $gettext('Nur Ordner') : $gettext('Alle Ergebnisse')"
-          class="z-[var(--z-index-modal)] absolute top-[50%] transform-[translateY(-50%)] right-0 mr-[170px] inline-flex items-center cursor-pointer [&_.oc-switch>span:first-child]:sr-only"
-        >
-          <oc-switch
-            :checked="folderOnlyActive"
-            :label="$gettext('Nur Ordner')"
-            @update:checked="folderOnlyActive = $event"
+    <!-- Auf dem Mobile wandert das Suchfeld ins Dock unter der Topbar (#oc-topbar-dock, web-runtime TopBar.vue) -->
+    <teleport :to="dockTarget" :disabled="!dockTarget">
+      <oc-search-bar
+        v-show="!isMobile || showCancelButton"
+        id="files-global-search-bar"
+        ref="searchInputRef"
+        :model-value="term"
+        :label="searchLabel"
+        :type-ahead="true"
+        :placeholder="searchLabel"
+        :button-hidden="true"
+        :show-cancel-button="showCancelButton && !isMobile"
+        :show-advanced-search-button="listProviderAvailable"
+        cancel-button-appearance="raw-inverse"
+        cancel-button-color-role="chrome"
+        :cancel-handler="cancelSearch"
+        small
+        class="order-1 my-1 sm:my-0 w-full sm:w-2xs md:w-lg h-10 sm:h-12 relative"
+        @advanced-search="onKeyUpEnter"
+        @update:model-value="updateTerm"
+        @clear="onClear"
+        @click="showPreview"
+        @keyup.esc="onClear"
+        @keyup.up="onKeyUpUp"
+        @keyup.down="onKeyUpDown"
+        @keyup.enter="onKeyUpEnter"
+        @keydown.tab="hideOptionsDrop"
+      >
+        <template #locationFilter>
+          <span
+            v-oc-tooltip="folderOnlyActive ? $gettext('Nur Ordner') : $gettext('Alle Ergebnisse')"
+            class="z-[var(--z-index-modal)] absolute top-[50%] transform-[translateY(-50%)] right-0 mr-[170px] inline-flex items-center cursor-pointer [&_.oc-switch>span:first-child]:sr-only"
+          >
+            <oc-switch
+              :checked="folderOnlyActive"
+              :label="$gettext('Nur Ordner')"
+              @update:checked="folderOnlyActive = $event"
+            />
+          </span>
+          <search-bar-filter
+            v-if="locationFilterAvailable"
+            id="files-global-search-filter"
+            :current-folder-available="currentFolderAvailable"
+            :current-folder-is-in-vault="currentFolderIsInVault"
+            @update:model-value="onLocationFilterChange"
           />
-        </span>
-        <search-bar-filter
-          v-if="locationFilterAvailable"
-          id="files-global-search-filter"
-          :current-folder-available="currentFolderAvailable"
-          :current-folder-is-in-vault="currentFolderIsInVault"
-          @update:model-value="onLocationFilterChange"
-        />
-      </template>
-    </oc-search-bar>
+        </template>
+      </oc-search-bar>
+    </teleport>
     <oc-button
-      v-oc-tooltip="$gettext('Display search bar')"
-      :aria-label="$gettext('Click to display and focus the search bar')"
+      v-oc-tooltip="showCancelButton ? $gettext('Close search bar') : $gettext('Display search bar')"
+      :aria-label="
+        showCancelButton
+          ? $gettext('Click to close the search bar')
+          : $gettext('Click to display and focus the search bar')
+      "
+      :aria-expanded="showCancelButton"
       class="inline-flex sm:hidden mr-6"
       appearance="raw-inverse"
       color-role="chrome"
       no-hover
-      @click="showSearchBar"
+      @click="toggleSearchBar"
     >
-      <oc-icon name="search" fill-type="line"></oc-icon>
+      <oc-icon :name="showCancelButton ? 'close' : 'search'" fill-type="line"></oc-icon>
     </oc-button>
     <oc-drop
       v-if="showDrop"
@@ -184,6 +193,10 @@ export default defineComponent({
     const capabilityStore = useCapabilityStore()
     const showCancelButton = ref(false)
     const { isMobile } = useIsMobile()
+    // Das Dock steht erst nach dem Mounten im DOM. Ohne `defer` am Teleport: dort gehen (Vue 3.5.38) Updates verloren,
+    // die vor dem verzögerten Mount eintreffen (Suchbegriff aus der Route).
+    const isMounted = ref(false)
+    const dockTarget = computed(() => (unref(isMobile) && unref(isMounted) ? '#oc-topbar-dock' : null))
     const scopeQueryValue = useRouteQuery('scope')
     const availableProviders = useAvailableProviders()
     const isAppActive = useIsAppActive()
@@ -227,8 +240,16 @@ export default defineComponent({
       () => unref(optionsDropRef)?.$refs.drop as HTMLElement
     )
 
+    // Auf dem Mobile hängt das Suchfeld per Teleport im Dock und damit nicht mehr unter searchBarRef
+    const getSearchBarElement = () => {
+      return (
+        unref(searchBarRef)?.querySelector<HTMLElement>('#files-global-search-bar') ??
+        document.getElementById('files-global-search-bar')
+      )
+    }
+
     const updateLocationFilterInputPadding = () => {
-      const inputElement = unref(searchBarRef)?.querySelector('.oc-search-input') as HTMLElement
+      const inputElement = getSearchBarElement()?.querySelector('.oc-search-input') as HTMLElement
       if (!inputElement) {
         return
       }
@@ -238,7 +259,7 @@ export default defineComponent({
         return
       }
 
-      const locationFilterElement = unref(searchBarRef)?.querySelector(
+      const locationFilterElement = getSearchBarElement()?.querySelector(
         '#files-global-search-filter'
       ) as HTMLElement
       if (!locationFilterElement) {
@@ -455,7 +476,7 @@ export default defineComponent({
     const { bindKeyAction } = useKeyboardActions()
 
     const onSearchShortcut = (event: KeyboardEvent) => {
-      const inputElement = unref(searchBarRef)?.querySelector('input') as HTMLElement
+      const inputElement = getSearchBarElement()?.querySelector('input') as HTMLElement
       inputElement?.focus()
     }
 
@@ -464,6 +485,7 @@ export default defineComponent({
     bindKeyAction({ primary: Key.Slash, modifier: Modifier.Shift }, onSearchShortcut)
 
     onMounted(() => {
+      isMounted.value = true
       updateLocationFilterInputPadding()
     })
     onBeforeUnmount(() => {
@@ -480,6 +502,9 @@ export default defineComponent({
       userContextReady,
       publicLinkContextReady,
       showCancelButton,
+      isMobile,
+      dockTarget,
+      updateLocationFilterInputPadding,
       dropElement,
       onLocationFilterChange,
       currentFolderAvailable,
@@ -647,6 +672,17 @@ export default defineComponent({
       inputElement.focus()
 
       this.showCancelButton = true
+      // im Dock ist das Suchfeld bis hierher ausgeblendet, der Standortfilter hatte noch keine Breite
+      this.$nextTick(() => this.updateLocationFilterInputPadding())
+    },
+    toggleSearchBar() {
+      if (!this.showCancelButton) {
+        this.showSearchBar()
+        return
+      }
+      // wie „Abbrechen“ im Suchfeld: Begriff verwerfen, Vorschau und Suchfeld schließen
+      this.updateTerm('')
+      this.cancelSearch()
     },
     cancelSearch() {
       document.getElementById('files-global-search-bar').style.visibility = 'hidden'
@@ -663,14 +699,17 @@ export default defineComponent({
 
 @layer utilities {
   #files-global-search #files-global-search-bar input,
-  #files-global-search #files-global-search-bar input:not(:placeholder-shown) {
+  #files-global-search #files-global-search-bar input:not(:placeholder-shown),
+  #oc-topbar-dock #files-global-search-bar input,
+  #oc-topbar-dock #files-global-search-bar input:not(:placeholder-shown) {
     @apply z-[var(--z-index-modal)] sm:z-auto;
   }
 
   #files-global-search-options {
     max-height: calc(100vh - 60px);
   }
-  #files-global-search .oc-search-input {
+  #files-global-search .oc-search-input,
+  #oc-topbar-dock .oc-search-input {
     @apply inline sm:block transition-none bg-role-surface;
   }
 
