@@ -58,6 +58,16 @@ export const topBarRightExtensionPoint: ExtensionPoint<CustomComponentExtension>
   multiple: true
 }
 
+// Dock-Widgets (kosmos 2026-11-11): Widgets von Apps für die Kopfzeile (z. B. Recorder), siehe DockWidgets.vue.
+// Desktop: rechts in der Topbar neben dem Audio-Player; Mobile (< 640px): als Zeile im Dock unter der Topbar
+// (#oc-topbar-dock, nach Suche und Audio-Player). Ein Widget ohne Inhalt rendert nichts; den Abstand im Dock
+// (my-1) bringt das Widget selbst mit.
+export const topBarDockExtensionPoint: ExtensionPoint<CustomComponentExtension> = {
+  id: 'app.runtime.header.dock',
+  extensionType: 'customComponent',
+  multiple: true
+}
+
 // Quick menu: lightning button in the top bar, tiles from apps (see QuickMenu.vue)
 export const quickMenuExtensionPoint: ExtensionPoint<QuickMenuItemExtension> = {
   id: 'app.runtime.header.quick-menu',
@@ -103,6 +113,7 @@ export const extensionPoints = () => {
       topBarLeftExtensionPoint,
       topBarAppActionsExtensionPoint,
       topBarRightExtensionPoint,
+      topBarDockExtensionPoint,
       quickMenuExtensionPoint,
       notificationHandlerExtensionPoint,
       appModeNavExtensionPoint,

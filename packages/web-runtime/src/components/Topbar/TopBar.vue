@@ -28,6 +28,7 @@
     <div class="flex items-center justify-end gap-5 col-3">
       <template v-if="!isEmbedModeEnabled">
         <audio-player />
+        <dock-widgets />
         <custom-component-target :extension-point="topBarRightExtensionPoint" />
         <quick-menu />
         <feedback-link v-if="isFeedbackLinkEnabled" v-bind="feedbackLinkOptions" />
@@ -83,6 +84,7 @@ import { RouteLocationNormalizedLoaded } from 'vue-router'
 import { useGettext } from 'vue3-gettext'
 import ApplicationsMenu from './ApplicationsMenu.vue'
 import AudioPlayer from './AudioPlayer.vue'
+import DockWidgets from './DockWidgets.vue'
 import JobStatus from './JobStatus.vue'
 import QuickMenu from './QuickMenu.vue'
 
