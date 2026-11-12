@@ -16,15 +16,17 @@
 import SkipTo from './components/SkipTo.vue'
 import ModalWrapper from './components/ModalWrapper.vue'
 import { useLayout } from './composables/layout'
-import { onMounted, ref, unref } from 'vue'
+import { onMounted, ref, unref, watch } from 'vue'
 import { additionalTranslations } from './helpers/additionalTranslations' // eslint-disable-line
 import {
   eventBus,
   isLocationSpacesActive,
   useRouter,
   useSideBar,
+  useSpacesStore,
   useThemeStore
 } from '@opencloud-eu/web-pkg'
+import { useDesktopBackground } from './composables/desktopBackground'
 import { RouteLocation, useRoute } from 'vue-router'
 import { storeToRefs } from 'pinia'
 import { useGettext } from 'vue3-gettext'
@@ -39,6 +41,19 @@ const { layout, layoutType } = useLayout({ router })
 
 const { onInitialLoad } = useSideBar()
 onInitialLoad()
+
+// desktop background of the user: available as soon as the personal space is known
+const spacesStore = useSpacesStore()
+const { loadDesktopBackground } = useDesktopBackground()
+watch(
+  () => spacesStore.personalSpace?.id,
+  (personalSpaceId) => {
+    if (personalSpaceId) {
+      loadDesktopBackground().catch((e) => console.error(e))
+    }
+  },
+  { immediate: true }
+)
 
 const announcement = ref<string>()
 

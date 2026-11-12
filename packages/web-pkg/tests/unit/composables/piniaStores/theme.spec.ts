@@ -60,4 +60,33 @@ describe('useThemeStore', () => {
       })
     })
   })
+
+  describe('signature color', () => {
+    it('sets and removes the custom property --oc-signature', () => {
+      vi.mocked(useLocalStorage).mockReturnValue(ref<string>(null))
+      const store = useThemeStore()
+
+      store.setSignatureColor('#00aa55')
+      expect(document.documentElement.style.getPropertyValue('--oc-signature')).toBe('#00aa55')
+
+      store.setSignatureColor(null)
+      expect(document.documentElement.style.getPropertyValue('--oc-signature')).toBe('')
+    })
+  })
+
+  describe('background image', () => {
+    it('sets and removes the custom property --oc-background', () => {
+      URL.revokeObjectURL = vi.fn()
+      const store = useThemeStore()
+
+      store.setBackgroundImage('blob:first')
+      expect(document.documentElement.style.getPropertyValue('--oc-background')).toBe(
+        'url("blob:first")'
+      )
+
+      store.setBackgroundImage(null)
+      expect(URL.revokeObjectURL).toHaveBeenCalledWith('blob:first')
+      expect(document.documentElement.style.getPropertyValue('--oc-background')).toBe('')
+    })
+  })
 })

@@ -58,6 +58,7 @@
             <theme-switcher />
           </oc-table-td>
         </oc-table-tr>
+        <appearance-settings />
         <oc-table-tr v-if="showNotifications && !canConfigureSpecificNotifications">
           <oc-table-td>{{ $gettext('Notifications') }}</oc-table-td>
           <oc-table-td v-if="!isMobile">
@@ -181,6 +182,7 @@ import {
 } from '@opencloud-eu/web-pkg'
 import { useIsMobile } from '@opencloud-eu/design-system/composables'
 import ThemeSwitcher from '../../components/Account/ThemeSwitcher.vue'
+import AppearanceSettings from '../../components/Account/AppearanceSettings.vue'
 import AccountTable from '../../components/Account/AccountTable.vue'
 import EditPasswordModal from '../../components/EditPasswordModal.vue'
 import { computed, markRaw, onMounted, ref, unref } from 'vue'

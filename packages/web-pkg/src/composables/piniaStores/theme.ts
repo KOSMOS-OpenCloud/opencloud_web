@@ -64,6 +64,7 @@ export type WebThemeType = z.infer<typeof WebTheme>
 export type ThemeConfigType = z.infer<typeof ThemeConfig>
 
 const themeStorageKey = 'oc_currentThemeName'
+const signatureStorageKey = 'oc_signatureColor'
 
 const setFavicon = (url: string) => {
   let link = document.querySelector("link[rel~='icon']") as HTMLLinkElement
@@ -87,6 +88,13 @@ export const useThemeStore = defineStore('theme', () => {
   // URL parameter override for the current session (e.g. ?appTheme=Windows%2011%20Light)
   const appThemeOverride = ref<string | null>(null)
 
+  // Signature color chosen by the user (independent of the theme). Themes read it as --oc-signature
+  // and fall back to their own default (brand color) while it is unset.
+  const signatureColor = useLocalStorage<string | null>(signatureStorageKey, null)
+
+  // Desktop background chosen by the user, as an object URL. Themes read it as --oc-background.
+  const backgroundImageUrl = ref<string | null>(null)
+
   const initializeThemes = (themeConfig: ThemeConfigType) => {
     const commonThemeConfig = themeConfig.common as WebThemeType
     const webThemeConfig = themeConfig.clients.web.defaults as WebThemeType
@@ -103,6 +111,34 @@ export const useThemeStore = defineStore('theme', () => {
     }
 
     setThemeFromStorageOrSystem()
+    applySignatureColor()
+  }
+
+  const applySignatureColor = () => {
+    if (unref(signatureColor)) {
+      document.documentElement.style.setProperty('--oc-signature', unref(signatureColor))
+      return
+    }
+    document.documentElement.style.removeProperty('--oc-signature')
+  }
+
+  const setSignatureColor = (color: string | null) => {
+    signatureColor.value = color || null
+    applySignatureColor()
+  }
+
+  const setBackgroundImage = (objectUrl: string | null) => {
+    if (unref(backgroundImageUrl)) {
+      URL.revokeObjectURL(unref(backgroundImageUrl))
+    }
+    backgroundImageUrl.value = objectUrl
+    if (!objectUrl) {
+      document.documentElement.style.removeProperty('--oc-background')
+      document.documentElement.style.removeProperty('--oc-background-size')
+      return
+    }
+    document.documentElement.style.setProperty('--oc-background', `url("${objectUrl}")`)
+    document.documentElement.style.setProperty('--oc-background-size', 'cover')
   }
 
   const setThemeFromStorageOrSystem = () => {
@@ -222,6 +258,10 @@ export const useThemeStore = defineStore('theme', () => {
     isCurrentThemeAutoSystem,
     hasDarkVariant,
     toggleDarkVariant,
+    signatureColor,
+    setSignatureColor,
+    backgroundImageUrl,
+    setBackgroundImage,
     getRoleIcon
   }
 })
