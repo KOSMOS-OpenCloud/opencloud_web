@@ -48,7 +48,9 @@
       >
         {{ currentTrack.name }}
       </span>
+      <!-- Eigenes Element für Mehrkanal-Dateien: einmal an WebAudio gebunden, lässt es sich nicht mehr lösen -->
       <audio
+        :key="downmixChannels > 0 ? 'downmix' : 'plain'"
         ref="audioEl"
         :controls="!isMobile"
         autoplay
@@ -57,7 +59,7 @@
         :class="{ hidden: isMobile }"
         @ended="onEnded"
         @loadedmetadata="onLoadedMetadata"
-        @play="isPlaying = true"
+        @play="onPlay"
         @pause="isPlaying = false"
         @timeupdate="onTimeUpdate"
         @durationchange="onDurationChange"
@@ -93,10 +95,11 @@
 
 <script setup lang="ts">
 import { storeToRefs } from 'pinia'
-import { computed, ref, watch, nextTick, onMounted } from 'vue'
+import { computed, ref, unref, watch, nextTick, onMounted, onBeforeUnmount } from 'vue'
 import { useGettext } from 'vue3-gettext'
 import { useAudioPlayerStore } from '@opencloud-eu/web-pkg'
 import { useIsMobile } from '@opencloud-eu/design-system/composables'
+import { AudioDownmix, connectMonoDownmix, probeOpusDownmixChannelCount } from '../../helpers/audioDownmix'
 
 const { $gettext } = useGettext()
 const { isMobile } = useIsMobile()
@@ -108,6 +111,41 @@ const audioPlayerStore = useAudioPlayerStore()
 const { currentTrack, playlist } = storeToRefs(audioPlayerStore)
 const { selectTrack, stop } = audioPlayerStore
 const audioEl = ref<HTMLAudioElement>()
+
+// Mehrkanal-Aufnahmen (ein Sprecher je Kanal): der Browser gäbe nur die ersten zwei Kanäle aus.
+// Familie 255 mit mehr als 2 Kanälen → alle Kanäle über WebAudio zu Mono addieren (helpers/audioDownmix.ts). 0 = kein Downmix.
+const downmixChannels = ref(0)
+let activeDownmix: AudioDownmix | null = null
+let downmixElement: HTMLAudioElement | null = null
+
+function closeDownmix() {
+  activeDownmix?.close()
+  activeDownmix = null
+  downmixElement = null
+}
+
+function applyDownmix() {
+  const audioElement = unref(audioEl)
+  if (unref(downmixChannels) === 0 || !audioElement) {
+    closeDownmix()
+    return
+  }
+  if (downmixElement === audioElement) {
+    // nächster Mehrkanal-Titel im selben Element: die Kette steht schon, nur der Pegel richtet sich neu
+    activeDownmix?.setChannelCount(unref(downmixChannels))
+    return
+  }
+  closeDownmix()
+  activeDownmix = connectMonoDownmix(audioElement, unref(downmixChannels))
+  downmixElement = audioElement
+}
+
+function onPlay() {
+  isPlaying.value = true
+  activeDownmix?.resume()
+}
+
+onBeforeUnmount(closeDownmix)
 
 // Zustand für die eigene Bedienung im Dock (auf dem Desktop zeigt der Browser seine Bedienelemente)
 const isPlaying = ref(false)
@@ -187,10 +225,22 @@ const onLoadedMetadata = () => {
 }
 
 watch(currentTrack, async () => {
-  if (!currentTrack.value) return
+  if (!currentTrack.value) {
+    downmixChannels.value = 0
+    closeDownmix()
+    return
+  }
   currentTime.value = 0
   duration.value = 0
+  const probedTrack = currentTrack.value
+  const downmixChannelCount = await probeOpusDownmixChannelCount(probedTrack.url)
+  if (currentTrack.value !== probedTrack) {
+    // inzwischen wurde ein anderer Titel gewählt
+    return
+  }
+  downmixChannels.value = downmixChannelCount
   await nextTick()
+  applyDownmix()
   if (audioEl.value) {
     pendingSeek = currentTrack.value.startTime !== undefined
     audioEl.value.load()
