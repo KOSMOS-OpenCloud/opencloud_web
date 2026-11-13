@@ -1,24 +1,25 @@
-import { computed, markRaw, unref } from 'vue'
+import { computed, markRaw /* , unref */ } from 'vue'
 import { preferencesPanelExtensionPoint, progressBarExtensionPoint } from './extensionPoints'
 import AppTokens from './components/Account/AppTokens.vue'
 import {
   AccountExtension,
-  AppMenuItemExtension,
+  // AppMenuItemExtension,
   CustomComponentExtension,
   LoadingIndicator,
-  useCapabilityStore,
-  useUserStore,
+  // useCapabilityStore,
+  // useUserStore,
   $gettext
 } from '@opencloud-eu/web-pkg'
-import { storeToRefs } from 'pinia'
+// import { storeToRefs } from 'pinia'
 
 export const extensions = () => {
-  const capabilityStore = useCapabilityStore()
-  const userStore = useUserStore()
-  const { supportRadicale } = storeToRefs(capabilityStore)
-  const { user } = storeToRefs(userStore)
+  // KOSMOS: alter Radicale-Kalender aus (Nutzer 2026-11-13), ersetzt durch die dApp od_calendar
+  // const capabilityStore = useCapabilityStore()
+  // const userStore = useUserStore()
+  // const { supportRadicale } = storeToRefs(capabilityStore)
+  // const { user } = storeToRefs(userStore)
 
-  const showCalender = computed(() => unref(user) && unref(supportRadicale))
+  // const showCalender = computed(() => unref(user) && unref(supportRadicale))
 
   return computed(() => [
     {
@@ -37,18 +38,19 @@ export const extensions = () => {
       userPreference: {
         optionLabel: $gettext('Default progress bar')
       }
-    } as CustomComponentExtension,
-    ...(unref(showCalender)
-      ? [
-          {
-            id: 'com.github.opencloud-eu.web.runtime.app-menu-item.Calendar',
-            type: 'appMenuItem',
-            label: () => $gettext('Calendar'),
-            color: '#0478d4',
-            icon: 'calendar',
-            path: '/account/calendar'
-          } as AppMenuItemExtension
-        ]
-      : [])
+    } as CustomComponentExtension
+    // KOSMOS: alter Radicale-Kalender aus (Nutzer 2026-11-13), ersetzt durch die dApp od_calendar
+    // ...(unref(showCalender)
+    //   ? [
+    //       {
+    //         id: 'com.github.opencloud-eu.web.runtime.app-menu-item.Calendar',
+    //         type: 'appMenuItem',
+    //         label: () => $gettext('Calendar'),
+    //         color: '#0478d4',
+    //         icon: 'calendar',
+    //         path: '/account/calendar'
+    //       } as AppMenuItemExtension
+    //     ]
+    //   : [])
   ])
 }

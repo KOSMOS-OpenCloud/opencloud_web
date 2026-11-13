@@ -11,11 +11,11 @@
 <script setup lang="ts">
 import {
   useActiveLocation,
-  useCapabilityStore,
+  // useCapabilityStore,
   useExtensionRegistry,
   AccountExtension
 } from '@opencloud-eu/web-pkg'
-import { storeToRefs } from 'pinia'
+// import { storeToRefs } from 'pinia'
 import { isLocationAccountActive } from '../../router'
 import { computed, onMounted, onUnmounted, ref, unref } from 'vue'
 import { preferencesPanelExtensionPoint } from '../../extensionPoints'
@@ -23,9 +23,10 @@ import { useGettext } from 'vue3-gettext'
 import { useRoute } from 'vue-router'
 
 const extensionRegistry = useExtensionRegistry()
-const capabilityStore = useCapabilityStore()
+// KOSMOS: alter Radicale-Kalender aus (Nutzer 2026-11-13), ersetzt durch die dApp od_calendar
+// const capabilityStore = useCapabilityStore()
 
-const { supportRadicale } = storeToRefs(capabilityStore)
+// const { supportRadicale } = storeToRefs(capabilityStore)
 const { $gettext } = useGettext()
 const preferencesPanelExtensions = ref<AccountExtension[]>([])
 const route = useRoute()
@@ -33,7 +34,7 @@ const route = useRoute()
 const isAccountInformationActive = useActiveLocation(isLocationAccountActive, 'account-information')
 const isAccountPreferencesActive = useActiveLocation(isLocationAccountActive, 'account-preferences')
 const isAccountExtensionsActive = useActiveLocation(isLocationAccountActive, 'account-extensions')
-const isAccountCalendarActive = useActiveLocation(isLocationAccountActive, 'account-calendar')
+// const isAccountCalendarActive = useActiveLocation(isLocationAccountActive, 'account-calendar')
 const isAccountGdprActive = useActiveLocation(isLocationAccountActive, 'account-gdpr')
 
 const navItems = computed(() => {
@@ -59,17 +60,18 @@ const navItems = computed(() => {
       active: unref(isAccountExtensionsActive),
       priority: 30
     },
-    ...(unref(supportRadicale)
-      ? [
-          {
-            name: $gettext('Calendar'),
-            route: { name: 'account-calendar' },
-            icon: 'calendar',
-            active: unref(isAccountCalendarActive),
-            priority: 40
-          }
-        ]
-      : []),
+    // KOSMOS: alter Radicale-Kalender aus (Nutzer 2026-11-13), ersetzt durch die dApp od_calendar
+    // ...(unref(supportRadicale)
+    //   ? [
+    //       {
+    //         name: $gettext('Calendar'),
+    //         route: { name: 'account-calendar' },
+    //         icon: 'calendar',
+    //         active: unref(isAccountCalendarActive),
+    //         priority: 40
+    //       }
+    //     ]
+    //   : []),
     {
       name: $gettext('GDPR'),
       route: { name: 'account-gdpr' },

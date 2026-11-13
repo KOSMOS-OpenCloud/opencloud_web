@@ -6,7 +6,8 @@
   >
     <div class="flex items-center flex-start gap-2.5 sm:gap-5 col-1">
       <sidebar-nav-mobile class="pt-1" />
-      <router-link v-if="!hideLogo" :to="homeLink">
+      <!-- KOSMOS: Gast-Seiten (Route meta.guestView) bekommen das Logo ohne Link -->
+      <component :is="isGuestView ? 'span' : 'router-link'" v-if="!hideLogo" v-bind="isGuestView ? {} : { to: homeLink }">
         <picture>
           <source
             :srcset="currentTheme.logoMobile || currentTheme.logo"
@@ -18,7 +19,7 @@
             class="oc-logo-image align-middle ml-1 h-[28px] w-auto select-none"
           />
         </picture>
-      </router-link>
+      </component>
       <custom-component-target :extension-point="topBarAppActionsExtensionPoint" />
     </div>
     <div class="topbar-center flex justify-end sm:justify-center col-2">
@@ -43,7 +44,7 @@
           v-if="appMenuExtensions.length && !isEmbedModeEnabled"
           :menu-items="appMenuExtensions"
         />
-        <user-menu />
+        <user-menu v-if="!isGuestView" />
       </template>
     </div>
     <custom-component-target :extension-point="topBarLeftExtensionPoint" />
@@ -100,6 +101,9 @@ const authStore = useAuthStore()
 const router = useRouter()
 const { isEnabled: isEmbedModeEnabled } = useEmbedMode()
 const appModeStore = useAppModeStore()
+
+// KOSMOS: Gast-Seite einer App, die Route kennzeichnet sich selbst (meta.guestView)
+const isGuestView = computed(() => unref(router.currentRoute).meta?.guestView === true)
 
 const appMenuExtensions = computed(() => {
   return extensionRegistry.requestExtensions(appMenuExtensionPoint)
