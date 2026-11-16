@@ -33,6 +33,7 @@
       @update:model-value="validateEmail"
     />
     <oc-text-input
+      v-if="!isExternalAuthDirectory"
       id="create-user-input-password"
       v-model="user.passwordProfile.password"
       autocomplete="new-password"
@@ -44,16 +45,61 @@
       required-mark
       @update:model-value="validatePassword"
     />
+    <div v-if="authDirectoryOptions.length > 1" class="mb-2">
+      <oc-select
+        id="create-user-input-auth-directory"
+        :model-value="selectedAuthDirectoryOption"
+        :label="$gettext('Authentication source')"
+        option-label="label"
+        :options="authDirectoryOptions"
+        :clearable="false"
+        @update:model-value="onUpdateAuthDirectory"
+      />
+      <div class="oc-text-input-message">
+        <span v-if="isExternalAuthDirectory">
+          {{
+            $gettext(
+              'The password is verified against the external directory. The user name must match the account there.'
+            )
+          }}
+        </span>
+      </div>
+      <div v-if="isExternalAuthDirectory" class="mb-2">
+        <oc-button
+          id="create-user-auth-directory-lookup"
+          size="small"
+          :disabled="authDirectoryLookupPending"
+          @click="onLookupAuthDirectory"
+        >
+          {{ $gettext('Check user name in directory') }}
+        </oc-button>
+        <span v-if="authDirectoryLookupMessage" class="ml-2">{{ authDirectoryLookupMessage }}</span>
+      </div>
+    </div>
     <input type="submit" class="hidden" />
   </form>
 </template>
 
 <script lang="ts">
 import { useGettext } from 'vue3-gettext'
-import { computed, defineComponent, PropType, ref, unref, watch } from 'vue'
+import { computed, defineComponent, onMounted, PropType, ref, unref, watch } from 'vue'
 import * as EmailValidator from 'email-validator'
 import { Modal, useClientService, useMessages } from '@opencloud-eu/web-pkg'
 import { useUserSettingsStore } from '../../composables/stores/userSettings'
+import {
+  useAuthDirectory,
+  AuthDirectory,
+  INTERNAL_AUTH_DIRECTORY
+} from '../../composables/authDirectory/useAuthDirectory'
+
+// randomPassword returns a strong random string for the idm entry of an
+// externally-authenticated user. It is never used for login (the check is
+// delegated to the external directory) and never shown.
+function randomPassword(): string {
+  const bytes = new Uint8Array(24)
+  crypto.getRandomValues(bytes)
+  return btoa(String.fromCharCode(...bytes)) + 'Aa1!'
+}
 
 export default defineComponent({
   name: 'CreateUserModal',
@@ -93,8 +139,29 @@ export default defineComponent({
       }
     })
 
+    const { listAuthDirectories, setUserAuthDirectory, lookupUser } = useAuthDirectory()
+    const authDirectories = ref<AuthDirectory[]>([])
+    const authDirectory = ref<string>(INTERNAL_AUTH_DIRECTORY)
+    const authDirectoryLookupPending = ref(false)
+    const authDirectoryLookupMessage = ref('')
+
+    const isExternalAuthDirectory = computed(() => unref(authDirectory) !== INTERNAL_AUTH_DIRECTORY)
+    const authDirectoryOptions = computed(() => unref(authDirectories))
+    const selectedAuthDirectoryOption = computed(() =>
+      unref(authDirectories).find((d) => d.name === unref(authDirectory))
+    )
+
+    onMounted(async () => {
+      try {
+        authDirectories.value = await listAuthDirectories()
+      } catch (error) {
+        console.error(error)
+      }
+    })
+
     const isFormInvalid = computed(() => {
       return Object.keys(unref(formData))
+        .filter((k) => k !== 'password' || !unref(isExternalAuthDirectory))
         .map((k) => !!unref(formData)[k].valid)
         .includes(false)
     })
@@ -114,7 +181,16 @@ export default defineComponent({
 
       try {
         const client = clientService.graphAuthenticated
+        if (unref(isExternalAuthDirectory)) {
+          // The idm entry still needs a password, but it is never used: the
+          // password check is delegated to the external directory. Set a strong
+          // random one so nobody can authenticate against idm for this user.
+          user.value.passwordProfile.password = randomPassword()
+        }
         const { id: createdUserId } = await client.users.createUser(unref(user))
+        if (unref(isExternalAuthDirectory)) {
+          await setUserAuthDirectory(createdUserId, unref(authDirectory))
+        }
         const createdUser = await client.users.getUser(createdUserId)
         showMessage({ title: $gettext('User was created successfully') })
         userSettingsStore.upsertUser(createdUser)
@@ -134,12 +210,41 @@ export default defineComponent({
       formData,
       user,
       isFormInvalid,
+      authDirectory,
+      authDirectoryOptions,
+      selectedAuthDirectoryOption,
+      isExternalAuthDirectory,
+      authDirectoryLookupPending,
+      authDirectoryLookupMessage,
+      lookupUser,
 
       // unit tests
       onConfirm
     }
   },
   methods: {
+    onUpdateAuthDirectory(option: AuthDirectory) {
+      this.authDirectory = option?.name || INTERNAL_AUTH_DIRECTORY
+      this.authDirectoryLookupMessage = ''
+    },
+    async onLookupAuthDirectory() {
+      const login = this.user.onPremisesSamAccountName
+      if (!this.isExternalAuthDirectory || !login) {
+        return
+      }
+      this.authDirectoryLookupPending = true
+      this.authDirectoryLookupMessage = ''
+      try {
+        const exists = await this.lookupUser(this.authDirectory, login)
+        this.authDirectoryLookupMessage = exists
+          ? this.$gettext('User name found in directory.')
+          : this.$gettext('User name NOT found in directory.')
+      } catch {
+        this.authDirectoryLookupMessage = this.$gettext('Could not reach the directory.')
+      } finally {
+        this.authDirectoryLookupPending = false
+      }
+    },
     async validateUserName() {
       if (this.user.onPremisesSamAccountName.trim() === '') {
         this.formData.userName.errorMessage = this.$gettext('User name cannot be empty')
