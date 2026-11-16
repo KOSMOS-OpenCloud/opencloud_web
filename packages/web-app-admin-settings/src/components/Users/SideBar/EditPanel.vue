@@ -10,7 +10,9 @@
           :label="$gettext('User name')"
           :error-message="formData.userName.errorMessage"
           :fix-message-line="true"
-          :read-only="isInputFieldReadOnly('user.onPremisesSamAccountName')"
+          :read-only="
+            isInputFieldReadOnly('user.onPremisesSamAccountName') || isExternalAuthDirectory
+          "
           required-mark
           @update:model-value="validateUserName"
         />
@@ -78,6 +80,40 @@
 
           <div class="oc-text-input-message"></div>
         </div>
+        <div v-if="authDirectoryOptions.length > 1" class="mb-2">
+          <oc-select
+            id="auth-directory-input"
+            :model-value="selectedAuthDirectoryOption"
+            :label="$gettext('Authentication source')"
+            option-label="label"
+            :options="authDirectoryOptions"
+            :clearable="false"
+            :read-only="isInputFieldReadOnly('user.onPremisesSamAccountName')"
+            @update:model-value="onUpdateAuthDirectory"
+          />
+          <div class="oc-text-input-message">
+            <span v-if="isExternalAuthDirectory">
+              {{
+                $gettext(
+                  'The password is verified against the external directory. The user name must match the account there and cannot be changed.'
+                )
+              }}
+            </span>
+          </div>
+          <div v-if="isExternalAuthDirectory" class="mb-2">
+            <oc-button
+              id="auth-directory-lookup"
+              size="small"
+              :disabled="authDirectoryLookupPending"
+              @click="onLookupAuthDirectory"
+            >
+              {{ $gettext('Check user name in directory') }}
+            </oc-button>
+            <span v-if="authDirectoryLookupMessage" class="ml-2">{{
+              authDirectoryLookupMessage
+            }}</span>
+          </div>
+        </div>
         <quota-select
           id="quota-select-form"
           :key="'quota-select-' + user.id"
@@ -116,7 +152,7 @@
   </div>
 </template>
 <script lang="ts">
-import { computed, defineComponent, PropType, ref, unref } from 'vue'
+import { computed, defineComponent, PropType, ref, unref, watch } from 'vue'
 import * as EmailValidator from 'email-validator'
 import {
   CompareSaveDialog,
@@ -135,7 +171,17 @@ import { MaybeRef, useClientService } from '@opencloud-eu/web-pkg'
 import { storeToRefs } from 'pinia'
 import { diff } from 'deep-object-diff'
 import { useUserSettingsStore } from '../../../composables/stores/userSettings'
+import {
+  useAuthDirectory,
+  AuthDirectory,
+  INTERNAL_AUTH_DIRECTORY
+} from '../../../composables/authDirectory/useAuthDirectory'
 import { useGettext } from 'vue3-gettext'
+
+// EditableUser adds the OpenCore per-user auth directory. It is not part of the
+// generated graph User model and is saved via its own endpoint (see onEditUser),
+// following the same pattern as drive/appRoleAssignments/memberOf.
+type EditableUser = User & { authDirectory?: string }
 
 export default defineComponent({
   name: 'EditPanel',
@@ -176,7 +222,13 @@ export default defineComponent({
     const { $gettext } = useGettext()
     const authService = useAuthService()
     const { graphUsersEditLoginAllowedDisabled } = storeToRefs(capabilityStore)
-    const editUser: MaybeRef<User> = ref()
+    const editUser: MaybeRef<EditableUser> = ref()
+    const { listAuthDirectories, getUserAuthDirectory, setUserAuthDirectory, lookupUser } =
+      useAuthDirectory()
+    const authDirectories = ref<AuthDirectory[]>([])
+    const originalAuthDirectory = ref<string>(INTERNAL_AUTH_DIRECTORY)
+    const authDirectoryLookupPending = ref(false)
+    const authDirectoryLookupMessage = ref('')
     const formData = ref({
       displayName: {
         errorMessage: '',
@@ -201,6 +253,46 @@ export default defineComponent({
     const isInputFieldReadOnly = (key: string) => {
       return capabilityStore.graphUsersReadOnlyAttributes.includes(key)
     }
+
+    const isExternalAuthDirectory = computed(() => {
+      const dir = (unref(editUser) as EditableUser)?.authDirectory
+      return !!dir && dir !== INTERNAL_AUTH_DIRECTORY
+    })
+
+    // Load the auth directory for the selected user. The panel is reused across
+    // users (the user prop changes), so this reacts to the id, not just mount.
+    watch(
+      () => (props.user as User)?.id,
+      async (id) => {
+        if (!id) {
+          return
+        }
+        authDirectoryLookupMessage.value = ''
+        if (!unref(authDirectories).length) {
+          try {
+            authDirectories.value = await listAuthDirectories()
+          } catch (error) {
+            console.error(error)
+            return
+          }
+        }
+        // Only relevant when at least one external directory is configured next to
+        // the built-in "internal" entry.
+        if (unref(authDirectories).length <= 1) {
+          return
+        }
+        try {
+          const current = await getUserAuthDirectory(id)
+          originalAuthDirectory.value = current
+          if (unref(editUser)) {
+            ;(unref(editUser) as EditableUser).authDirectory = current
+          }
+        } catch (error) {
+          console.error(error)
+        }
+      },
+      { immediate: true }
+    )
 
     const onUpdateUserAppRoleAssignments = (user: User, editUser: User) => {
       const client = clientService.graphAuthenticated
@@ -250,7 +342,7 @@ export default defineComponent({
       try {
         const client = clientService.graphAuthenticated
         const graphEditUserPayloadExtractor = (user: User) => {
-          return omit(user, ['drive', 'appRoleAssignments', 'memberOf'])
+          return omit(user, ['drive', 'appRoleAssignments', 'memberOf', 'authDirectory'])
         }
         const graphEditUserPayload = diff(
           graphEditUserPayloadExtractor(user),
@@ -273,6 +365,14 @@ export default defineComponent({
           !isEqual(user.appRoleAssignments[0]?.appRoleId, editUser.appRoleAssignments[0]?.appRoleId)
         ) {
           await onUpdateUserAppRoleAssignments(user, editUser)
+        }
+
+        // The auth directory is an OpenCore per-user setting, saved via its own
+        // endpoint (not part of the graph user payload).
+        const editAuthDirectory = (editUser as EditableUser).authDirectory
+        if (editAuthDirectory !== undefined && editAuthDirectory !== unref(originalAuthDirectory)) {
+          await setUserAuthDirectory(user.id, editAuthDirectory)
+          originalAuthDirectory.value = editAuthDirectory
         }
 
         // When the username of the current user changes, we need to obtain a new token
@@ -311,7 +411,13 @@ export default defineComponent({
       formData,
       groupOptions,
       clientService,
-      onEditUser
+      onEditUser,
+      isExternalAuthDirectory,
+      authDirectories,
+      originalAuthDirectory,
+      authDirectoryLookupPending,
+      authDirectoryLookupMessage,
+      lookupUser
     }
   },
   computed: {
@@ -355,7 +461,17 @@ export default defineComponent({
       return typeof this.showQuota === 'undefined'
     },
     compareSaveDialogOriginalObject() {
-      return cloneDeep(this.user)
+      // Include the loaded auth directory so the save dialog only reports it as a
+      // change once the admin actually picks a different source.
+      return { ...cloneDeep(this.user), authDirectory: this.originalAuthDirectory }
+    },
+    authDirectoryOptions() {
+      // The list already contains the built-in "internal" entry first.
+      return this.authDirectories
+    },
+    selectedAuthDirectoryOption() {
+      const current = (this.editUser as EditableUser)?.authDirectory || INTERNAL_AUTH_DIRECTORY
+      return this.authDirectories.find((d) => d.name === current)
     }
   },
   watch: {
@@ -488,6 +604,29 @@ export default defineComponent({
     },
     onUpdateLogin({ value }: { value: boolean }) {
       this.editUser.accountEnabled = value
+    },
+    onUpdateAuthDirectory(option: AuthDirectory) {
+      ;(this.editUser as EditableUser).authDirectory = option?.name || INTERNAL_AUTH_DIRECTORY
+      this.authDirectoryLookupMessage = ''
+    },
+    async onLookupAuthDirectory() {
+      const directory = (this.editUser as EditableUser).authDirectory
+      const login = this.editUser.onPremisesSamAccountName
+      if (!directory || directory === INTERNAL_AUTH_DIRECTORY || !login) {
+        return
+      }
+      this.authDirectoryLookupPending = true
+      this.authDirectoryLookupMessage = ''
+      try {
+        const exists = await this.lookupUser(directory, login)
+        this.authDirectoryLookupMessage = exists
+          ? this.$gettext('User name found in directory.')
+          : this.$gettext('User name NOT found in directory.')
+      } catch {
+        this.authDirectoryLookupMessage = this.$gettext('Could not reach the directory.')
+      } finally {
+        this.authDirectoryLookupPending = false
+      }
     }
   }
 })
