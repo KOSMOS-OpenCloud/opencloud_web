@@ -63,6 +63,16 @@ export function useSubspaces() {
     return allSubspaces.value[driveId] || []
   }
 
+  // Drops the cached list of a space and loads it again, e.g. after a
+  // subspace member was added or removed (the first member creates the
+  // subspace, the last one removes it).
+  function reloadSubspaces(space: SpaceResource): Promise<SubspaceEntry[]> {
+    const remaining = { ...allSubspaces.value }
+    delete remaining[space.id]
+    allSubspaces.value = remaining
+    return loadSubspaces(space)
+  }
+
   async function setSubspace(space: SpaceResource, itemId: string): Promise<SubspaceEntry> {
     const entry = await clientService.graphAuthenticated.drives.setSubspace(space.id, itemId)
     // Reload subspace list
@@ -82,6 +92,7 @@ export function useSubspaces() {
   return {
     subspaces,
     loadSubspaces,
+    reloadSubspaces,
     isSubspaceRoot,
     setSubspace,
     removeSubspace

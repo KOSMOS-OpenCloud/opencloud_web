@@ -41,7 +41,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, inject, unref, Ref } from 'vue'
+import { computed, inject, unref, watch, Ref } from 'vue'
 import { useGettext } from 'vue3-gettext'
 import {
   SpaceResource,
@@ -53,7 +53,8 @@ import {
   useMessages,
   useModals,
   useSharesStore,
-  useClientService
+  useClientService,
+  useSubspaces
 } from '@opencloud-eu/web-pkg'
 import InviteCollaboratorForm from './Collaborators/InviteCollaborator/InviteCollaboratorForm.vue'
 import CollaboratorListItem from './Collaborators/ListItem.vue'
@@ -73,7 +74,29 @@ const directShares = computed(() =>
   sharesStore.collaboratorShares.filter((s: CollaboratorShare) => !s.indirect)
 )
 
-const hasMembers = computed(() => directShares.value.length > 0)
+const { isSubspaceRoot, reloadSubspaces } = useSubspaces()
+
+// A folder with shares is not a subspace. Only a folder registered as
+// subspace has subspace members; the direct shares of any other folder are
+// plain shares and are listed in the share panel, not here.
+const isSubspace = computed(() => {
+  const folder = unref(resource)
+  return !!folder?.id && isSubspaceRoot(folder.id)
+})
+
+const hasMembers = computed(() => unref(isSubspace) && directShares.value.length > 0)
+
+// Adding the first member creates the subspace, removing the last one removes
+// it again: refresh the subspace list whenever the direct shares change.
+watch(
+  () => directShares.value.length,
+  () => {
+    const currentSpace = unref(space)
+    if (currentSpace) {
+      reloadSubspaces(currentSpace)
+    }
+  }
+)
 
 const deleteMemberConfirm = (share: CollaboratorShare) => {
   dispatchModal({
@@ -101,8 +124,9 @@ const deleteMemberConfirm = (share: CollaboratorShare) => {
   })
 }
 
-// Subspace registration is handled automatically by reva:
-// AddGrant → auto-registers folder as subspace
-// RemoveGrant → auto-removes subspace when last grant is gone
-// No UI-side marking needed.
+// Subspace registration is handled by the backend, but only for this panel:
+// adding a member here (subspace/permissions endpoint) registers the folder
+// as subspace, removing the last grant removes the subspace again.
+// A share created in the share panel is a plain share and never creates a
+// subspace. No UI-side marking needed.
 </script>
