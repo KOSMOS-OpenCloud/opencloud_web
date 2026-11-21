@@ -21,9 +21,25 @@
       class="w-xs"
       @show-drop="updateAppIcons"
     >
-      <div class="block relative">
-        <oc-list class="applications-list">
-          <li v-for="(n, nid) in sortedMenuItems" :key="`apps-menu-${nid}`">
+      <!-- kosmos: Einträge mit `group` stehen unter einer Überschrift mit dem Gruppennamen (nichts klappt auf),
+           Einträge ohne Gruppe wie bisher in der Liste darüber -->
+      <div
+        v-for="(section, sectionIndex) in menuSections"
+        :key="`apps-menu-section-${section.group ?? ''}`"
+        class="block relative"
+      >
+        <h3
+          v-if="section.group"
+          :id="`apps-menu-group-${sectionIndex}`"
+          class="applications-group-title m-0 px-3 pb-1 text-xs font-semibold uppercase text-role-on-surface-variant"
+          :class="sectionIndex > 0 ? 'pt-3' : 'pt-1'"
+          v-text="$gettext(section.group)"
+        />
+        <oc-list
+          class="applications-list"
+          :aria-labelledby="section.group ? `apps-menu-group-${sectionIndex}` : undefined"
+        >
+          <li v-for="(n, nid) in section.items" :key="`apps-menu-${sectionIndex}-${nid}`">
             <oc-button
               :key="n.url ? 'apps-menu-external-link' : 'apps-menu-internal-link'"
               :appearance="isMenuItemActive(n) ? 'filled' : 'raw-inverse'"
@@ -36,7 +52,7 @@
               v-on="getAdditionalEventBindings(n)"
             >
               <oc-application-icon
-                :key="`apps-menu-icon-${nid}-${appIconKey}`"
+                :key="`apps-menu-icon-${sectionIndex}-${nid}-${appIconKey}`"
                 :icon="n.icon || 'link'"
                 :color-primary="n.color"
               />
@@ -78,6 +94,30 @@ export default defineComponent({
       )
     })
 
+    // kosmos: first the items without a group, then one section per group. Groups keep the order of their
+    // first item, so the lowest priority of a group decides where the group stands.
+    const menuSections = computed(() => {
+      const ungroupedItems: AppMenuItemExtension[] = []
+      const groupedItems = new Map<string, AppMenuItemExtension[]>()
+      for (const menuItem of unref(sortedMenuItems)) {
+        const groupName = typeof menuItem.group === 'string' ? menuItem.group.trim() : ''
+        if (!groupName) {
+          ungroupedItems.push(menuItem)
+          continue
+        }
+        if (!groupedItems.has(groupName)) {
+          groupedItems.set(groupName, [])
+        }
+        groupedItems.get(groupName).push(menuItem)
+      }
+      const sections: { group: string | null; items: AppMenuItemExtension[] }[] = []
+      if (ungroupedItems.length) {
+        sections.push({ group: null, items: ungroupedItems })
+      }
+      groupedItems.forEach((items, group) => sections.push({ group, items }))
+      return sections
+    })
+
     const applicationSwitcherLabel = computed(() => {
       return $gettext('Application Switcher')
     })
@@ -111,6 +151,7 @@ export default defineComponent({
     return {
       menu,
       sortedMenuItems,
+      menuSections,
       appIconKey,
       updateAppIcons,
       applicationSwitcherLabel,

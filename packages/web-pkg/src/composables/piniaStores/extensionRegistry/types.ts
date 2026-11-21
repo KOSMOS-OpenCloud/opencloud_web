@@ -105,6 +105,11 @@ export interface CreateNewActionExtension extends Extension {
 export interface AppMenuItemExtension extends Extension {
   type: 'appMenuItem'
   label: () => string
+  /**
+   * kosmos: name of a group in the app menu. Items with the same group are listed together below a heading
+   * with that name. Items without a group stay in the plain list above the groups.
+   */
+  group?: string
   color?: string
   handler?: () => Promise<void> | void
   icon?: string

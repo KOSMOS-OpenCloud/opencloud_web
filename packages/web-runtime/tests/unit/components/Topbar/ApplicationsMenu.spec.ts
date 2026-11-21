@@ -39,6 +39,34 @@ describe('ApplicationsMenu component', () => {
     const firstElTxt = wrapper.findAll('oc-list-stub oc-button-stub')[0].find('span').text()
     expect(firstElTxt).toEqual(menuItems[1].label())
   })
+  describe('groups', () => {
+    it('renders no heading when no item has a group', () => {
+      const menuItems = [{ label: () => '1' }, { label: () => '2' }] as AppMenuItemExtension[]
+      const { wrapper } = getWrapper({ menuItems })
+      expect(wrapper.findAll('.applications-group-title').length).toBe(0)
+      expect(wrapper.findAll('oc-list-stub').length).toBe(1)
+    })
+    it('lists items without a group first, then every group below its heading', () => {
+      const menuItems = [
+        { label: () => 'viewer', priority: 70, group: 'UCM' },
+        { label: () => 'admin', priority: 65, group: 'System' },
+        { label: () => 'files', priority: 80 },
+        { label: () => 'editor', priority: 60, group: 'UCM' }
+      ] as AppMenuItemExtension[]
+
+      const { wrapper } = getWrapper({ menuItems })
+      expect(wrapper.findAll('.applications-group-title').map((title) => title.text())).toEqual([
+        'UCM',
+        'System'
+      ])
+      const lists = wrapper.findAll('oc-list-stub')
+      const labelsOf = (listIndex: number) =>
+        lists[listIndex].findAll('oc-button-stub span').map((label) => label.text())
+      expect(labelsOf(0)).toEqual(['files'])
+      expect(labelsOf(1)).toEqual(['editor', 'viewer'])
+      expect(labelsOf(2)).toEqual(['admin'])
+    })
+  })
   describe('active state', () => {
     it('checks the current route path against the menu item path', () => {
       const menuItems = [
