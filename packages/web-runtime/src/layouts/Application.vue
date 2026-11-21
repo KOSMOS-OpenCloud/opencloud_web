@@ -60,7 +60,6 @@ import {
   AppLoadingSpinner,
   CustomComponentExtension,
   CustomComponentTarget,
-  FloatingActionButtonExtension,
   SideBar,
   useActiveApp,
   useExtensionRegistry,
@@ -77,6 +76,7 @@ import { useRouter } from 'vue-router'
 import { useGettext } from 'vue3-gettext'
 import { globalSideBarExtensionPoint, progressBarExtensionPoint } from '../extensionPoints'
 import AppFloatingActionButton from '../components/AppFloatingActionButton.vue'
+import { useFloatingActionButton } from '../composables/floatingActionButton'
 
 const { $gettext } = useGettext()
 const { navItems } = useNavItems()
@@ -94,11 +94,9 @@ const isLoading = computed(() => {
 
 const { isTablet } = useIsMobile()
 
+const { floatingActionButtons } = useFloatingActionButton()
 const hasFloatingActionButton = computed(() => {
-  return !!requestExtensions<FloatingActionButtonExtension>({
-    id: `app.${unref(activeApp)}.floating-action-button`,
-    extensionType: 'floatingActionButton'
-  }).filter(({ isVisible }) => !isVisible || isVisible()).length
+  return !!unref(floatingActionButtons).length
 })
 
 const hasSidebarNavExtension = computed(() => {

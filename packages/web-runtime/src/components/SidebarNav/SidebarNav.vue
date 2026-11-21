@@ -85,11 +85,10 @@ import {
   ExtensionPoint,
   CustomComponentExtension,
   useActiveApp,
-  useExtensionRegistry,
-  FloatingActionButtonExtension,
   useLocalStorage
 } from '@opencloud-eu/web-pkg'
 import { useIsMobile } from '@opencloud-eu/design-system/composables'
+import { useFloatingActionButton } from '../../composables/floatingActionButton'
 
 const { navItems } = defineProps<{ navItems: NavItem[] }>()
 
@@ -100,7 +99,6 @@ const capabilityStore = useCapabilityStore()
 const backendVersion = computed(() => getBackendVersion({ capabilityStore }))
 
 const activeApp = useActiveApp()
-const { requestExtensions } = useExtensionRegistry()
 
 const { isTablet } = useIsMobile()
 
@@ -115,12 +113,7 @@ const dynamicExtensionPointBottom = computed<ExtensionPoint<CustomComponentExten
 
 const isFloatingActionButtonDisabled = ref(true)
 
-const floatingActionButton = computed(() => {
-  return requestExtensions<FloatingActionButtonExtension>({
-    id: `app.${unref(activeApp)}.floating-action-button`,
-    extensionType: 'floatingActionButton'
-  }).find(({ isVisible }) => !isVisible || isVisible())
-})
+const { floatingActionButton } = useFloatingActionButton()
 
 function getButtonId(extensionId: string): string {
   return `app-floating-action-button-${extensionId.replace(/\./g, '-')}`

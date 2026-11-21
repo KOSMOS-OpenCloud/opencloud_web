@@ -32,6 +32,7 @@ class ClassicApplication extends NextApplication {
 
     routes && this.runtimeApi.announceRoutes(_routes)
     navItems && this.runtimeApi.announceNavigationItems(_navItems)
+    this.runtimeApi.announceMounts()
 
     return Promise.resolve(undefined)
   }
@@ -101,7 +102,8 @@ export const convertClassicApplication = ({
     applicationName,
     applicationId,
     router,
-    extensionRegistry
+    extensionRegistry,
+    mounts: applicationScript.mounts
   })
 
   const appsStore = useAppsStore()

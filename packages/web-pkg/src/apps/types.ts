@@ -102,9 +102,23 @@ export interface ApplicationTranslations {
   }
 }
 
+/**
+ * kosmos: ApplicationMount hangs an app into a second primary app. The routes of the app are announced
+ * below `/<app>/<path>` as well, so the main menu of that primary app stays visible.
+ */
+export interface ApplicationMount {
+  /** id of the primary app, first segment of the path (e.g. `calendar`) */
+  app: string
+  /** segment below the primary app, defaults to the last segment of `appInfo.id` */
+  path?: string
+  /** entry in the main menu of the primary app, the runtime sets the route */
+  navItem?: Omit<AppNavigationItem, 'route'>
+}
+
 /** ClassicApplicationScript reflects classic application script structure */
 export interface ClassicApplicationScript {
   appInfo?: ApplicationInformation
+  mounts?: ApplicationMount[]
   routes?: ((args: GlobalProperties) => RouteRecordRaw[]) | RouteRecordRaw[]
   navItems?: ((args: GlobalProperties) => AppNavigationItem[]) | AppNavigationItem[]
   translations?: ApplicationTranslations

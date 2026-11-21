@@ -17,26 +17,14 @@
 </template>
 
 <script setup lang="ts">
-import { computed, unref } from 'vue'
-import {
-  FloatingActionButtonExtension,
-  useActiveApp,
-  useEmbedMode,
-  useExtensionRegistry
-} from '@opencloud-eu/web-pkg'
+import { useEmbedMode } from '@opencloud-eu/web-pkg'
 import { useIsMobile } from '@opencloud-eu/design-system/composables'
+import { useFloatingActionButton } from '../composables/floatingActionButton'
 
-const { requestExtensions } = useExtensionRegistry()
 const { isTablet } = useIsMobile()
-const activeApp = useActiveApp()
 const { isEnabled: isEmbedModeEnabled } = useEmbedMode()
 
-const floatingActionButton = computed(() => {
-  return requestExtensions<FloatingActionButtonExtension>({
-    id: `app.${unref(activeApp)}.floating-action-button`,
-    extensionType: 'floatingActionButton'
-  }).find(({ isVisible }) => !isVisible || isVisible())
-})
+const { floatingActionButton } = useFloatingActionButton()
 
 function getButtonId(extensionId: string): string {
   return `mobile-app-floating-action-button-${extensionId.replace(/\./g, '-')}`

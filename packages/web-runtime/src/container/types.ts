@@ -5,4 +5,5 @@ import { AppNavigationItem } from '@opencloud-eu/web-pkg'
 export interface RuntimeApi {
   announceRoutes: (routes: RouteRecordRaw[]) => void
   announceNavigationItems: (navigationItems: AppNavigationItem[]) => void
+  announceMounts: () => void
 }

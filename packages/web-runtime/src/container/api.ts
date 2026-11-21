@@ -10,7 +10,17 @@ import {
 } from '@opencloud-eu/web-pkg'
 import { isObject, isArray } from 'lodash-es'
 import { computed } from 'vue'
-import { AppNavigationItem } from '@opencloud-eu/web-pkg'
+import { AppNavigationItem, ApplicationMount } from '@opencloud-eu/web-pkg'
+
+/**
+ * kosmos: path below which a mount announces the routes of the app, e.g. `calendar/todos`
+ *
+ * @param applicationId
+ * @param mount
+ */
+export const getMountPath = (applicationId: string, mount: ApplicationMount): string => {
+  return `${mount.app}/${mount.path || applicationId.split('/').pop()}`
+}
 
 /**
  * inject application specific routes into runtime
@@ -18,11 +28,30 @@ import { AppNavigationItem } from '@opencloud-eu/web-pkg'
  * @param applicationId
  * @param router
  * @param routes
+ * @param mounts
  */
-const announceRoutes = (applicationId: string, router: Router, routes: RouteRecordRaw[]): void => {
+const announceRoutes = (
+  applicationId: string,
+  router: Router,
+  routes: RouteRecordRaw[],
+  mounts: ApplicationMount[] = []
+): void => {
   if (!isArray(routes)) {
     throw new ApiError("routes can't be blank")
   }
+
+  announceRoutesBelow(applicationId, router, routes)
+  // kosmos: the same routes once more below every mount, route names carry the mount path
+  mounts.forEach((mount) => {
+    announceRoutesBelow(getMountPath(applicationId, mount), router, routes)
+  })
+}
+
+const announceRoutesBelow = (
+  applicationId: string,
+  router: Router,
+  routes: RouteRecordRaw[]
+): void => {
   const namespaceRouteName = (name: string) => {
     return name.startsWith(`${applicationId}-`) ? name : `${applicationId}-${name}`
   }
@@ -96,6 +125,33 @@ const announceNavigationItems = (
 }
 
 /**
+ * kosmos: inject the main menu entries of the mounts into the primary apps
+ *
+ * @param applicationId
+ * @param extensionRegistry
+ * @param mounts
+ */
+const announceMounts = (
+  applicationId: string,
+  extensionRegistry: ExtensionRegistry,
+  mounts: ApplicationMount[]
+): void => {
+  const navExtensions = mounts
+    .filter((mount) => isObject(mount.navItem))
+    .map((mount) => ({
+      // must not start with `app.<mount.app>.`, those ids mark the own items of the primary app
+      id: `mount.${mount.app}.${applicationId}`,
+      type: 'sidebarNav',
+      navItem: { ...mount.navItem, route: { path: `/${getMountPath(applicationId, mount)}` } },
+      extensionPointIds: [`app.${mount.app}.navItems`]
+    })) as SidebarNavExtension[]
+
+  if (navExtensions.length) {
+    extensionRegistry.registerExtensions(computed(() => navExtensions))
+  }
+}
+
+/**
  * exposed runtime api, this wraps all available api actions in a closure and provides application
  * specific data to the implementations.
  *
@@ -105,12 +161,14 @@ export const buildRuntimeApi = ({
   applicationName,
   applicationId,
   router,
-  extensionRegistry
+  extensionRegistry,
+  mounts = []
 }: {
   applicationName: string
   applicationId: string
   router: Router
   extensionRegistry: ExtensionRegistry
+  mounts?: ApplicationMount[]
 }): RuntimeApi => {
   if (!applicationName) {
     throw new ApiError("applicationName can't be blank")
@@ -122,8 +180,9 @@ export const buildRuntimeApi = ({
 
   return {
     announceRoutes: (routes: RouteRecordRaw[]): void =>
-      announceRoutes(applicationId, router, routes),
+      announceRoutes(applicationId, router, routes, mounts),
     announceNavigationItems: (navigationItems: AppNavigationItem[]): void =>
-      announceNavigationItems(applicationId, extensionRegistry, navigationItems)
+      announceNavigationItems(applicationId, extensionRegistry, navigationItems),
+    announceMounts: (): void => announceMounts(applicationId, extensionRegistry, mounts)
   }
 }
