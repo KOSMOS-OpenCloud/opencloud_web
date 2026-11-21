@@ -39,6 +39,8 @@
           class="applications-list"
           :aria-labelledby="section.group ? `apps-menu-group-${sectionIndex}` : undefined"
         >
+          <!-- kosmos: gleicher Innenabstand für den aktiven (filled) und die übrigen (raw) Einträge, sonst rückt
+               der aktive Eintrag ein. Mit !, weil Themes gefüllten Knöpfen eigenen Abstand geben (aqua: 14px). -->
           <li v-for="(n, nid) in section.items" :key="`apps-menu-${sectionIndex}-${nid}`">
             <oc-button
               :key="n.url ? 'apps-menu-external-link' : 'apps-menu-internal-link'"
@@ -46,6 +48,7 @@
               :color-role="isMenuItemActive(n) ? 'secondaryContainer' : 'surface'"
               justify-content="left"
               gap-size="large"
+              class="px-1.5!"
               :class="{ 'router-link-active': isMenuItemActive(n), active: isMenuItemActive(n) }"
               :data-test-id="n.id"
               v-bind="getAdditionalAttributes(n)"
