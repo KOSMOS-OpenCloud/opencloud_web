@@ -104,11 +104,18 @@ export const extensions = (appInfo: ApplicationInformation) => {
     // FloatingActionButton driven by create-new-action registry
     (() => {
       const { requestExtensions } = useExtensionRegistry()
+      // kosmos: höchste priority gewinnt (Default 0), bei Gleichstand die Registrierungsreihenfolge.
+      // Damit kann eine Extension (z. B. Leaf-App mdm-editor) den Knopf im Ordner übernehmen,
+      // obwohl dort auch das Hochladen der Files-App aktiv ist.
       const activeAction = () =>
         requestExtensions<CreateNewActionExtension>({
           id: 'app.files.create-new-action',
           extensionType: 'createNewAction'
-        }).find((ext) => ext.isActive())
+        })
+          .map((ext, index) => ({ ext, index }))
+          .sort((a, b) => (b.ext.priority || 0) - (a.ext.priority || 0) || a.index - b.index)
+          .map(({ ext }) => ext)
+          .find((ext) => ext.isActive())
       // Chat-Panel offen → FAB ("Neu") deckt den Chat-Submit-Button auf
       // kleinen Bildschirmen ab → ausblenden, wenn genau dieses Panel aktiv ist.
       // Nur auf kleinen Bildschirmen: auf dem Desktop rendert dieselbe Extension den

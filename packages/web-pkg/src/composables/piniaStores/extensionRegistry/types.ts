@@ -100,6 +100,8 @@ export interface CreateNewActionExtension extends Extension {
   dropComponent?: Component
   label?: () => string
   icon?: string
+  /** kosmos: Vorrang beim Neu-Knopf der Files-App, höhere Zahl gewinnt (Default 0) */
+  priority?: number
 }
 
 export interface AppMenuItemExtension extends Extension {
