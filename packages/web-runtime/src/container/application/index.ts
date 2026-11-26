@@ -166,6 +166,7 @@ export const buildApplication = ({
   applicationKey,
   applicationPath,
   applicationConfig,
+  applicationGroups,
   applicationScript,
   router
 }: {
@@ -174,6 +175,8 @@ export const buildApplication = ({
   applicationKey: string
   applicationPath: string
   applicationConfig: AppConfigObject
+  /** kosmos: display names of the groups whose members may use the app, empty means every user */
+  applicationGroups?: string[]
   applicationScript: ClassicApplicationScript
   router: Router
 }) => {
@@ -192,6 +195,7 @@ export const buildApplication = ({
         appName,
         applicationScript,
         applicationConfig,
+        applicationGroups,
         router
       })
     }

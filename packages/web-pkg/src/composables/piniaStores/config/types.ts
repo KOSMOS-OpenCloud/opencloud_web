@@ -127,7 +127,9 @@ export type OptionsConfig = z.infer<typeof OptionsConfigSchema>
 const ExternalApp = z.object({
   id: z.string(),
   path: z.string(),
-  config: z.record(z.string(), z.unknown()).optional()
+  config: z.record(z.string(), z.unknown()).optional(),
+  // kosmos: display names of the groups whose members may use the app, without groups every user may
+  groups: z.array(z.string()).optional()
 })
 
 export const RawConfigSchema = z.object({

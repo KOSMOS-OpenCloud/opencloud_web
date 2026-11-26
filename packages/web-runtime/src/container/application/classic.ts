@@ -1,10 +1,11 @@
 import { RuntimeApi } from '../types'
 import { buildRuntimeApi } from '../api'
-import { App } from 'vue'
+import { App, computed, unref } from 'vue'
 import { isFunction, isObject } from 'lodash-es'
 import { NextApplication } from './next'
 import { Router } from 'vue-router'
-import { GlobalProperties, RuntimeError, useAppsStore } from '@opencloud-eu/web-pkg'
+import { GlobalProperties, RuntimeError, useAppsStore, useUserStore } from '@opencloud-eu/web-pkg'
+import { isMemberOfAppGroups } from '../../helpers/appGroups'
 import { AppConfigObject, AppReadyHookArgs, ClassicApplicationScript } from '@opencloud-eu/web-pkg'
 import { useExtensionRegistry } from '@opencloud-eu/web-pkg'
 
@@ -63,12 +64,15 @@ export const convertClassicApplication = ({
   appName,
   applicationScript,
   applicationConfig,
+  applicationGroups = [],
   router
 }: {
   app: App
   appName?: string
   applicationScript: ClassicApplicationScript
   applicationConfig: AppConfigObject
+  /** kosmos: display names of the groups whose members may use the app, empty means every user */
+  applicationGroups?: string[]
   router: Router
 }): NextApplication => {
   if (applicationScript.setup) {
@@ -103,14 +107,26 @@ export const convertClassicApplication = ({
     applicationId,
     router,
     extensionRegistry,
-    mounts: applicationScript.mounts
+    mounts: applicationScript.mounts,
+    groups: applicationGroups
   })
 
   const appsStore = useAppsStore()
   appsStore.registerApp(applicationScript.appInfo, applicationScript.translations)
 
   if (applicationScript.extensions) {
-    extensionRegistry.registerExtensions(applicationScript.extensions)
+    if (applicationGroups.length) {
+      // kosmos: an app limited to groups offers its extensions (app menu, quick menu, actions …) to members only
+      const userStore = useUserStore()
+      const applicationExtensions = applicationScript.extensions
+      extensionRegistry.registerExtensions(
+        computed(() =>
+          isMemberOfAppGroups(userStore.user, applicationGroups) ? unref(applicationExtensions) : []
+        )
+      )
+    } else {
+      extensionRegistry.registerExtensions(applicationScript.extensions)
+    }
   }
 
   if (applicationScript.extensionPoints) {

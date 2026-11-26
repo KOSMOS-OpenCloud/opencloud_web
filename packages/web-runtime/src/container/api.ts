@@ -6,8 +6,10 @@ import {
   Extension,
   ExtensionPoint,
   ExtensionRegistry,
-  SidebarNavExtension
+  SidebarNavExtension,
+  useUserStore
 } from '@opencloud-eu/web-pkg'
+import { isMemberOfAppGroups } from '../helpers/appGroups'
 import { isObject, isArray } from 'lodash-es'
 import { computed } from 'vue'
 import { AppNavigationItem, ApplicationMount } from '@opencloud-eu/web-pkg'
@@ -29,28 +31,31 @@ export const getMountPath = (applicationId: string, mount: ApplicationMount): st
  * @param router
  * @param routes
  * @param mounts
+ * @param groups
  */
 const announceRoutes = (
   applicationId: string,
   router: Router,
   routes: RouteRecordRaw[],
-  mounts: ApplicationMount[] = []
+  mounts: ApplicationMount[] = [],
+  groups: string[] = []
 ): void => {
   if (!isArray(routes)) {
     throw new ApiError("routes can't be blank")
   }
 
-  announceRoutesBelow(applicationId, router, routes)
+  announceRoutesBelow(applicationId, router, routes, groups)
   // kosmos: the same routes once more below every mount, route names carry the mount path
   mounts.forEach((mount) => {
-    announceRoutesBelow(getMountPath(applicationId, mount), router, routes)
+    announceRoutesBelow(getMountPath(applicationId, mount), router, routes, groups)
   })
 }
 
 const announceRoutesBelow = (
   applicationId: string,
   router: Router,
-  routes: RouteRecordRaw[]
+  routes: RouteRecordRaw[],
+  groups: string[] = []
 ): void => {
   const namespaceRouteName = (name: string) => {
     return name.startsWith(`${applicationId}-`) ? name : `${applicationId}-${name}`
@@ -68,6 +73,11 @@ const announceRoutesBelow = (
       }
 
       route.path = `/${encodeURI(applicationId)}${route.path}`
+
+      // kosmos: an app limited to groups carries them on every route, `setupAppGroupsGuard` keeps others out
+      if (groups.length) {
+        route.meta = { ...route.meta, requiredGroups: groups }
+      }
 
       if (route.children) {
         route.children = route.children.map((childRoute) => {
@@ -96,11 +106,13 @@ const announceRoutesBelow = (
  * @param applicationId
  * @param extensionRegistry
  * @param navigationItems
+ * @param isApplicationAllowed
  */
 const announceNavigationItems = (
   applicationId: string,
   extensionRegistry: ExtensionRegistry,
-  navigationItems: AppNavigationItem[]
+  navigationItems: AppNavigationItem[],
+  isApplicationAllowed: () => boolean = () => true
 ): void => {
   if (!isObject(navigationItems)) {
     throw new ApiError("navigationItems can't be blank")
@@ -121,7 +133,9 @@ const announceNavigationItems = (
     extensionPointIds: [navExtensionPoint.id]
   })) as SidebarNavExtension[]
 
-  extensionRegistry.registerExtensions(computed(() => navExtensions))
+  extensionRegistry.registerExtensions(
+    computed(() => (isApplicationAllowed() ? navExtensions : []))
+  )
 }
 
 /**
@@ -130,11 +144,13 @@ const announceNavigationItems = (
  * @param applicationId
  * @param extensionRegistry
  * @param mounts
+ * @param isApplicationAllowed
  */
 const announceMounts = (
   applicationId: string,
   extensionRegistry: ExtensionRegistry,
-  mounts: ApplicationMount[]
+  mounts: ApplicationMount[],
+  isApplicationAllowed: () => boolean = () => true
 ): void => {
   const navExtensions = mounts
     .filter((mount) => isObject(mount.navItem))
@@ -147,7 +163,9 @@ const announceMounts = (
     })) as SidebarNavExtension[]
 
   if (navExtensions.length) {
-    extensionRegistry.registerExtensions(computed(() => navExtensions))
+    extensionRegistry.registerExtensions(
+      computed(() => (isApplicationAllowed() ? navExtensions : []))
+    )
   }
 }
 
@@ -162,13 +180,16 @@ export const buildRuntimeApi = ({
   applicationId,
   router,
   extensionRegistry,
-  mounts = []
+  mounts = [],
+  groups = []
 }: {
   applicationName: string
   applicationId: string
   router: Router
   extensionRegistry: ExtensionRegistry
   mounts?: ApplicationMount[]
+  /** kosmos: display names of the groups whose members may use the app, empty means every user */
+  groups?: string[]
 }): RuntimeApi => {
   if (!applicationName) {
     throw new ApiError("applicationName can't be blank")
@@ -178,11 +199,20 @@ export const buildRuntimeApi = ({
     throw new ApiError("applicationId can't be blank")
   }
 
+  // kosmos: read inside the computed lists of the registry, so the entries follow login and logout
+  const isApplicationAllowed = () => isMemberOfAppGroups(useUserStore().user, groups)
+
   return {
     announceRoutes: (routes: RouteRecordRaw[]): void =>
-      announceRoutes(applicationId, router, routes, mounts),
+      announceRoutes(applicationId, router, routes, mounts, groups),
     announceNavigationItems: (navigationItems: AppNavigationItem[]): void =>
-      announceNavigationItems(applicationId, extensionRegistry, navigationItems),
-    announceMounts: (): void => announceMounts(applicationId, extensionRegistry, mounts)
+      announceNavigationItems(
+        applicationId,
+        extensionRegistry,
+        navigationItems,
+        isApplicationAllowed
+      ),
+    announceMounts: (): void =>
+      announceMounts(applicationId, extensionRegistry, mounts, isApplicationAllowed)
   }
 }

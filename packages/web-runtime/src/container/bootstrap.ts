@@ -232,6 +232,8 @@ export const initializeApplications = async ({
   type RawApplication = {
     path?: string
     config?: AppConfigObject
+    // kosmos: groups whose members may use the app (app manifest or apps.yaml), empty means every user
+    groups?: string[]
   }
   type ApplicationResponse = {
     appName?: string
@@ -242,6 +244,7 @@ export const initializeApplications = async ({
   }
 
   let applicationKeys: string[] = []
+  const applicationGroupsByKey: Record<string, string[]> = {}
   let applicationResponses: PromiseSettledResult<ApplicationResponse>[] = []
   if (appProviderApps) {
     applicationKeys = appProviderService.appNames.map((appName) => `web-app-external-${appName}`)
@@ -266,6 +269,9 @@ export const initializeApplications = async ({
     ]
 
     applicationKeys = rawApplications.map((rawApplication) => rawApplication.path)
+    rawApplications.forEach((rawApplication) => {
+      applicationGroupsByKey[rawApplication.path] = rawApplication.groups || []
+    })
     applicationResponses = await Promise.allSettled(
       rawApplications.map((rawApplication) =>
         loadApplication({
@@ -305,6 +311,7 @@ export const initializeApplications = async ({
       applications.push(
         buildApplication({
           ...applicationResponse,
+          applicationGroups: applicationGroupsByKey[applicationKey] || [],
           app,
           router
         })

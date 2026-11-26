@@ -1,12 +1,15 @@
 import { createRouter, createWebHashHistory } from 'vue-router'
 import { unref } from 'vue'
 import { createTestingPinia } from '@opencloud-eu/web-test-helpers'
-import { SidebarNavExtension, useExtensionRegistry } from '@opencloud-eu/web-pkg'
+import { SidebarNavExtension, useExtensionRegistry, useUserStore } from '@opencloud-eu/web-pkg'
 import { buildRuntimeApi, getMountPath } from '../../../src/container/api'
 
 const component = { template: '<div />' }
 
-function getRuntimeApi(mounts?: Parameters<typeof buildRuntimeApi>[0]['mounts']) {
+function getRuntimeApi(
+  mounts?: Parameters<typeof buildRuntimeApi>[0]['mounts'],
+  groups?: Parameters<typeof buildRuntimeApi>[0]['groups']
+) {
   createTestingPinia({ stubActions: false })
   const router = createRouter({ history: createWebHashHistory(), routes: [] })
   const extensionRegistry = useExtensionRegistry()
@@ -15,7 +18,8 @@ function getRuntimeApi(mounts?: Parameters<typeof buildRuntimeApi>[0]['mounts'])
     applicationId: 'files/todos',
     router,
     extensionRegistry,
-    mounts
+    mounts,
+    groups
   })
   return { router, extensionRegistry, runtimeApi }
 }
@@ -82,6 +86,59 @@ describe('runtime api', () => {
       runtimeApi.announceMounts()
 
       expect(unref(extensionRegistry.extensions).length).toBe(0)
+    })
+  })
+
+  describe('groups', () => {
+    const setUserGroups = (groupNames: string[]) => {
+      useUserStore().user = {
+        memberOf: groupNames.map((displayName) => ({ displayName }))
+      } as any
+    }
+    const requestNavItems = (
+      extensionRegistry: ReturnType<typeof useExtensionRegistry>,
+      extensionPointId: string
+    ) =>
+      extensionRegistry.requestExtensions<SidebarNavExtension>({
+        id: extensionPointId,
+        extensionType: 'sidebarNav'
+      })
+
+    it('writes the groups into the meta of every route, below mounts as well', () => {
+      const { router, runtimeApi } = getRuntimeApi([{ app: 'calendar' }], ['Construct'])
+      runtimeApi.announceRoutes([{ path: '/', name: 'todos', component, meta: { title: 'Todos' } }])
+
+      expect(router.resolve('/files/todos/').meta).toEqual({
+        title: 'Todos',
+        requiredGroups: ['Construct']
+      })
+      expect(router.resolve('/calendar/todos/').meta.requiredGroups).toEqual(['Construct'])
+    })
+    it('leaves the meta of the routes alone without groups', () => {
+      const { router, runtimeApi } = getRuntimeApi()
+      runtimeApi.announceRoutes([{ path: '/', name: 'todos', component }])
+
+      expect(router.resolve('/files/todos/').meta.requiredGroups).toBeUndefined()
+    })
+    it('offers nav items and mounts to members only and follows the user', () => {
+      const { extensionRegistry, runtimeApi } = getRuntimeApi(
+        [{ app: 'calendar', navItem: { name: 'Todos', icon: 'task-line' } }],
+        ['Construct']
+      )
+      runtimeApi.announceNavigationItems([{ name: 'Liste', icon: 'task-line' }])
+      runtimeApi.announceMounts()
+
+      // nobody logged in
+      expect(requestNavItems(extensionRegistry, 'app.files/todos.navItems').length).toBe(0)
+      expect(requestNavItems(extensionRegistry, 'app.calendar.navItems').length).toBe(0)
+
+      setUserGroups(['Admin'])
+      expect(requestNavItems(extensionRegistry, 'app.files/todos.navItems').length).toBe(0)
+      expect(requestNavItems(extensionRegistry, 'app.calendar.navItems').length).toBe(0)
+
+      setUserGroups(['Admin', 'construct'])
+      expect(requestNavItems(extensionRegistry, 'app.files/todos.navItems').length).toBe(1)
+      expect(requestNavItems(extensionRegistry, 'app.calendar.navItems').length).toBe(1)
     })
   })
 })

@@ -1,4 +1,5 @@
 import AccessDeniedPage from '../pages/accessDenied.vue'
+import AppAccessDeniedPage from '../pages/appAccessDenied.vue'
 import LoginPage from '../pages/login.vue'
 import LogoutPage from '../pages/logout.vue'
 import NotFoundPage from '../pages/notFound.vue'
@@ -8,6 +9,7 @@ import ResolvePrivateLinkPage from '../pages/resolvePrivateLink.vue'
 import ShareUploadedPage from '../pages/shareUploaded.vue'
 import { setupRouterHooks } from './setupRouter'
 import { setupAuthGuard } from './setupAuthGuard'
+import { setupAppGroupsGuard } from './setupAppGroupsGuard'
 import { patchRouter } from './patchCleanPath'
 import { routeNames } from './names'
 import {
@@ -110,6 +112,13 @@ const routes: readonly RouteRecordRaw[] = [
     meta: { title: $gettext('Access denied'), authContext: 'anonymous' }
   },
   {
+    // kosmos: target for routes of an app that is limited to groups the user is not a member of
+    path: '/app-access-denied',
+    name: routeNames.appAccessDenied,
+    component: AppAccessDeniedPage,
+    meta: { title: $gettext('No access to this app'), authContext: 'hybrid' }
+  },
+  {
     path: '/account',
     name: routeNames.account,
     component: AccountLayout,
@@ -179,3 +188,4 @@ export const router = patchRouter(
 
 setupRouterHooks(router)
 setupAuthGuard(router)
+setupAppGroupsGuard(router)

@@ -15,6 +15,8 @@ export interface WebRouteMeta extends RouteMeta {
   authContext?: AuthContext
   // KOSMOS: Gast-Seite einer App (z. B. od_meet). Die Kopfleiste zeigt dann kein Konto-Menü und das Logo ohne Link.
   guestView?: boolean
+  // kosmos: Gruppen (Anzeigenamen), deren Mitglieder die Route öffnen dürfen. Setzt die Hülle aus `groups` der App.
+  requiredGroups?: string[]
   patchCleanPath?: boolean
   contextQueryItems?: string[]
 }
